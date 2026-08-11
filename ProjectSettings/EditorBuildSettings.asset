@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/Start Screen.unity
+    guid: 8c9cfa26abfee488c85f1582747f6a02
+  - enabled: 1
+    path: Assets/Scenes/Boss Fight Mode.unity
+    guid: 1f46beb2b7ccb1545808f10cfe053c54
+  - enabled: 1
+    path: Assets/Scenes/Character Select Screen.unity
+    guid: 7929c18ee6c2be9478478f5cf3a34b1e
+  - enabled: 1
+    path: Assets/Scenes/HomeTown.unity
+    guid: 72ebbcc5ae488014eb40893f32f2bd49
+  - enabled: 1
+    path: Assets/Scenes/Mode Select Screen.unity
+    guid: c367493b06d21384bbe8d1a02fcf3718
+  - enabled: 1
+    path: Assets/Scenes/Test Room.unity
+    guid: 5dc90c027ecda884d9353481c3bec3f8
+  - enabled: 1
+    path: Assets/Scenes/Tower Mode.unity
+    guid: d47da9fa64f8d2b41b75f29ea03db5c1
+  m_configObjects:
+    com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
+  m_UseUCBPForAssetBundles: 0
