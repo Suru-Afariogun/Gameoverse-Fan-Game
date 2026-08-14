@@ -51,8 +51,8 @@ public class VisualEffect : MonoBehaviour
     [SerializeField] private float deathBallFadeDistance = 6f;
     [Tooltip("Destroy each ball after this many seconds (safety cap).")]
     [SerializeField] private float deathBallMaxLifetime = 2.5f;
-    [Tooltip("Scene fade / return waits until every ball has traveled at least this far.")]
-    [SerializeField] private float deathBallWaitTravelDistance = 3f;
+    [Tooltip("Scene fade / return waits until every ball has traveled at least this far (world units / spaces).")]
+    [SerializeField] private float deathBallWaitTravelDistance = 8f;
     [Tooltip("Bool parameter on the death-ball Animator (if present).")]
     [SerializeField] private string deathBoolParameter = "IsDying";
     [Tooltip("Trigger parameter on the death-ball Animator (if present).")]
@@ -143,7 +143,7 @@ public class VisualEffect : MonoBehaviour
                 deathBallAngleOffsetDegrees = 22.5f;
                 deathBallFadeDistance = 6f;
                 deathBallMaxLifetime = 2.5f;
-                deathBallWaitTravelDistance = 3f;
+                deathBallWaitTravelDistance = 8f;
                 deathBoolParameter = "IsDying";
                 deathTriggerParameter = "death";
                 deathAnimationStateName = "Death animation";

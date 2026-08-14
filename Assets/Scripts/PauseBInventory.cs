@@ -410,9 +410,15 @@ public class PauseBInventory : MonoBehaviour
         lastToggleUnscaledTime = Time.unscaledTime;
 
         if (isOpen)
+        {
+            SoundManager.Instance?.PlayUiConfirmOrBack();
             Close();
+        }
         else
+        {
+            SoundManager.Instance?.PlayUiConfirmOrBack();
             Open();
+        }
     }
 
     private void OnQuitBackPerformed(InputAction.CallbackContext context)
@@ -420,6 +426,7 @@ public class PauseBInventory : MonoBehaviour
         if (!context.performed || !isOpen)
             return;
 
+        SoundManager.Instance?.PlayUiConfirmOrBack();
         Close();
     }
 
@@ -428,6 +435,7 @@ public class PauseBInventory : MonoBehaviour
         if (!context.performed || !isOpen)
             return;
 
+        SoundManager.Instance?.PlayUiConfirmOrBack();
         UseSelectedItem();
     }
 

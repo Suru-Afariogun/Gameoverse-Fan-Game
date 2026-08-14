@@ -65,7 +65,11 @@ public class BossLifeBar : MonoBehaviour
     private void Update()
     {
         if (!autoFindActiveBoss)
+        {
+            if (boundBoss != null)
+                SyncFromBoss(boundBoss);
             return;
+        }
 
         Boss boss = GetTrackedBoss();
         if (boss == null)
@@ -76,9 +80,22 @@ public class BossLifeBar : MonoBehaviour
             ApplyCharacterSprites(characterId);
 
         RefreshBindingIfNeeded(boss);
+        SyncFromBoss(boss);
+    }
 
-        if (!isFlickering)
-            RefreshFromBoss(boss);
+    /// <summary>
+    /// Keep the sprite in sync with every HP change (direct hits, crystal-linked damage, heals).
+    /// </summary>
+    private void SyncFromBoss(Boss boss)
+    {
+        if (boss == null)
+            return;
+
+        if (boss.CurrentHealth == lastShownHealth)
+            return;
+
+        bool tookDamage = lastShownHealth != int.MinValue && boss.CurrentHealth < lastShownHealth;
+        SetDisplayedHealth(boss.CurrentHealth, boss.MaxHealth, tookDamage);
     }
 
     private void RefreshBindingIfNeeded(Boss boss)
@@ -96,6 +113,7 @@ public class BossLifeBar : MonoBehaviour
         if (boundBoss == null)
             return;
 
+        boundBoss.OnHealthChanged -= HandleHealthChanged;
         boundBoss.OnHealthChanged += HandleHealthChanged;
         ApplyCharacterSprites(ResolveCharacterIdForBoss(boundBoss));
         HandleHealthChanged(boundBoss.CurrentHealth, boundBoss.MaxHealth);
@@ -173,19 +191,14 @@ public class BossLifeBar : MonoBehaviour
     private void HandleHealthChanged(int current, int max)
     {
         bool tookDamage = lastShownHealth != int.MinValue && current < lastShownHealth;
-        SetDisplayedHealth(current, max, tookDamage);
+        bool gainedHealth = lastShownHealth != int.MinValue && current > lastShownHealth;
+        // Flicker on damage; heals / full resets snap straight to the new percentage sprite.
+        SetDisplayedHealth(current, max, playHitFlicker: tookDamage && !gainedHealth);
     }
 
     private void RefreshFromBoss(Boss boss)
     {
-        if (boss == null)
-            return;
-
-        if (boss.CurrentHealth == lastShownHealth)
-            return;
-
-        bool tookDamage = lastShownHealth != int.MinValue && boss.CurrentHealth < lastShownHealth;
-        SetDisplayedHealth(boss.CurrentHealth, boss.MaxHealth, tookDamage);
+        SyncFromBoss(boss);
     }
 
     public void SetDisplayedHealth(int currentHealth, int maxHealth)
@@ -223,9 +236,8 @@ public class BossLifeBar : MonoBehaviour
         int clamped = Mathf.Clamp(currentHealth, 0, max);
         float pct = clamped / (float)max;
 
-        // 11 sprites (0..10): drop one sprite every 10% HP lost.
-        // 100% → index 10, 90–99% → 9, …, 1–9% → 0 after floor, 0% → 0.
-        // With Length != 11, still uses equal percentage bands across the array.
+        // 11 sprites (0..10): equal percentage bands across MaxHealth.
+        // 100% → top index, 0% → index 0.
         int topIndex = activeSprites.Length - 1;
         int spriteIndex = Mathf.FloorToInt(pct * topIndex + 0.0001f);
         spriteIndex = Mathf.Clamp(spriteIndex, 0, topIndex);
@@ -257,11 +269,26 @@ public class BossLifeBar : MonoBehaviour
 
         for (int i = 0; i < cycles; i++)
         {
+            // If HP changed again mid-flicker, settle on the latest mapped sprite.
+            if (boundBoss != null)
+            {
+                Sprite latest = ResolveHealthSprite(boundBoss.CurrentHealth, boundBoss.MaxHealth);
+                if (latest != null)
+                    currentHealthSprite = latest;
+            }
+
             lifeBarSpriteRenderer.sprite = damagedSprite;
             yield return new WaitForSeconds(half);
 
             lifeBarSpriteRenderer.sprite = currentHealthSprite;
             yield return new WaitForSeconds(half);
+        }
+
+        if (boundBoss != null)
+        {
+            Sprite latest = ResolveHealthSprite(boundBoss.CurrentHealth, boundBoss.MaxHealth);
+            if (latest != null)
+                currentHealthSprite = latest;
         }
 
         lifeBarSpriteRenderer.sprite = currentHealthSprite;

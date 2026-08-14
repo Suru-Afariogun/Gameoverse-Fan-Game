@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
@@ -73,13 +74,19 @@ public class Kaboodle : MonoBehaviour
     [Header("UI - Item Shop")]
     [SerializeField] private Button juiceShopButton;
     [SerializeField] private Button hotdogShopButton;
-    [Tooltip("How many shop buttons per row (usually 2: Juice | Hotdog).")]
+    [Tooltip("Temporary Kit attack-style placeholder (Spread Shot).")]
+    [SerializeField] private Button spreadShotShopButton;
+    [Tooltip("Temporary Kit attack-style placeholder (Machine Gun).")]
+    [SerializeField] private Button machineGunShopButton;
+    [Tooltip("How many shop buttons per row (usually 2).")]
     [SerializeField] private int itemShopColumns = 2;
     [Tooltip("Selected/hovered item buttons grow by this much (smaller than character select).")]
     [SerializeField] private float itemShopSelectedScaleBonus = 0.25f;
     [Tooltip("Optional. Auto-found under each item button if left empty.")]
     [SerializeField] private SpriteRenderer juiceItemTextContainer;
     [SerializeField] private SpriteRenderer hotdogItemTextContainer;
+    [SerializeField] private SpriteRenderer spreadShotItemTextContainer;
+    [SerializeField] private SpriteRenderer machineGunItemTextContainer;
 
     [Header("Selection Look (main menu)")]
     [SerializeField] private Color normalButtonColor = Color.white;
@@ -175,6 +182,7 @@ public class Kaboodle : MonoBehaviour
         controls.PlayerControls.Left.performed += OnLeftPerformed;
         controls.PlayerControls.Right.performed += OnRightPerformed;
         controls.PlayerControls.Confirm.performed += OnConfirmPerformed;
+        controls.PlayerControls.Attack.performed += OnAttackPerformed;
         controls.PlayerControls.Select.performed += OnSelectPerformed;
         controls.PlayerControls.QuitBack.performed += OnQuitBackPerformed;
         controls.PlayerControls.Movement.performed += OnMovementPerformed;
@@ -199,6 +207,7 @@ public class Kaboodle : MonoBehaviour
         controls.PlayerControls.Left.performed -= OnLeftPerformed;
         controls.PlayerControls.Right.performed -= OnRightPerformed;
         controls.PlayerControls.Confirm.performed -= OnConfirmPerformed;
+        controls.PlayerControls.Attack.performed -= OnAttackPerformed;
         controls.PlayerControls.Select.performed -= OnSelectPerformed;
         controls.PlayerControls.QuitBack.performed -= OnQuitBackPerformed;
         controls.PlayerControls.Movement.performed -= OnMovementPerformed;
@@ -286,23 +295,39 @@ public class Kaboodle : MonoBehaviour
 
         if (juiceShopButton == null)
             juiceShopButton = FindNamedButtonUnder(itemShopPage, "Juice");
+        if (spreadShotShopButton == null)
+            spreadShotShopButton = FindNamedButtonUnder(itemShopPage, "Spread");
         if (hotdogShopButton == null)
             hotdogShopButton = FindNamedButtonUnder(itemShopPage, "HotDog")
                                ?? FindNamedButtonUnder(itemShopPage, "Hotdog");
+        if (machineGunShopButton == null)
+            machineGunShopButton = FindNamedButtonUnder(itemShopPage, "Machine Gun")
+                                   ?? FindNamedButtonUnder(itemShopPage, "MachineGun");
 
         if (juiceItemTextContainer == null)
             juiceItemTextContainer = FindItemTextContainer(juiceShopButton);
+        if (spreadShotItemTextContainer == null)
+            spreadShotItemTextContainer = FindItemTextContainer(spreadShotShopButton);
         if (hotdogItemTextContainer == null)
             hotdogItemTextContainer = FindItemTextContainer(hotdogShopButton);
+        if (machineGunItemTextContainer == null)
+            machineGunItemTextContainer = FindItemTextContainer(machineGunShopButton);
 
+        // Visual row-major: top-left Juice, top-right HotDog, bottom-left Spread, bottom-right Machine Gun.
         AddValidButton(validShopButtons, juiceShopButton);
         AddValidButton(validShopButtons, hotdogShopButton);
+        AddValidButton(validShopButtons, spreadShotShopButton);
+        AddValidButton(validShopButtons, machineGunShopButton);
 
         RegisterShopTextContainer(juiceShopButton, juiceItemTextContainer);
+        RegisterShopTextContainer(spreadShotShopButton, spreadShotItemTextContainer);
         RegisterShopTextContainer(hotdogShopButton, hotdogItemTextContainer);
+        RegisterShopTextContainer(machineGunShopButton, machineGunItemTextContainer);
+
+        RefreshAttackStyleButtonLabels();
 
         if (validShopButtons.Count == 0)
-            Debug.LogWarning("[Kaboodle] Item Shop has no Juice/HotDog buttons assigned.");
+            Debug.LogWarning("[Kaboodle] Item Shop has no shop buttons assigned.");
     }
 
     private void RegisterShopTextContainer(Button button, SpriteRenderer container)
@@ -943,6 +968,8 @@ public class Kaboodle : MonoBehaviour
         CacheShopButtons();
         BindClick(juiceShopButton, BuyJuice, bind);
         BindClick(hotdogShopButton, BuyHotdog, bind);
+        BindClick(spreadShotShopButton, EquipSpreadShot, bind);
+        BindClick(machineGunShopButton, EquipMachineGun, bind);
     }
 
     /// <summary>Inspector / UI OnClick → pick Kit boss and load Boss Fight Mode.</summary>
@@ -1058,9 +1085,14 @@ public class Kaboodle : MonoBehaviour
         if (!boxOpen)
         {
             if (playerInRange)
+            {
+                SoundManager.Instance?.PlayUiConfirmOrBack();
                 OpenBox();
+            }
             return;
         }
+
+        SoundManager.Instance?.PlayUiConfirmOrBack();
 
         if (currentPage == BoxPage.Menu)
             ActivateMenuSelection();
@@ -1072,13 +1104,66 @@ public class Kaboodle : MonoBehaviour
             ActivateShopSelection();
     }
 
+    /// <summary>
+    /// Item Shop only: Attack on the currently equipped attack-style button returns to default.
+    /// </summary>
+    private void OnAttackPerformed(InputAction.CallbackContext context)
+    {
+        if (!context.performed || !boxOpen || currentPage != BoxPage.ItemShop)
+            return;
+
+        if (!CanAcceptMenuInput())
+            return;
+
+        if (!TryGetHoveredAttackStyle(out AttackStyleId hoveredStyle))
+            return;
+
+        // Only unequip when hovering the style that is already equipped.
+        if (!PlayerAttackStyle.Is(hoveredStyle))
+            return;
+
+        PlayerAttackStyle.Set(AttackStyleId.Normal);
+        RefreshAttackStyleButtonLabels();
+        SoundManager.Instance?.PlayUiConfirmOrBack();
+        ConsumeMenuInputCooldown();
+    }
+
+    private bool TryGetHoveredAttackStyle(out AttackStyleId style)
+    {
+        style = AttackStyleId.Normal;
+
+        if (shopIndex < 0 || shopIndex >= validShopButtons.Count)
+            return false;
+
+        Button hovered = validShopButtons[shopIndex];
+        if (hovered == null)
+            return false;
+
+        if (hovered == spreadShotShopButton)
+        {
+            style = AttackStyleId.SpreadShot;
+            return true;
+        }
+
+        if (hovered == machineGunShopButton)
+        {
+            style = AttackStyleId.MachineGun;
+            return true;
+        }
+
+        return false;
+    }
+
     private void OnSelectPerformed(InputAction.CallbackContext context)
     {
         if (!context.performed)
             return;
 
         if (boxOpen)
+        {
+            SoundManager.Instance?.PlayUiConfirmOrBack();
             CloseBox(unlockPlayer: true);
+        }
     }
 
     private void OnQuitBackPerformed(InputAction.CallbackContext context)
@@ -1086,7 +1171,15 @@ public class Kaboodle : MonoBehaviour
         if (!context.performed || !boxOpen || !CanAcceptMenuInput())
             return;
 
-        if (currentPage != BoxPage.Menu && currentPage != BoxPage.None)
+        SoundManager.Instance?.PlayUiConfirmOrBack();
+
+        if (currentPage == BoxPage.Menu)
+        {
+            CloseBox(unlockPlayer: true);
+            return;
+        }
+
+        if (currentPage != BoxPage.None)
             ShowMenuPage();
     }
 
@@ -1388,6 +1481,48 @@ public class Kaboodle : MonoBehaviour
         PauseBInventory.Instance?.ShowShopPreview();
     }
 
+    /// <summary>Temporary Kit attack style: Spread Shot (Item Shop placeholder).</summary>
+    public void EquipSpreadShot()
+    {
+        PlayerAttackStyle.Set(AttackStyleId.SpreadShot);
+        RefreshAttackStyleButtonLabels();
+    }
+
+    /// <summary>Temporary Kit attack style: Machine Gun (Item Shop placeholder).</summary>
+    public void EquipMachineGun()
+    {
+        PlayerAttackStyle.Set(AttackStyleId.MachineGun);
+        RefreshAttackStyleButtonLabels();
+    }
+
+    private void RefreshAttackStyleButtonLabels()
+    {
+        SetAttackStyleButtonLabel(spreadShotShopButton, AttackStyleId.SpreadShot);
+        SetAttackStyleButtonLabel(machineGunShopButton, AttackStyleId.MachineGun);
+    }
+
+    private static void SetAttackStyleButtonLabel(Button button, AttackStyleId style)
+    {
+        if (button == null)
+            return;
+
+        string styleName = PlayerAttackStyle.DisplayName(style);
+        string label = PlayerAttackStyle.Is(style)
+            ? $"{styleName}: equipped"
+            : styleName;
+
+        TextMeshProUGUI ui = button.GetComponentInChildren<TextMeshProUGUI>(true);
+        if (ui != null)
+        {
+            ui.text = label;
+            return;
+        }
+
+        TextMeshPro world = button.GetComponentInChildren<TextMeshPro>(true);
+        if (world != null)
+            world.text = label;
+    }
+
     /// <summary>Wire shop / continue-after-game-over → Kaboodle.BuyLife.</summary>
     public void BuyLife()
     {
@@ -1458,42 +1593,91 @@ public class Kaboodle : MonoBehaviour
     }
 
     /// <summary>
-    /// Move selection on a row/column grid. Buttons are row-major:
-    /// index 0 = top-left, then across the row, then next row.
+    /// Move selection to the nearest button in the input direction using on-screen positions.
+    /// Works for any layout — no rigid row/column list order required.
     /// </summary>
+    private static bool MoveSpatialSelection(List<Button> buttons, ref int currentIndex, int deltaX, int deltaY)
+    {
+        if (buttons == null || buttons.Count <= 1)
+            return false;
+
+        if (deltaX == 0 && deltaY == 0)
+            return false;
+
+        currentIndex = Mathf.Clamp(currentIndex, 0, buttons.Count - 1);
+        if (!TryGetButtonWorldPosition(buttons[currentIndex], out Vector2 from))
+            return false;
+
+        // Up on stick maps to deltaY = -1; screen Y increases upward in UI world space.
+        Vector2 dir = new Vector2(deltaX, -deltaY);
+        if (dir.sqrMagnitude < 0.0001f)
+            return false;
+
+        dir.Normalize();
+
+        int bestIndex = -1;
+        float bestPrimary = float.MaxValue;
+        float bestSecondary = float.MaxValue;
+
+        const float minAlignment = 0.25f;
+
+        for (int i = 0; i < buttons.Count; i++)
+        {
+            if (i == currentIndex)
+                continue;
+
+            Button candidate = buttons[i];
+            if (candidate == null || !candidate.isActiveAndEnabled || !candidate.gameObject.activeInHierarchy)
+                continue;
+
+            if (!TryGetButtonWorldPosition(candidate, out Vector2 to))
+                continue;
+
+            Vector2 delta = to - from;
+            if (delta.sqrMagnitude < 1f)
+                continue;
+
+            float alignment = Vector2.Dot(delta.normalized, dir);
+            if (alignment < minAlignment)
+                continue;
+
+            float primary = Vector2.Dot(delta, dir);
+            if (primary <= 0f)
+                continue;
+
+            float secondary = Mathf.Abs(Vector2.Dot(delta, new Vector2(-dir.y, dir.x)));
+
+            if (primary < bestPrimary - 0.5f ||
+                (Mathf.Abs(primary - bestPrimary) <= 0.5f && secondary < bestSecondary))
+            {
+                bestPrimary = primary;
+                bestSecondary = secondary;
+                bestIndex = i;
+            }
+        }
+
+        if (bestIndex < 0)
+            return false;
+
+        currentIndex = bestIndex;
+        return true;
+    }
+
+    private static bool TryGetButtonWorldPosition(Button button, out Vector2 position)
+    {
+        position = default;
+        if (button == null)
+            return false;
+
+        RectTransform rt = button.transform as RectTransform;
+        position = rt != null ? (Vector2)rt.position : (Vector2)button.transform.position;
+        return true;
+    }
+
     private void MoveMenuSelection(int deltaX, int deltaY)
     {
-        int count = validMenuButtons.Count;
-        if (count <= 0)
+        if (!MoveSpatialSelection(validMenuButtons, ref menuIndex, deltaX, deltaY))
             return;
-
-        int cols = Mathf.Max(1, menuColumns);
-
-        if (deltaX != 0)
-        {
-            int row = menuIndex / cols;
-            int rowStart = row * cols;
-            int rowCount = Mathf.Min(cols, count - rowStart);
-            int col = menuIndex - rowStart;
-            col = (col + deltaX) % rowCount;
-            if (col < 0)
-                col += rowCount;
-            menuIndex = rowStart + col;
-        }
-
-        if (deltaY != 0)
-        {
-            int col = menuIndex % cols;
-            int row = menuIndex / cols;
-            int rowCount = Mathf.CeilToInt(count / (float)cols);
-            row = (row + deltaY) % rowCount;
-            if (row < 0)
-                row += rowCount;
-
-            menuIndex = row * cols + col;
-            if (menuIndex >= count)
-                menuIndex = count - 1;
-        }
 
         RefreshMenuHighlight();
         ConsumeMenuInputCooldown();
@@ -1501,37 +1685,8 @@ public class Kaboodle : MonoBehaviour
 
     private void MoveCharacterSelection(int deltaX, int deltaY)
     {
-        int count = validCharacterButtons.Count;
-        if (count <= 0)
+        if (!MoveSpatialSelection(validCharacterButtons, ref characterIndex, deltaX, deltaY))
             return;
-
-        int cols = Mathf.Max(1, characterSelectColumns);
-
-        if (deltaX != 0)
-        {
-            int row = characterIndex / cols;
-            int rowStart = row * cols;
-            int rowCount = Mathf.Min(cols, count - rowStart);
-            int col = characterIndex - rowStart;
-            col = (col + deltaX) % rowCount;
-            if (col < 0)
-                col += rowCount;
-            characterIndex = rowStart + col;
-        }
-
-        if (deltaY != 0)
-        {
-            int col = characterIndex % cols;
-            int row = characterIndex / cols;
-            int rowCount = Mathf.CeilToInt(count / (float)cols);
-            row = (row + deltaY) % rowCount;
-            if (row < 0)
-                row += rowCount;
-
-            characterIndex = row * cols + col;
-            if (characterIndex >= count)
-                characterIndex = count - 1;
-        }
 
         RefreshCharacterHighlight();
         ConsumeMenuInputCooldown();
@@ -1539,37 +1694,8 @@ public class Kaboodle : MonoBehaviour
 
     private void MoveBossSelection(int deltaX, int deltaY)
     {
-        int count = validBossButtons.Count;
-        if (count <= 0)
+        if (!MoveSpatialSelection(validBossButtons, ref bossIndex, deltaX, deltaY))
             return;
-
-        int cols = Mathf.Max(1, bossSelectColumns);
-
-        if (deltaX != 0)
-        {
-            int row = bossIndex / cols;
-            int rowStart = row * cols;
-            int rowCount = Mathf.Min(cols, count - rowStart);
-            int col = bossIndex - rowStart;
-            col = (col + deltaX) % rowCount;
-            if (col < 0)
-                col += rowCount;
-            bossIndex = rowStart + col;
-        }
-
-        if (deltaY != 0)
-        {
-            int col = bossIndex % cols;
-            int row = bossIndex / cols;
-            int rowCount = Mathf.CeilToInt(count / (float)cols);
-            row = (row + deltaY) % rowCount;
-            if (row < 0)
-                row += rowCount;
-
-            bossIndex = row * cols + col;
-            if (bossIndex >= count)
-                bossIndex = count - 1;
-        }
 
         RefreshBossHighlight();
         ConsumeMenuInputCooldown();
@@ -1577,37 +1703,8 @@ public class Kaboodle : MonoBehaviour
 
     private void MoveShopSelection(int deltaX, int deltaY)
     {
-        int count = validShopButtons.Count;
-        if (count <= 0)
+        if (!MoveSpatialSelection(validShopButtons, ref shopIndex, deltaX, deltaY))
             return;
-
-        int cols = Mathf.Max(1, itemShopColumns);
-
-        if (deltaX != 0)
-        {
-            int row = shopIndex / cols;
-            int rowStart = row * cols;
-            int rowCount = Mathf.Min(cols, count - rowStart);
-            int col = shopIndex - rowStart;
-            col = (col + deltaX) % rowCount;
-            if (col < 0)
-                col += rowCount;
-            shopIndex = rowStart + col;
-        }
-
-        if (deltaY != 0)
-        {
-            int col = shopIndex % cols;
-            int row = shopIndex / cols;
-            int rowCount = Mathf.CeilToInt(count / (float)cols);
-            row = (row + deltaY) % rowCount;
-            if (row < 0)
-                row += rowCount;
-
-            shopIndex = row * cols + col;
-            if (shopIndex >= count)
-                shopIndex = count - 1;
-        }
 
         RefreshShopHighlight();
         ConsumeMenuInputCooldown();

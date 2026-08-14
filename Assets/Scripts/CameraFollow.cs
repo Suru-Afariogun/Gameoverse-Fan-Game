@@ -59,11 +59,13 @@ public class CameraFollow : MonoBehaviour
     private bool hasBounds;
     private Transform trackedTarget;
     private float acquireTimer;
+    private bool followEnabled = true;
 
     private float lookAheadX;
     private float lookAheadVelocity;
     private float fastBlend;
     private float fastBlendVelocity;
+    private bool catchUpBoost;
 
     private void Awake()
     {
@@ -87,6 +89,9 @@ public class CameraFollow : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (!followEnabled)
+            return;
+
         if (target == null && autoFindPlayer)
             ResolveTarget();
 
@@ -122,6 +127,12 @@ public class CameraFollow : MonoBehaviour
 
         float currentMaxSpeed = Mathf.Lerp(maxFollowSpeed, fastMaxFollowSpeed, fastBlend);
 
+        if (catchUpBoost)
+        {
+            currentSmooth = Mathf.Min(currentSmooth, 0.12f);
+            currentMaxSpeed = Mathf.Max(currentMaxSpeed, 42f);
+        }
+
         transform.position = Vector3.SmoothDamp(
             transform.position,
             desired,
@@ -131,6 +142,9 @@ public class CameraFollow : MonoBehaviour
 
         if (acquireTimer > 0f)
             acquireTimer -= Time.deltaTime;
+
+        if (catchUpBoost && HasCaughtUpToTarget(0.55f))
+            catchUpBoost = false;
     }
 
     /// <summary>
@@ -188,6 +202,86 @@ public class CameraFollow : MonoBehaviour
 
         target = newTarget;
         BeginSoftAcquire(newTarget);
+    }
+
+    /// <summary>
+    /// When false, camera holds still (used during life-loss fade-to-black).
+    /// </summary>
+    public void SetFollowEnabled(bool enabled)
+    {
+        followEnabled = enabled;
+        if (!enabled)
+        {
+            velocity = Vector3.zero;
+            lookAheadVelocity = 0f;
+            fastBlendVelocity = 0f;
+            catchUpBoost = false;
+        }
+    }
+
+    public bool FollowEnabled => followEnabled;
+
+    /// <summary>
+    /// Instantly places the camera on the target without enabling follow/tracking.
+    /// Used while the screen is black so the reveal is framed correctly.
+    /// </summary>
+    public void SnapToTarget(Transform newTarget = null)
+    {
+        if (newTarget != null)
+        {
+            target = newTarget;
+            trackedTarget = newTarget;
+        }
+
+        if (target == null)
+            return;
+
+        if (!hasBounds && autoFindBackground)
+            ResolveBackground();
+
+        Vector3 desired = target.position + offset;
+        desired = GetClampedPosition(desired);
+        if (!followX) desired.x = transform.position.x;
+        if (!followY) desired.y = transform.position.y;
+        desired.z = offset.z;
+
+        transform.position = desired;
+        velocity = Vector3.zero;
+        lookAheadX = 0f;
+        lookAheadVelocity = 0f;
+        fastBlendVelocity = 0f;
+        acquireTimer = 0f;
+        catchUpBoost = false;
+    }
+
+    /// <summary>
+    /// Speeds follow briefly after a mid-fight respawn / warning finishes.
+    /// </summary>
+    public void BeginRespawnCatchUp()
+    {
+        followEnabled = true;
+        catchUpBoost = true;
+        acquireTimer = 0f;
+        velocity = Vector3.zero;
+        lookAheadVelocity = 0f;
+        lookAheadX = 0f;
+    }
+
+    /// <summary>
+    /// True when the camera is close enough to the follow target that a fade-in feels settled.
+    /// </summary>
+    public bool HasCaughtUpToTarget(float maxDistance = 0.65f)
+    {
+        if (target == null)
+            return true;
+
+        Vector3 desired = target.position + offset;
+        desired = GetClampedPosition(desired);
+        if (!followX) desired.x = transform.position.x;
+        if (!followY) desired.y = transform.position.y;
+
+        Vector2 delta = new Vector2(desired.x - transform.position.x, desired.y - transform.position.y);
+        return delta.sqrMagnitude <= maxDistance * maxDistance;
     }
 
     public void SetBackground(SpriteRenderer backgroundRenderer)

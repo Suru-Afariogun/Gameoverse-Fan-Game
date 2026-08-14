@@ -159,6 +159,10 @@ public class AttackHitbox : MonoBehaviour
             crystal = other.GetComponentInParent<Crystal>();
         if (crystal != null && !crystal.IsDead)
         {
+            // Boss attacks must never damage the crystal — only the player can.
+            if (ownerBoss != null)
+                return;
+
             int crystalId = crystal.GetInstanceID();
             if (!hitInstanceIds.Add(crystalId))
                 return;
@@ -200,7 +204,7 @@ public class AttackHitbox : MonoBehaviour
         if (dealDamage && damage > 0)
         {
             if (player != null && player != ownerPlayer)
-                player.TakeDamage(damage);
+                player.TakeDamage(damage, ownerRoot != null ? ownerRoot : transform);
             else if (boss != null && boss != ownerBoss)
                 boss.TakeDamage(damage);
         }

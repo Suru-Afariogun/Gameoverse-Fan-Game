@@ -141,7 +141,7 @@ MonoBehaviour:
   deathBallAngleOffsetDegrees: 22.5
   deathBallFadeDistance: 6
   deathBallMaxLifetime: 2.5
-  deathBallWaitTravelDistance: 3
+  deathBallWaitTravelDistance: 8
   deathBoolParameter: IsDying
   deathTriggerParameter: death
   deathAnimationStateName: Death animation

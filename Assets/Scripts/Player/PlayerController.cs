@@ -82,6 +82,16 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
     [SerializeField] protected float hitStunDuration = 0.5f;
     [Tooltip("How long the character is invincible after taking damage.")]
     [SerializeField] protected float hitInvincibilityDuration = 1.5f;
+    [Tooltip("Alpha for the brighter half of the invincibility flicker (0.80 = 80% opaque).")]
+    [SerializeField] [Range(0f, 1f)] protected float invincibilityFlickerAlphaHigh = 0.80f;
+    [Tooltip("Alpha for the dimmer half of the invincibility flicker (0.75 = 75% opaque).")]
+    [SerializeField] [Range(0f, 1f)] protected float invincibilityFlickerAlphaLow = 0.75f;
+    [Tooltip("Seconds for each half of the invincibility flicker.")]
+    [SerializeField] protected float invincibilityFlickerHalfPeriod = 0.08f;
+    [Tooltip("How far the character is knocked back on hit (world units / spaces).")]
+    [SerializeField] protected float hitKnockbackDistance = 3f;
+    [Tooltip("How long the knockback slide takes (higher = smoother / slower).")]
+    [SerializeField] protected float hitKnockbackDuration = 0.22f;
 
     [Header("Combat - VFX Prefabs")]
     [Tooltip("Assign your Default Stunned prefab. Set Effect Type = Default Stunned on the prefab.")]
@@ -181,6 +191,12 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
     protected bool dashDisabled;
     protected float stunTimer;
     protected float invincibilityTimer;
+    private float invincibilityFlickerTimer;
+    private bool invincibilityFlickerActive;
+    private bool knockbackActive;
+    private Vector2 knockbackStart;
+    private Vector2 knockbackEnd;
+    private float knockbackElapsed;
     protected float defaultGravityScale = 1f;
     protected bool airHangActive;
 
@@ -309,6 +325,7 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
         HandleLandingAndAirDashRefill();
         TickDashJumpMomentum(Time.fixedDeltaTime);
         TickDash(Time.fixedDeltaTime);
+        TickHitKnockback(Time.fixedDeltaTime);
 
         if (isDashing)
         {
@@ -328,11 +345,12 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
             }
         }
 
-        if (isStunned)
+        if (isStunned || knockbackActive)
         {
             jumpRequested = false;
-            dashRequested = false;
-            if (rb != null)
+            if (isStunned)
+                dashRequested = false;
+            if (rb != null && !knockbackActive)
                 rb.linearVelocity = new Vector2(0f, airHangActive ? 0f : rb.linearVelocity.y);
             ApplyFallMultiplier();
             HandleCharacterFixedUpdate();
@@ -891,17 +909,25 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
     }
 
     /// <summary>
-    /// Mega Man death burst. Hides the character only when this death consumes the last life.
+    /// Mega Man death burst. Character vanishes immediately at 0 HP; balls spawn from that same moment.
     /// </summary>
     protected virtual void PlayDeathEnergyBallsOnDeath()
     {
-        PlayerInventory inv = PlayerInventory.Instance;
-        // Life is deducted by BossFightDirector after OnDied — hide if this is the last life.
-        bool hideCharacter = inv == null || inv.LivesCount <= 1;
-        VisualEffects.PlayDeathEnergyBalls(deathEnergyBallPrefab, this, hideCharacter);
+        SetInputLocked(true);
+        if (rb != null)
+            rb.linearVelocity = Vector2.zero;
+        knockbackActive = false;
+
+        VisualEffects.SetHostSpritesVisible(gameObject, false);
+        VisualEffects.PlayDeathEnergyBalls(deathEnergyBallPrefab, this, hideHost: true);
     }
 
     public virtual void TakeDamage(int amount)
+    {
+        TakeDamage(amount, null);
+    }
+
+    public virtual void TakeDamage(int amount, Transform hitSource)
     {
         if (amount <= 0 || currentHealth <= 0)
             return;
@@ -912,7 +938,7 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
         SetHealth(currentHealth - amount);
 
         if (currentHealth > 0)
-            BeginHitReaction();
+            BeginHitReaction(hitSource);
     }
 
     protected virtual void TickHitReaction(float dt)
@@ -932,17 +958,76 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
         }
 
         if (invincibilityTimer > 0f)
+        {
             invincibilityTimer = Mathf.Max(0f, invincibilityTimer - dt);
+            TickInvincibilityFlicker(dt);
+        }
+        else if (invincibilityFlickerActive)
+        {
+            ClearInvincibilityFlicker();
+        }
+    }
+
+    private void TickInvincibilityFlicker(float dt)
+    {
+        if (currentHealth <= 0)
+            return;
+
+        invincibilityFlickerActive = true;
+        invincibilityFlickerTimer += dt;
+        float half = Mathf.Max(0.02f, invincibilityFlickerHalfPeriod);
+        bool high = (Mathf.FloorToInt(invincibilityFlickerTimer / half) % 2) == 0;
+        SetBodySpriteAlpha(high ? invincibilityFlickerAlphaHigh : invincibilityFlickerAlphaLow);
+    }
+
+    private void ClearInvincibilityFlicker()
+    {
+        invincibilityFlickerActive = false;
+        invincibilityFlickerTimer = 0f;
+        if (currentHealth > 0)
+            SetBodySpriteAlpha(1f);
+    }
+
+    private void SetBodySpriteAlpha(float alpha)
+    {
+        SpriteRenderer[] renderers = GetComponentsInChildren<SpriteRenderer>(true);
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            SpriteRenderer sr = renderers[i];
+            if (sr == null || IsAfterimageRenderer(sr))
+                continue;
+
+            Color c = sr.color;
+            c.a = alpha;
+            sr.color = c;
+        }
+    }
+
+    private bool IsAfterimageRenderer(SpriteRenderer sr)
+    {
+        if (afterimageRenderers == null || sr == null)
+            return false;
+
+        for (int i = 0; i < afterimageRenderers.Length; i++)
+        {
+            if (afterimageRenderers[i] == sr)
+                return true;
+        }
+
+        return sr.gameObject.name.IndexOf("Afterimage", System.StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
     /// <summary>
     /// Stun + invincibility after a successful hit. Shared by Kit and Malice.
     /// </summary>
-    protected virtual void BeginHitReaction()
+    protected virtual void BeginHitReaction(Transform hitSource = null)
     {
         isStunned = true;
         stunTimer = Mathf.Max(0f, hitStunDuration);
         invincibilityTimer = Mathf.Max(0f, hitInvincibilityDuration);
+        invincibilityFlickerTimer = 0f;
+        invincibilityFlickerActive = true;
+        SetBodySpriteAlpha(invincibilityFlickerAlphaHigh);
 
         moveInput = Vector2.zero;
         jumpRequested = false;
@@ -951,10 +1036,56 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
         if (isDashing)
             CancelDash(keepHorizontalMomentum: false);
 
-        if (rb != null)
-            rb.linearVelocity = new Vector2(0f, airHangActive ? 0f : rb.linearVelocity.y);
+        ApplyHitKnockback(hitSource);
 
         OnHitStunStarted();
+    }
+
+    private void ApplyHitKnockback(Transform hitSource)
+    {
+        if (rb == null || hitKnockbackDistance <= 0.001f)
+        {
+            knockbackActive = false;
+            return;
+        }
+
+        // Away from the attacker when known; otherwise opposite of facing.
+        float dir = -facingSign;
+        if (hitSource != null)
+        {
+            float dx = transform.position.x - hitSource.position.x;
+            if (Mathf.Abs(dx) > 0.01f)
+                dir = Mathf.Sign(dx);
+        }
+
+        knockbackStart = rb.position;
+        knockbackEnd = knockbackStart + new Vector2(dir * hitKnockbackDistance, 0f);
+        knockbackElapsed = 0f;
+        knockbackActive = true;
+        rb.linearVelocity = new Vector2(0f, airHangActive ? 0f : rb.linearVelocity.y);
+    }
+
+    private void TickHitKnockback(float dt)
+    {
+        if (!knockbackActive || rb == null)
+            return;
+
+        float duration = Mathf.Max(0.01f, hitKnockbackDuration);
+        knockbackElapsed += dt;
+        float t = Mathf.Clamp01(knockbackElapsed / duration);
+        // Smoothstep — ease out so the slide starts quick and settles gently.
+        float s = t * t * (3f - 2f * t);
+
+        Vector2 pos = Vector2.Lerp(knockbackStart, knockbackEnd, s);
+        float vy = airHangActive ? 0f : rb.linearVelocity.y;
+        rb.MovePosition(new Vector2(pos.x, rb.position.y));
+        rb.linearVelocity = new Vector2(0f, vy);
+
+        if (CameraFollow.Instance != null)
+            CameraFollow.Instance.ClampRigidbodyToPlayableBounds(rb, bodyCollider);
+
+        if (t >= 1f)
+            knockbackActive = false;
     }
 
     protected virtual void OnHitStunStarted()
@@ -1201,7 +1332,13 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
         dashAfterimageSpacing = Mathf.Max(0.01f, dashAfterimageSpacing);
         dashAfterimageAlphaEnd = Mathf.Min(dashAfterimageAlphaEnd, dashAfterimageAlphaStart);
         hitStunDuration = Mathf.Max(0f, hitStunDuration);
+        hitStunDuration = Mathf.Max(0f, hitStunDuration);
         hitInvincibilityDuration = Mathf.Max(0f, hitInvincibilityDuration);
+        invincibilityFlickerAlphaHigh = Mathf.Clamp01(invincibilityFlickerAlphaHigh);
+        invincibilityFlickerAlphaLow = Mathf.Clamp01(invincibilityFlickerAlphaLow);
+        invincibilityFlickerHalfPeriod = Mathf.Max(0.02f, invincibilityFlickerHalfPeriod);
+        hitKnockbackDistance = Mathf.Max(0f, hitKnockbackDistance);
+        hitKnockbackDuration = Mathf.Max(0.01f, hitKnockbackDuration);
     }
 
     protected virtual void OnDrawGizmosSelected()

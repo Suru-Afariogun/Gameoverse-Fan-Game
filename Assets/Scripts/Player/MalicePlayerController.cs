@@ -172,6 +172,7 @@ public class MalicePlayerController : PlayerController
     private bool grappleIsGrab;
     private bool grappleIsAirMove;
     private bool grapplePullActive;
+    private bool grappleReelSfxPlayed;
     private Vector3 grappleAnchorWorld;
     private bool grappleAnchorLocked;
     private bool grappleAirHang;
@@ -227,6 +228,7 @@ public class MalicePlayerController : PlayerController
         isCharging = false;
         chargeTimer = 0f;
         SetChargeAuraVisible(false);
+        SoundManager.Instance?.StopChargeLoop();
         EndMeleeImmediate();
         SetDashHitboxActive(false);
         ResetRapidAttackSpeed();
@@ -472,6 +474,7 @@ public class MalicePlayerController : PlayerController
         chargeStartedInAir = !isGrounded;
         auraAllowedAfterTime = Time.time + Mathf.Max(0f, auraDelayAfterPress);
         SetChargeAuraVisible(false);
+        SoundManager.Instance?.StartChargeLoop();
     }
 
     protected override void OnAttackCanceled(InputAction.CallbackContext context)
@@ -488,6 +491,7 @@ public class MalicePlayerController : PlayerController
         isCharging = false;
         chargeTimer = 0f;
         SetChargeAuraVisible(false);
+        SoundManager.Instance?.StopChargeLoop();
 
         // Held into charge → Grapple Arm. Quick tap → slash / air slash.
         if (auraWasActive || held >= mediumChargeSeconds)
@@ -708,6 +712,19 @@ public class MalicePlayerController : PlayerController
 
         if (animator != null)
             animator.SetBool("IsAttacking", true);
+
+        PlayMaliceSlashSound(state);
+    }
+
+    private static void PlayMaliceSlashSound(MeleeState state)
+    {
+        if (SoundManager.Instance == null)
+            return;
+
+        if (state == MeleeState.Slash3)
+            SoundManager.Instance.PlayMaliceSlashHeavy();
+        else if (state == MeleeState.Slash1 || state == MeleeState.Slash2 || state == MeleeState.AirSlash)
+            SoundManager.Instance.PlayMaliceSlashLight();
     }
 
     private float ResolveSlashSpeedMultiplier(MeleeState state)
@@ -792,6 +809,10 @@ public class MalicePlayerController : PlayerController
             animator.SetTrigger(air ? "GrappleArmAir" : "GrappleArm");
             animator.SetBool("IsAttacking", true);
         }
+
+        grappleReelSfxPlayed = false;
+        float animSpeed = animator != null ? animator.speed : 1f;
+        SoundManager.Instance?.PlayMaliceGrappleExtend(animSpeed);
     }
 
     private static string GetClipNameForMeleeState(MeleeState state)
@@ -878,7 +899,10 @@ public class MalicePlayerController : PlayerController
         meleeTimer -= dt;
 
         if (meleeState == MeleeState.GrappleArm)
+        {
+            TickGrappleReelSfx();
             UpdateGrappleHitbox();
+        }
         else
             UpdateSlashHitbox();
 
@@ -1120,6 +1144,22 @@ public class MalicePlayerController : PlayerController
         if (!grappleIsAirMove && rb != null)
             edge.y = rb.position.y;
         return edge;
+    }
+
+    private void TickGrappleReelSfx()
+    {
+        if (grappleReelSfxPlayed || meleeState != MeleeState.GrappleArm)
+            return;
+
+        float elapsed = Mathf.Max(0f, meleeDuration - meleeTimer);
+        float clipTime = elapsed * (animator != null && animator.speed > 0.01f ? animator.speed : 1f);
+        float reelAt = grappleIsAirMove ? 0.333f : 0.2083f;
+        if (clipTime + 0.0001f < reelAt)
+            return;
+
+        grappleReelSfxPlayed = true;
+        float animSpeed = animator != null ? animator.speed : 1f;
+        SoundManager.Instance?.PlayMaliceGrappleReel(animSpeed);
     }
 
     private bool HasReachedGrapplePullExtensionFrame()
@@ -1592,6 +1632,7 @@ public class MalicePlayerController : PlayerController
 
         if (wasGrapple)
         {
+            SoundManager.Instance?.StopMaliceGrapple();
             ClearGrabbedTargets();
             ResetAttackBoxFacingMirrorCapture();
         }

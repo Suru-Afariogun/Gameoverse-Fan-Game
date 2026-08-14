@@ -10,9 +10,13 @@ public static class VisualEffects
     private static readonly Dictionary<int, DefaultStunnedEffect> ActiveStunnedByHostId =
         new Dictionary<int, DefaultStunnedEffect>();
 
+    private static readonly List<BusterBlastEffect> ActiveBusterBlasts = new List<BusterBlastEffect>(12);
+    private const int MaxActiveBusterBlasts = 8;
+
     /// <summary>
     /// Spawn a Buster Blast from the prefab you assigned on Kit/Boss Kit.
     /// Parented to FirePoint; preserves prefab size/offset and scales to match the projectile.
+    /// Concurrent blasts are hard-capped so Machine Gun cannot flood the scene.
     /// </summary>
     public static void SpawnBusterBlast(VisualEffect prefab, Transform firePoint, Projectile projectile)
     {
@@ -26,6 +30,8 @@ public static class VisualEffects
                 prefab);
             return;
         }
+
+        CapActiveBusterBlasts();
 
         GameObject go = Object.Instantiate(
             prefab.gameObject,
@@ -48,6 +54,8 @@ public static class VisualEffects
         if (driver == null)
             driver = go.AddComponent<BusterBlastEffect>();
 
+        ActiveBusterBlasts.Add(driver);
+
         driver.Play(
             projectile,
             instance.MaxTravelDistance,
@@ -56,6 +64,31 @@ public static class VisualEffects
             instance.BlastColor,
             instance.TintBlastSprites,
             startLocalScale);
+    }
+
+    private static void CapActiveBusterBlasts()
+    {
+        for (int i = ActiveBusterBlasts.Count - 1; i >= 0; i--)
+        {
+            if (ActiveBusterBlasts[i] == null)
+                ActiveBusterBlasts.RemoveAt(i);
+        }
+
+        while (ActiveBusterBlasts.Count >= MaxActiveBusterBlasts)
+        {
+            BusterBlastEffect oldest = ActiveBusterBlasts[0];
+            ActiveBusterBlasts.RemoveAt(0);
+            if (oldest != null)
+                Object.Destroy(oldest.gameObject);
+        }
+    }
+
+    internal static void UnregisterBusterBlast(BusterBlastEffect blast)
+    {
+        if (blast == null)
+            return;
+
+        ActiveBusterBlasts.Remove(blast);
     }
 
     /// <summary>
@@ -264,7 +297,7 @@ public static class VisualEffects
 
     /// <summary>
     /// Wait until every ball in the burst has traveled at least the wait distance
-    /// (defaults to the prefab's Death Ball Wait Travel Distance, usually 3).
+    /// (defaults to the prefab's Death Ball Wait Travel Distance, usually 8).
     /// </summary>
     public static System.Collections.IEnumerator WaitForDeathBallsTravel(
         DeathEnergyBallBurst burst,
@@ -278,6 +311,23 @@ public static class VisualEffects
             : burst.WaitTravelDistance;
 
         while (burst != null && !burst.HasReachedTravelDistance(wait))
+            yield return null;
+    }
+
+    /// <summary>
+    /// Crystal respawn: balls fly out to turnDistance, then reverse home. Completes when all have regrouped.
+    /// </summary>
+    public static System.Collections.IEnumerator WaitForDeathBallsCrystalRecall(
+        DeathEnergyBallBurst burst,
+        float turnDistance = 9f)
+    {
+        if (burst == null)
+            yield break;
+
+        if (!burst.IsCrystalRecallMode)
+            burst.EnableCrystalRecall(turnDistance);
+
+        while (burst != null && !burst.AllBallsReturned)
             yield return null;
     }
 
@@ -399,6 +449,11 @@ public class BusterBlastEffect : MonoBehaviour
 
         if (t >= 1f)
             Destroy(gameObject);
+    }
+
+    private void OnDestroy()
+    {
+        VisualEffects.UnregisterBusterBlast(this);
     }
 
     private void ApplyVisual(float t)
@@ -585,17 +640,47 @@ public class DefaultStunnedEffect : MonoBehaviour
 
 /// <summary>
 /// Spawns Mega Man-style death energy balls in an equal circle and tracks travel for fade waits.
+/// Crystal respawns can reverse the balls home so the boss reforms at the death center.
 /// </summary>
 public class DeathEnergyBallBurst : MonoBehaviour
 {
     private readonly System.Collections.Generic.List<DeathEnergyBallEffect> balls =
         new System.Collections.Generic.List<DeathEnergyBallEffect>(8);
 
-    private float waitTravelDistance = 3f;
+    private float waitTravelDistance = 8f;
     private int ballCount;
     private int ballsPastWaitDistance;
+    private int ballsReturned;
+    private bool crystalRecallMode;
+    private Coroutine autoDestroyRoutine;
 
     public float WaitTravelDistance => waitTravelDistance;
+    public bool IsCrystalRecallMode => crystalRecallMode;
+
+    /// <summary>
+    /// True once every still-living ball has returned (destroyed balls are ignored so we never hang).
+    /// </summary>
+    public bool AllBallsReturned
+    {
+        get
+        {
+            if (!crystalRecallMode)
+                return false;
+
+            int living = 0;
+            for (int i = 0; i < balls.Count; i++)
+            {
+                if (balls[i] != null)
+                    living++;
+            }
+
+            if (living <= 0)
+                return true;
+
+            return ballsReturned >= living;
+        }
+    }
+
     public float MinDistanceTraveled
     {
         get
@@ -646,11 +731,40 @@ public class DeathEnergyBallBurst : MonoBehaviour
         ballsPastWaitDistance++;
     }
 
+    public void NotifyBallReturned()
+    {
+        ballsReturned++;
+    }
+
+    /// <summary>
+    /// Switch an in-flight death burst into crystal recall: fly out to turnDistance, then reverse home.
+    /// </summary>
+    public void EnableCrystalRecall(float turnDistance)
+    {
+        crystalRecallMode = true;
+        ballsReturned = 0;
+        waitTravelDistance = Mathf.Max(0.1f, turnDistance);
+
+        if (autoDestroyRoutine != null)
+        {
+            StopCoroutine(autoDestroyRoutine);
+            autoDestroyRoutine = null;
+        }
+
+        for (int i = 0; i < balls.Count; i++)
+        {
+            if (balls[i] != null)
+                balls[i].EnableCrystalRecall(waitTravelDistance);
+        }
+    }
+
     public void Begin(VisualEffect prefab, Vector3 center, Component hostComponent)
     {
         waitTravelDistance = prefab.DeathBallWaitTravelDistance;
         ballCount = Mathf.Max(1, prefab.DeathBallCount);
         ballsPastWaitDistance = 0;
+        ballsReturned = 0;
+        crystalRecallMode = false;
 
         float angleStep = 360f / ballCount;
         float angleOffset = prefab.DeathBallAngleOffsetDegrees;
@@ -682,7 +796,15 @@ public class DeathEnergyBallBurst : MonoBehaviour
             balls.Add(ball);
         }
 
-        Destroy(gameObject, Mathf.Max(prefab.DeathBallMaxLifetime, 3f) + 1f);
+        autoDestroyRoutine = StartCoroutine(AutoDestroyAfter(
+            Mathf.Max(prefab.DeathBallMaxLifetime, 3f) + 1f));
+    }
+
+    private System.Collections.IEnumerator AutoDestroyAfter(float seconds)
+    {
+        yield return new WaitForSeconds(seconds);
+        if (!crystalRecallMode)
+            Destroy(gameObject);
     }
 
     private static void DisableAllColliders(GameObject go)
@@ -720,9 +842,17 @@ public class DeathEnergyBallBurst : MonoBehaviour
 
 /// <summary>
 /// One death energy ball: flies outward, plays death anim, fades with travel.
+/// Crystal recall mode: flies out to a turn distance, then reverses home at the same speed.
 /// </summary>
 public class DeathEnergyBallEffect : MonoBehaviour
 {
+    private enum FlightPhase
+    {
+        Outbound,
+        Returning,
+        Done
+    }
+
     private Vector2 direction = Vector2.right;
     private Vector3 spawnPos;
     private float speed = 8f;
@@ -732,6 +862,9 @@ public class DeathEnergyBallEffect : MonoBehaviour
     private float age;
     private float distanceTraveled;
     private bool notifiedWait;
+    private bool crystalRecall;
+    private float recallTurnDistance = 9f;
+    private FlightPhase phase = FlightPhase.Outbound;
     private DeathEnergyBallBurst ownerBurst;
     private SpriteRenderer[] renderers;
     private Color[] baseColors;
@@ -752,6 +885,8 @@ public class DeathEnergyBallEffect : MonoBehaviour
         age = 0f;
         distanceTraveled = 0f;
         notifiedWait = false;
+        crystalRecall = false;
+        phase = FlightPhase.Outbound;
         ownerBurst = burst;
         waitNotifyDistance = waitDistance;
         running = true;
@@ -767,6 +902,33 @@ public class DeathEnergyBallEffect : MonoBehaviour
         ApplySortInFront(hostSprite, definition != null ? definition.SortOrderInFrontOfHost : 1);
         DriveDeathAnimator(definition);
         ApplyFade(0f);
+    }
+
+    public void EnableCrystalRecall(float turnDistance)
+    {
+        crystalRecall = true;
+        recallTurnDistance = Mathf.Max(0.1f, turnDistance);
+        waitNotifyDistance = recallTurnDistance;
+        // Stay fully visible for the crystal reform sequence.
+        fadeDistance = float.MaxValue;
+        maxLifetime = float.MaxValue;
+        ApplyFade(0f);
+
+        // If we already passed the turn distance, reverse immediately.
+        if (phase == FlightPhase.Outbound && distanceTraveled >= recallTurnDistance)
+            BeginReturn();
+    }
+
+    private void BeginReturn()
+    {
+        phase = FlightPhase.Returning;
+        direction = -direction;
+        if (!notifiedWait)
+        {
+            notifiedWait = true;
+            if (ownerBurst != null)
+                ownerBurst.NotifyBallReachedWaitDistance();
+        }
     }
 
     private void CacheRenderers()
@@ -822,19 +984,53 @@ public class DeathEnergyBallEffect : MonoBehaviour
 
     private void Update()
     {
-        if (!running)
+        if (!running || phase == FlightPhase.Done)
             return;
 
         float dt = Time.deltaTime;
         age += dt;
-        transform.position += (Vector3)(direction * speed * dt);
-        distanceTraveled = Vector3.Distance(spawnPos, transform.position);
 
-        if (!notifiedWait && distanceTraveled >= waitNotifyDistance)
+        if (phase == FlightPhase.Outbound)
         {
-            notifiedWait = true;
-            if (ownerBurst != null)
-                ownerBurst.NotifyBallReachedWaitDistance();
+            transform.position += (Vector3)(direction * speed * dt);
+            distanceTraveled = Vector3.Distance(spawnPos, transform.position);
+
+            if (!notifiedWait && distanceTraveled >= waitNotifyDistance)
+            {
+                notifiedWait = true;
+                if (ownerBurst != null)
+                    ownerBurst.NotifyBallReachedWaitDistance();
+            }
+
+            if (crystalRecall && distanceTraveled >= recallTurnDistance)
+            {
+                BeginReturn();
+                return;
+            }
+        }
+        else if (phase == FlightPhase.Returning)
+        {
+            transform.position += (Vector3)(direction * speed * dt);
+            float distToCenter = Vector3.Distance(transform.position, spawnPos);
+            // Passed the center or close enough — regrouped.
+            if (distToCenter <= Mathf.Max(0.05f, speed * dt * 1.25f) ||
+                Vector2.Dot(direction, (Vector2)(spawnPos - transform.position)) <= 0f)
+            {
+                transform.position = spawnPos;
+                phase = FlightPhase.Done;
+                running = false;
+                ApplyFade(0f);
+                if (ownerBurst != null)
+                    ownerBurst.NotifyBallReturned();
+                gameObject.SetActive(false);
+                return;
+            }
+        }
+
+        if (crystalRecall)
+        {
+            ApplyFade(0f);
+            return;
         }
 
         float tDist = distanceTraveled / Mathf.Max(0.0001f, fadeDistance);

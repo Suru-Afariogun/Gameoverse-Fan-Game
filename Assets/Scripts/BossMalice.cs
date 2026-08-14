@@ -275,6 +275,7 @@ public class BossMalice : Boss
     private float grappleLockY;
     private bool grappleYLocked;
     private bool grapplePullActive;
+    private bool grappleReelSfxPlayed;
     private bool grapplePullArrived;
     private bool grappleAnchorLocked;
     private Vector2 grapplePullStartBodyPos;
@@ -1344,6 +1345,19 @@ public class BossMalice : Boss
 
         if (step)
             ApplySlashStep();
+
+        PlayBossMaliceSlashSound(slashState);
+    }
+
+    private static void PlayBossMaliceSlashSound(AiState slashState)
+    {
+        if (SoundManager.Instance == null)
+            return;
+
+        if (slashState == AiState.Slash3)
+            SoundManager.Instance.PlayMaliceSlashHeavy();
+        else if (slashState == AiState.Slash1 || slashState == AiState.Slash2)
+            SoundManager.Instance.PlayMaliceSlashLight();
     }
 
     private void BeginAirSlash(bool dive)
@@ -1375,6 +1389,7 @@ public class BossMalice : Boss
         if (!isGrounded && jumpPrepAirTime < minAirTimeBeforeAirAttack)
             jumpPrepAirTime = minAirTimeBeforeAirAttack;
         BeginAttack("AirSlash");
+        SoundManager.Instance?.PlayMaliceSlashLight();
     }
 
     private void BeginRayHook()
@@ -1401,6 +1416,7 @@ public class BossMalice : Boss
         state = AiState.ChargeWindup;
         stateTimer = airGrappleChaseTimeout;
         isAttacking = false;
+        SoundManager.Instance?.StartChargeLoop();
         SetChargeAuraVisible(false);
         FaceToward(player != null ? player.transform : null);
         aimUp = pendingGrappleAimUp;
@@ -1486,6 +1502,10 @@ public class BossMalice : Boss
 
         if (animator != null)
             animator.SetTrigger(grappleAirMove ? "GrappleArmAir" : "GrappleArm");
+
+        grappleReelSfxPlayed = false;
+        float animSpeed = animator != null ? animator.speed : AttackSpeedMul();
+        SoundManager.Instance?.PlayMaliceGrappleExtend(animSpeed);
     }
 
     private float GetBossGrapplePullAnchorTimeSeconds(bool air)
@@ -1562,6 +1582,21 @@ public class BossMalice : Boss
     private bool HasReachedBossGrappleExtension(float elapsed)
     {
         return elapsed + 0.0001f >= grapplePullExtendTime;
+    }
+
+    private void TickBossGrappleReelSfx(float elapsed)
+    {
+        if (grappleReelSfxPlayed || state != AiState.Grapple)
+            return;
+
+        float clipTime = elapsed * (animator != null && animator.speed > 0.01f ? animator.speed : 1f);
+        float reelAt = grappleAirMove ? 0.333f : 0.2083f;
+        if (clipTime + 0.0001f < reelAt)
+            return;
+
+        grappleReelSfxPlayed = true;
+        float animSpeed = animator != null ? animator.speed : AttackSpeedMul();
+        SoundManager.Instance?.PlayMaliceGrappleReel(animSpeed);
     }
 
     private void TickGroundSlash()
@@ -1693,6 +1728,7 @@ public class BossMalice : Boss
             grappleHitboxDelay / AttackSpeedMul(),
             grappleHitboxActiveTime / AttackSpeedMul());
 
+        TickBossGrappleReelSfx(elapsed);
         TickBossGrapplePull(elapsed);
         FollowGrabbedTarget();
 
@@ -1707,6 +1743,7 @@ public class BossMalice : Boss
 
         DeactivateHitbox();
         ClearGrabbedTarget();
+        SoundManager.Instance?.StopMaliceGrapple();
         ClearBossGrapplePullState();
         grappleIsGrab = false;
         aimUp = false;
@@ -2178,6 +2215,7 @@ public class BossMalice : Boss
         pendingConvertToDashJump = false;
         isBossDashJumping = false;
         grappleYLocked = false;
+        SoundManager.Instance?.StopMaliceGrapple();
         ClearBossGrapplePullState();
         EndGrappleCharge(clearAura: true);
         EndAirHang();
@@ -2413,6 +2451,7 @@ public class BossMalice : Boss
         slashSlideRemaining = 0f;
         pendingConvertToDashJump = false;
         isBossDashJumping = false;
+        SoundManager.Instance?.StopMaliceGrapple();
         ClearBossGrapplePullState();
         grappleYLocked = false;
         EndGrappleCharge(clearAura: true);
@@ -2459,6 +2498,9 @@ public class BossMalice : Boss
 
     private void EndGrappleCharge(bool clearAura)
     {
+        if (isGrappleCharging || isCharging)
+            SoundManager.Instance?.StopChargeLoop();
+
         isGrappleCharging = false;
         isCharging = false;
         chargeTimer = 0f;
@@ -2918,6 +2960,14 @@ public class BossMalice : Boss
         if (animator != null)
             animator.speed = defaultAnimatorSpeed;
         base.OnBossDefeated();
+    }
+
+    protected override void OnCombatPaused()
+    {
+        CancelAttackImmediate();
+        state = AiState.Recover;
+        stateTimer = Mathf.Max(0.05f, CurrentRecoverDuration());
+        base.OnCombatPaused();
     }
 
     protected override void OnRevived()

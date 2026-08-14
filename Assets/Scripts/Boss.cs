@@ -72,12 +72,19 @@ public class Boss : MonoBehaviour, IDamageable
     private Color crystalBoostAuraColor = new Color(0.2f, 0.55f, 1f, 1f);
     private Color crystalBoostAuraStrongColor = new Color(0.05f, 0.25f, 0.85f, 1f);
 
+    private bool combatPaused;
+
     public string BossId => bossId;
     public int MaxHealth => maxHealth;
     public int CurrentHealth => currentHealth;
     public bool IsGrounded => isGrounded;
     public bool IsStunned => isStunned;
     public bool IsInvincible => invincibilityTimer > 0f;
+    public bool HasActiveCrystalBoost =>
+        crystalBoostRoutine != null &&
+        (crystalMoveSpeedBonus > 0.001f || crystalAttackBonus > 0) &&
+        Time.time < crystalBoostEndsAt;
+    public bool CombatPaused => combatPaused;
     public bool IsDead => currentHealth <= 0;
     public float FacingSign => facingSign;
     public Rigidbody2D Body => rb;
@@ -126,6 +133,7 @@ public class Boss : MonoBehaviour, IDamageable
         }
 
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
+        ApplyBossFightSpawnFacing();
     }
 
     protected virtual void OnEnable()
@@ -144,6 +152,14 @@ public class Boss : MonoBehaviour, IDamageable
         UpdateGrounded();
         TickPostHitVisuals(Time.deltaTime);
 
+        if (combatPaused)
+        {
+            StopHorizontal();
+            UpdateAnimator();
+            ClampToPlayableWorld();
+            return;
+        }
+
         if (!isStunned)
             HandleBossUpdate();
 
@@ -156,7 +172,7 @@ public class Boss : MonoBehaviour, IDamageable
         if (IsDead || rb == null)
             return;
 
-        if (isStunned)
+        if (combatPaused || isStunned)
         {
             rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
             ApplyFallMultiplier();
@@ -292,6 +308,23 @@ public class Boss : MonoBehaviour, IDamageable
         FaceToward(target.position.x);
     }
 
+    public void SetFacingSign(float sign)
+    {
+        if (Mathf.Abs(sign) < 0.01f)
+            return;
+
+        facingSign = Mathf.Sign(sign);
+        ApplyFacingVisual();
+    }
+
+    protected void ApplyBossFightSpawnFacing()
+    {
+        if (!BossFightDirector.IsActiveBossFightScene())
+            return;
+
+        SetFacingSign(BossFightDirector.GetDefaultBossFacingSign());
+    }
+
     protected void ApplyFacingVisual()
     {
         if (spriteRenderer == null)
@@ -345,6 +378,93 @@ public class Boss : MonoBehaviour, IDamageable
             new Color(0.95f, 0.25f, 0.05f, 1f));
     }
 
+    /// <summary>
+    /// Shortens an active crystal boost. Used when the crystal takes direct damage during the boost.
+    /// 1 HP of crystal damage → 1 second removed.
+    /// </summary>
+    public void ShortenCrystalBoost(float seconds)
+    {
+        if (!HasActiveCrystalBoost || seconds <= 0f)
+            return;
+
+        crystalBoostEndsAt -= seconds;
+        if (Time.time < crystalBoostEndsAt)
+            return;
+
+        if (crystalBoostRoutine != null)
+        {
+            StopCoroutine(crystalBoostRoutine);
+            crystalBoostRoutine = null;
+        }
+
+        ClearCrystalBoost();
+    }
+
+    /// <summary>
+    /// HP loss from crystal being attacked (no stun / invuln). Every 20 crystal HP → 30 boss HP.
+    /// Always routes through SetHealth so BossLifeBar / OnHealthChanged stay in sync.
+    /// </summary>
+    public void ApplyLinkedCrystalDamage(int amount)
+    {
+        if (amount <= 0 || IsDead)
+            return;
+
+        SetHealth(currentHealth - amount);
+    }
+
+    /// <summary>
+    /// Full HP + clear boosts. Used when the player loses a life mid-fight.
+    /// </summary>
+    public void ResetHealthAndBoostsToFull()
+    {
+        bool wasDead = IsDead;
+
+        if (crystalBoostRoutine != null)
+        {
+            StopCoroutine(crystalBoostRoutine);
+            crystalBoostRoutine = null;
+        }
+
+        ClearCrystalBoost();
+        currentHealth = Mathf.Max(1, maxHealth);
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+        isStunned = false;
+        stunTimer = 0f;
+        invincibilityTimer = 0f;
+        VisualEffects.StopStunned(this);
+        VisualEffects.SetHostSpritesVisible(gameObject, true);
+        enabled = true;
+
+        if (wasDead)
+            OnRevived();
+    }
+
+    /// <summary>
+    /// Stops attacking / AI while the player life-loss fade runs.
+    /// </summary>
+    public void SetCombatPaused(bool paused)
+    {
+        combatPaused = paused;
+        if (!paused)
+            return;
+
+        OnCombatPaused();
+    }
+
+    protected virtual void OnCombatPaused()
+    {
+        isAttacking = false;
+        isCharging = false;
+        isDashing = false;
+        aimUp = false;
+        wantsMoveAnim = false;
+        if (attackHitbox != null)
+            attackHitbox.Deactivate();
+        StopHorizontal();
+        if (rb != null)
+            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+    }
+
     private void StartCrystalBoost(
         float moveBonus,
         int attackBonus,
@@ -383,6 +503,7 @@ public class Boss : MonoBehaviour, IDamageable
     {
         crystalMoveSpeedBonus = 0f;
         crystalAttackBonus = 0;
+        crystalBoostEndsAt = 0f;
         crystalBoostRoutine = null;
         SetCrystalBoostAuraVisible(false);
     }
@@ -477,6 +598,7 @@ public class Boss : MonoBehaviour, IDamageable
 
         if (rb != null)
         {
+            rb.position = worldPosition;
             rb.linearVelocity = Vector2.zero;
             rb.gravityScale = defaultGravityScale;
         }
@@ -488,6 +610,8 @@ public class Boss : MonoBehaviour, IDamageable
         }
 
         enabled = true;
+        combatPaused = false;
+        ApplyBossFightSpawnFacing();
         OnRevived();
     }
 
@@ -524,6 +648,14 @@ public class Boss : MonoBehaviour, IDamageable
 
         if (currentHealth <= 0)
             Die();
+    }
+
+    /// <summary>
+    /// Force a health UI refresh even if the value did not change (e.g. after bind).
+    /// </summary>
+    public void NotifyHealthChanged()
+    {
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
     }
 
     public virtual void TakeDamage(int amount)

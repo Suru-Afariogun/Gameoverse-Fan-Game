@@ -198,7 +198,7 @@ MonoBehaviour:
   upAimThreshold: 0.35
   dashDistance: 4.5
   dashSpeed: 14
-  dashCooldown: 0.05
+  dashCooldown: 0.01
   dashSmoothStopDuration: 0.12
   dashEndSpeedMultiplier: 0.15
   allowAirDash: 1

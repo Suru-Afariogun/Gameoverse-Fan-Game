@@ -87,6 +87,20 @@ public class KitPlayerController : PlayerController
     [SerializeField] [Range(0f, 1f)] private float kitAfterimageAlphaStart = 0.55f;
     [SerializeField] [Range(0f, 1f)] private float kitAfterimageAlphaEnd = 0.15f;
 
+    [Header("Kit - Attack Styles (temporary)")]
+    [Tooltip("Degrees above/below aim for Spread Shot side pellets.")]
+    [SerializeField] private float spreadShotAngleDegrees = 45f;
+    [Tooltip("Seconds between Machine Gun rapid-fire pellets after the first (charged) shot.")]
+    [SerializeField] private float machineGunFireInterval = 0.12f;
+    [Tooltip("Max live Machine Gun pellets. Oldest are removed when over cap.")]
+    [SerializeField] private int machineGunMaxLiveShots = 8;
+    [Tooltip("How often rapid pellets refresh the shoot animator (1 = every shot).")]
+    [SerializeField] private int machineGunAnimEveryNthShot = 2;
+    [Tooltip("Machine Gun medium opener speed as a multiple of the small pellet speed (must be > 1).")]
+    [SerializeField] private float machineGunMediumSpeedMultiplier = 1.35f;
+    [Tooltip("Machine Gun big opener speed as a multiple of the small pellet speed (must be > medium).")]
+    [SerializeField] private float machineGunBigSpeedMultiplier = 1.6f;
+
     private bool isCharging;
     private float chargeTimer;
     private float shootCooldownTimer;
@@ -101,6 +115,14 @@ public class KitPlayerController : PlayerController
     private Material chargeAuraMaterial;
     private float auraAllowedAfterTime;
     private float auraFlickerPhase;
+
+    // Machine Gun: passive auto-charge while not firing; hold = rapid small shots.
+    private bool machineGunHolding;
+    private float machineGunAutoCharge;
+    private bool machineGunFirstShotQueued;
+    private int machineGunPelletIndex;
+    private readonly System.Collections.Generic.List<Projectile> liveMachineGunShots =
+        new System.Collections.Generic.List<Projectile>(16);
 
     protected override void Awake()
     {
@@ -131,6 +153,9 @@ public class KitPlayerController : PlayerController
     protected override void OnDisable()
     {
         base.OnDisable();
+        machineGunHolding = false;
+        machineGunFirstShotQueued = false;
+        liveMachineGunShots.Clear();
         CancelPendingShot();
         SetChargeAuraVisible(false);
     }
@@ -151,7 +176,9 @@ public class KitPlayerController : PlayerController
         if (shootCooldownTimer > 0f)
             shootCooldownTimer -= Time.deltaTime;
 
-        if (isCharging)
+        if (UsesMachineGunStyle())
+            TickMachineGunStyle();
+        else if (isCharging)
         {
             chargeTimer += Time.deltaTime;
             // Aura waits until after the small shot has fired + delay.
@@ -160,7 +187,7 @@ public class KitPlayerController : PlayerController
                 // Aura is visible → charge movement unlock. Drop shoot-lock anim flag.
                 isShooting = false;
                 shootAnimTimer = 0f;
-                UpdateChargeAura();
+                UpdateChargeAura(chargeTimer);
             }
             else
             {
@@ -175,11 +202,86 @@ public class KitPlayerController : PlayerController
         TickPendingShot();
     }
 
+    private bool UsesMachineGunStyle()
+    {
+        return PlayerAttackStyle.Is(AttackStyleId.MachineGun);
+    }
+
+    private bool UsesSpreadShotStyle()
+    {
+        return PlayerAttackStyle.Is(AttackStyleId.SpreadShot);
+    }
+
+    private void TickMachineGunStyle()
+    {
+        if (InputLocked || isStunned)
+        {
+            EndMachineGunFire();
+            SetChargeAuraVisible(false);
+            return;
+        }
+
+        if (machineGunHolding)
+        {
+            SetChargeAuraVisible(false);
+
+            // After the opening (auto-charge level) shot, keep spraying smalls while held.
+            if (!machineGunFirstShotQueued && !pendingShot && shootCooldownTimer <= 0f)
+                FireMachineGunPellet();
+
+            return;
+        }
+
+        // Passive auto-charge while not firing.
+        machineGunAutoCharge += Time.deltaTime;
+        machineGunAutoCharge = Mathf.Min(machineGunAutoCharge, bigChargeSeconds);
+        chargeTimer = machineGunAutoCharge;
+        isCharging = false;
+
+        if (machineGunAutoCharge >= 0.12f)
+            UpdateChargeAura(machineGunAutoCharge);
+        else
+            SetChargeAuraVisible(false);
+    }
+
+    private void FireMachineGunPellet()
+    {
+        if (GetPrefab(ProjectileShotType.Small) == null)
+            return;
+
+        // Every pellet: projectile + buster blast + meow/laser (all hard-capped elsewhere).
+        SpawnShotBurst(
+            GetAimDirection(),
+            ProjectileShotType.Small,
+            spawnBusterBlast: true,
+            trackAsMachineGunShot: true);
+
+        shootCooldownTimer = Mathf.Max(0.05f, machineGunFireInterval);
+        SoundManager.Instance?.PlayKitFireRapid();
+
+        machineGunPelletIndex++;
+        int animEvery = Mathf.Max(1, machineGunAnimEveryNthShot);
+        if (machineGunPelletIndex % animEvery == 0)
+        {
+            BeginShootAnimation(Mathf.Min(shootAnimDuration, machineGunFireInterval * 1.5f));
+            PlayShootAnimatorTriggers();
+        }
+        else
+        {
+            isShooting = true;
+            shootAnimTimer = Mathf.Max(shootAnimTimer, machineGunFireInterval);
+        }
+    }
+
     /// <summary>
     /// True once Kit is charging and the pink aura is allowed to show (after small shot + delay).
+    /// Machine Gun auto-charge counts as aura-active for move unlock.
     /// </summary>
     private bool IsChargeAuraActive()
     {
+        if (UsesMachineGunStyle())
+            return !machineGunHolding && machineGunAutoCharge > 0.01f;
+
         return isCharging && Time.time >= auraAllowedAfterTime;
     }
 
@@ -191,7 +293,7 @@ public class KitPlayerController : PlayerController
             lockMovementWhileGroundShooting &&
             isGrounded &&
             !chargeMoveUnlocked &&
-            (isShooting || pendingShot || isCharging);
+            (isShooting || pendingShot || isCharging || machineGunHolding);
 
         if (shouldLock)
         {
@@ -210,10 +312,12 @@ public class KitPlayerController : PlayerController
         if (!IsChargeAuraActive())
             return speed;
 
-        if (chargeTimer >= bigChargeSeconds)
+        float charge = UsesMachineGunStyle() ? machineGunAutoCharge : chargeTimer;
+
+        if (charge >= bigChargeSeconds)
             return speed + bigChargeMoveSpeedBonus;
 
-        if (chargeTimer >= mediumChargeSeconds)
+        if (charge >= mediumChargeSeconds)
             return speed + mediumChargeMoveSpeedBonus;
 
         return speed;
@@ -224,7 +328,7 @@ public class KitPlayerController : PlayerController
         if (IsChargeAuraActive())
             return false;
 
-        return isShooting || pendingShot || isCharging;
+        return isShooting || pendingShot || isCharging || machineGunHolding;
     }
 
     protected override void OnAttackStarted(InputAction.CallbackContext context)
@@ -232,17 +336,30 @@ public class KitPlayerController : PlayerController
         if (InputLocked || isStunned)
             return;
 
+        if (UsesMachineGunStyle())
+        {
+            BeginMachineGunFire();
+            return;
+        }
+
         isCharging = true;
         chargeTimer = 0f;
         // Aura (and charge-move unlock) only after a small shot actually fires + delay.
         auraAllowedAfterTime = float.PositiveInfinity;
         SetChargeAuraVisible(false);
+        SoundManager.Instance?.StartChargeLoop();
 
         QueueShot(ProjectileShotType.Small);
     }
 
     protected override void OnAttackCanceled(InputAction.CallbackContext context)
     {
+        if (UsesMachineGunStyle())
+        {
+            EndMachineGunFire();
+            return;
+        }
+
         if (InputLocked || isStunned)
             return;
 
@@ -253,6 +370,7 @@ public class KitPlayerController : PlayerController
         isCharging = false;
         chargeTimer = 0f;
         SetChargeAuraVisible(false);
+        SoundManager.Instance?.StopChargeLoop();
 
         if (held >= bigChargeSeconds)
             QueueShot(ProjectileShotType.Big, replacePending: true);
@@ -260,11 +378,43 @@ public class KitPlayerController : PlayerController
             QueueShot(ProjectileShotType.Medium, replacePending: true);
     }
 
+    private void BeginMachineGunFire()
+    {
+        machineGunHolding = true;
+        machineGunPelletIndex = 0;
+        ProjectileShotType first = ShotTypeFromCharge(machineGunAutoCharge);
+        machineGunAutoCharge = 0f;
+        chargeTimer = 0f;
+        SetChargeAuraVisible(false);
+        SoundManager.Instance?.StopChargeLoop();
+
+        machineGunFirstShotQueued = true;
+        QueueShot(first, replacePending: true);
+    }
+
+    private void EndMachineGunFire()
+    {
+        machineGunHolding = false;
+        machineGunFirstShotQueued = false;
+    }
+
+    private ProjectileShotType ShotTypeFromCharge(float charge)
+    {
+        if (charge >= bigChargeSeconds)
+            return ProjectileShotType.Big;
+        if (charge >= mediumChargeSeconds)
+            return ProjectileShotType.Medium;
+        return ProjectileShotType.Small;
+    }
+
     protected override void OnHitStunStarted()
     {
         isCharging = false;
         chargeTimer = 0f;
+        machineGunHolding = false;
+        machineGunFirstShotQueued = false;
         pendingShot = false;
+        SoundManager.Instance?.StopChargeLoop();
         SetChargeAuraVisible(false);
         isShooting = false;
         shootAnimTimer = 0f;
@@ -313,22 +463,56 @@ public class KitPlayerController : PlayerController
             return;
 
         ProjectileShotType firedType = pendingShotType;
-        Projectile prefab = GetPrefab(firedType);
+        Vector2 aim = pendingShotAim;
         pendingShot = false;
 
-        if (prefab == null)
+        if (GetPrefab(firedType) == null)
             return;
 
-        SpawnProjectile(prefab, pendingShotAim);
-        shootCooldownTimer = shootCooldown;
+        // Same spawn path for Normal / Spread / Machine Gun openers (medium+big use prefab speeds).
+        SpawnShotBurst(aim, firedType);
+        shootCooldownTimer = UsesMachineGunStyle() && machineGunHolding
+            ? Mathf.Max(0.05f, machineGunFireInterval)
+            : shootCooldown;
+        SoundManager.Instance?.PlayKitFire(firedType);
 
-        if (firedType == ProjectileShotType.Small)
+        if (UsesMachineGunStyle())
+            machineGunFirstShotQueued = false;
+        else if (firedType == ProjectileShotType.Small)
             auraAllowedAfterTime = Time.time + Mathf.Max(0f, auraDelayAfterSmallShot);
     }
 
     private void CancelPendingShot()
     {
         pendingShot = false;
+    }
+
+    private void SpawnShotBurst(
+        Vector2 aim,
+        ProjectileShotType type,
+        bool spawnBusterBlast = true,
+        bool trackAsMachineGunShot = false)
+    {
+        if (UsesSpreadShotStyle())
+        {
+            float angle = spreadShotAngleDegrees;
+            // Same prefab speed as a normal shot; tiny muzzle offsets so the three never overlap at spawn.
+            SpawnProjectile(RotateAim(aim, angle), type, 0.12f, spawnBusterBlast, trackAsMachineGunShot);
+            SpawnProjectile(aim, type, 0f, spawnBusterBlast, trackAsMachineGunShot);
+            SpawnProjectile(RotateAim(aim, -angle), type, 0.12f, spawnBusterBlast, trackAsMachineGunShot);
+            return;
+        }
+
+        SpawnProjectile(aim, type, 0f, spawnBusterBlast, trackAsMachineGunShot);
+    }
+
+    private static Vector2 RotateAim(Vector2 direction, float degrees)
+    {
+        Vector2 dir = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector2.right;
+        float rad = degrees * Mathf.Deg2Rad;
+        float cos = Mathf.Cos(rad);
+        float sin = Mathf.Sin(rad);
+        return new Vector2(dir.x * cos - dir.y * sin, dir.x * sin + dir.y * cos).normalized;
     }
 
     private bool IsInShootAnimation()
@@ -381,6 +565,38 @@ public class KitPlayerController : PlayerController
         }
     }
 
+    /// <summary>
+    /// Normal/Spread: prefab speeds. Machine Gun: medium/big openers are faster than small pellets.
+    /// </summary>
+    private float GetShotSpeed(ProjectileShotType type)
+    {
+        Projectile prefab = GetPrefab(type);
+        float prefabSpeed = prefab != null ? prefab.Speed : 12f;
+
+        if (!UsesMachineGunStyle())
+            return prefabSpeed;
+
+        float smallSpeed = smallProjectilePrefab != null ? smallProjectilePrefab.Speed : prefabSpeed;
+
+        switch (type)
+        {
+            case ProjectileShotType.Medium:
+                return smallSpeed * Mathf.Max(1.01f, machineGunMediumSpeedMultiplier);
+            case ProjectileShotType.Big:
+                return smallSpeed * Mathf.Max(
+                    machineGunMediumSpeedMultiplier + 0.01f,
+                    machineGunBigSpeedMultiplier);
+            default:
+                return smallSpeed;
+        }
+    }
+
+    private int GetShotDamage(ProjectileShotType type)
+    {
+        Projectile prefab = GetPrefab(type);
+        return prefab != null ? prefab.Damage : 1;
+    }
+
     private VisualEffect GetBusterBlastPrefab(ProjectileShotType type)
     {
         return VisualEffects.ResolveBusterBlastPrefab(
@@ -389,17 +605,53 @@ public class KitPlayerController : PlayerController
             busterBlastMediumBigPrefab);
     }
 
-    private void SpawnProjectile(Projectile prefab, Vector2 direction)
+    private void SpawnProjectile(
+        Vector2 direction,
+        ProjectileShotType type,
+        float muzzleOffset = 0f,
+        bool spawnBusterBlast = true,
+        bool trackAsMachineGunShot = false)
     {
+        Projectile prefab = GetPrefab(type);
         if (prefab == null)
             return;
 
-        Vector3 spawnPos = GetFirePosition();
-        Projectile shot = Instantiate(prefab, spawnPos, Quaternion.identity);
-        shot.Launch(direction, transform);
+        if (trackAsMachineGunShot)
+            PruneAndCapMachineGunShots();
 
-        Transform muzzle = firePoint != null ? firePoint : transform;
-        VisualEffects.SpawnBusterBlast(GetBusterBlastPrefab(shot.ShotType), muzzle, shot);
+        Vector2 dir = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector2.right;
+        Vector3 spawnPos = GetFirePosition() + (Vector3)(dir * Mathf.Max(0f, muzzleOffset));
+        Projectile shot = Instantiate(prefab, spawnPos, Quaternion.identity);
+
+        // Canonical stats by shot type. Machine Gun medium/big use boosted speed over small pellets.
+        shot.Launch(dir, GetShotSpeed(type), GetShotDamage(type), transform);
+
+        if (trackAsMachineGunShot)
+            liveMachineGunShots.Add(shot);
+
+        if (spawnBusterBlast)
+        {
+            Transform muzzle = firePoint != null ? firePoint : transform;
+            VisualEffects.SpawnBusterBlast(GetBusterBlastPrefab(type), muzzle, shot);
+        }
+    }
+
+    private void PruneAndCapMachineGunShots()
+    {
+        for (int i = liveMachineGunShots.Count - 1; i >= 0; i--)
+        {
+            if (liveMachineGunShots[i] == null)
+                liveMachineGunShots.RemoveAt(i);
+        }
+
+        int maxLive = Mathf.Max(2, machineGunMaxLiveShots);
+        while (liveMachineGunShots.Count >= maxLive)
+        {
+            Projectile oldest = liveMachineGunShots[0];
+            liveMachineGunShots.RemoveAt(0);
+            if (oldest != null)
+                Destroy(oldest.gameObject);
+        }
     }
 
     private void PlayShootAnimatorTriggers()
@@ -452,7 +704,7 @@ public class KitPlayerController : PlayerController
         chargeAuraObject.SetActive(false);
     }
 
-    private void UpdateChargeAura()
+    private void UpdateChargeAura(float chargeSeconds)
     {
         if (!showChargeAura)
             return;
@@ -463,7 +715,7 @@ public class KitPlayerController : PlayerController
         if (chargeAuraRenderer == null || spriteRenderer == null)
             return;
 
-        float charge01 = Mathf.Clamp01(chargeTimer / Mathf.Max(0.01f, bigChargeSeconds));
+        float charge01 = Mathf.Clamp01(chargeSeconds / Mathf.Max(0.01f, bigChargeSeconds));
 
         chargeAuraObject.SetActive(true);
         chargeAuraRenderer.sprite = spriteRenderer.sprite;
@@ -473,12 +725,12 @@ public class KitPlayerController : PlayerController
 
         // More solid (less transparent) as charge grows.
         float alpha;
-        if (chargeTimer >= bigChargeSeconds)
+        if (chargeSeconds >= bigChargeSeconds)
             alpha = auraAlphaAtBig;
-        else if (chargeTimer >= mediumChargeSeconds)
-            alpha = Mathf.Lerp(auraAlphaAtMedium, auraAlphaAtBig, Mathf.InverseLerp(mediumChargeSeconds, bigChargeSeconds, chargeTimer));
+        else if (chargeSeconds >= mediumChargeSeconds)
+            alpha = Mathf.Lerp(auraAlphaAtMedium, auraAlphaAtBig, Mathf.InverseLerp(mediumChargeSeconds, bigChargeSeconds, chargeSeconds));
         else
-            alpha = Mathf.Lerp(auraAlphaStart, auraAlphaAtMedium, chargeTimer / Mathf.Max(0.01f, mediumChargeSeconds));
+            alpha = Mathf.Lerp(auraAlphaStart, auraAlphaAtMedium, chargeSeconds / Mathf.Max(0.01f, mediumChargeSeconds));
 
         // Soft equal pink/yellow shimmer — no hard flashes (photosensitivity-safe).
         // Rate stays well under 3 Hz even at full charge; yellow only gently tints pink.
@@ -534,6 +786,14 @@ public class KitPlayerController : PlayerController
         kitAfterimageCount = Mathf.Max(1, kitAfterimageCount);
         kitAfterimageSpacing = Mathf.Max(0.01f, kitAfterimageSpacing);
         kitAfterimageAlphaEnd = Mathf.Min(kitAfterimageAlphaEnd, kitAfterimageAlphaStart);
+        spreadShotAngleDegrees = Mathf.Clamp(spreadShotAngleDegrees, 1f, 89f);
+        machineGunFireInterval = Mathf.Max(0.05f, machineGunFireInterval);
+        machineGunMaxLiveShots = Mathf.Max(2, machineGunMaxLiveShots);
+        machineGunAnimEveryNthShot = Mathf.Max(1, machineGunAnimEveryNthShot);
+        machineGunMediumSpeedMultiplier = Mathf.Max(1.01f, machineGunMediumSpeedMultiplier);
+        machineGunBigSpeedMultiplier = Mathf.Max(
+            machineGunMediumSpeedMultiplier + 0.01f,
+            machineGunBigSpeedMultiplier);
     }
 #endif
 }

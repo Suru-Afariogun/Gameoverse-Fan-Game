@@ -208,6 +208,7 @@ MonoBehaviour:
   firePoint: {fileID: 30462497081011044}
   smallProjectilePrefab: {fileID: 5646477003654141351, guid: ca605575e28a2c74e9abbe03d4757177, type: 3}
   mediumProjectilePrefab: {fileID: 8718572514994242046, guid: 1c0a403c7e3af4e43aa67fbc218fe15b, type: 3}
+  bigProjectilePrefab: {fileID: 591779156351371611, guid: 1dd6a99700acee04ea7dea312cec9aa1, type: 3}
   shotsPerBurst: 3
   timeBetweenShots: 0.22
   shootAnimDuration: 0.28

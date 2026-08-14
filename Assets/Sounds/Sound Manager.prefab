@@ -1,0 +1,73 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &5598038544943328203
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1868065676500885626}
+  - component: {fileID: 1459177346855595936}
+  m_Layer: 0
+  m_Name: Sound Manager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1868065676500885626
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5598038544943328203}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -4.30992, y: 4.11995, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1459177346855595936
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5598038544943328203}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 21e0117c9e6e6a24fb443029138868a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SoundManager
+  masterVolume: 1
+  musicVolume: 0.7
+  sfxVolume: 1
+  lofiLoopMusic: {fileID: 8300000, guid: 94f0f70181160c54aa63003cb60675c6, type: 3}
+  bossFightMusic: {fileID: 8300000, guid: 71e36907a5872574aa5b397c65f1ee77, type: 3}
+  lofiMusicVolume: 1
+  bossMusicVolume: 1
+  chargePurrLoop: {fileID: 8300000, guid: 7805a3eed5d41614da82ba08d0181419, type: 3}
+  chargePurrVolume: 1
+  chargePurrPitch: 1
+  kitMeow: {fileID: 8300000, guid: 39a842b91db61b14f9a496ec250074a0, type: 3}
+  kitSoftLaser: {fileID: 8300000, guid: 89ff362ef27a63a4f8efdb57e6aac828, type: 3}
+  kitWeirdLaser: {fileID: 8300000, guid: f6f62561eff9cb748adefe6ca5866fe5, type: 3}
+  kitMeowVolume: 1
+  kitLaserVolume: 1
+  slashLight: {fileID: 8300000, guid: 28d8c4f67e6e90247a825e8e6aa81242, type: 3}
+  slashHeavy: {fileID: 8300000, guid: 0789a3775a7c70b47b2d02126784bc75, type: 3}
+  slashLightVolume: 1
+  slashHeavyVolume: 1
+  grappleHook: {fileID: 8300000, guid: 5352a1373cdb4324d8df1d23d0096e4b, type: 3}
+  grappleVolume: 1
+  grappleBasePitch: 1
+  grappleExtendSpikeTime: 0.713
+  grappleReelSpikeTime: 1.038
+  grappleExtendMaxDuration: 0.35
+  uiSoftLaser: {fileID: 8300000, guid: 89ff362ef27a63a4f8efdb57e6aac828, type: 3}
+  uiVolume: 1

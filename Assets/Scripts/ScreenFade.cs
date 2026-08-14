@@ -18,6 +18,20 @@ public class ScreenFade : MonoBehaviour
 
     public static bool IsBusy => instance != null && instance.busy;
 
+    public static bool IsFullyBlack =>
+        instance != null &&
+        instance.group != null &&
+        instance.group.alpha >= 0.999f;
+
+    public float CurrentAlpha
+    {
+        get
+        {
+            EnsureGroup();
+            return group != null ? group.alpha : 0f;
+        }
+    }
+
     public static ScreenFade EnsureExists()
     {
         if (instance != null)
@@ -85,27 +99,48 @@ public class ScreenFade : MonoBehaviour
         while (t < duration)
         {
             t += Time.unscaledDeltaTime;
-            group.alpha = Mathf.Lerp(start, 1f, t / duration);
+            group.alpha = Mathf.Lerp(start, 1f, Mathf.Clamp01(t / duration));
             yield return null;
         }
 
         group.alpha = 1f;
+        // One more frame so the full-black frame is actually presented before callers teleport.
+        yield return null;
     }
 
     public IEnumerator FadeFromBlack(float duration)
     {
         EnsureGroup();
+        // Never start revealing until we are truly black.
+        group.alpha = 1f;
+        yield return null;
+
         float t = 0f;
         float start = group.alpha;
         duration = Mathf.Max(0.01f, duration);
         while (t < duration)
         {
             t += Time.unscaledDeltaTime;
-            group.alpha = Mathf.Lerp(start, 0f, t / duration);
+            group.alpha = Mathf.Lerp(start, 0f, Mathf.Clamp01(t / duration));
             yield return null;
         }
 
         group.alpha = 0f;
+    }
+
+    /// <summary>Blocks until the overlay is fully black (no fade — waits only).</summary>
+    public IEnumerator WaitUntilFullyBlack(float timeoutSeconds = 2f)
+    {
+        EnsureGroup();
+        float elapsed = 0f;
+        while (group.alpha < 0.999f && elapsed < Mathf.Max(0.01f, timeoutSeconds))
+        {
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        group.alpha = 1f;
+        yield return null;
     }
 
     public void SetBlackImmediate()

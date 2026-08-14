@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// Spawns / switches playable characters (Kit, Malice, …).
@@ -11,7 +12,13 @@ public class PlayerSpawner : MonoBehaviour
 
     public static string SelectedCharacterId { get; private set; } = "Kit";
 
-    const string PrefsKey = "Gameoverse_SelectedCharacterId";
+    private static bool homeTownFirstLoadDefaultsApplied;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void ResetHomeTownFirstLoadFlag()
+    {
+        homeTownFirstLoadDefaultsApplied = false;
+    }
 
     [Serializable]
     public class CharacterEntry
@@ -31,9 +38,6 @@ public class PlayerSpawner : MonoBehaviour
 
     [Tooltip("Used on first load if nothing is saved yet.")]
     [SerializeField] private string defaultCharacterId = "Kit";
-
-    [Tooltip("Remember last selected character between Play Mode sessions / scenes.")]
-    [SerializeField] private bool persistSelection = true;
 
     [Header("Spawn")]
     [Tooltip("Where new players appear on scene start / RespawnAtSpawnPoint.")]
@@ -60,7 +64,11 @@ public class PlayerSpawner : MonoBehaviour
     private void Awake()
     {
         Instance = this;
-        LoadSelection();
+
+        if (IsHomeTownScene())
+            ApplyHomeTownFirstLoadDefaultsIfNeeded();
+        else
+            EnsureValidSelection();
     }
 
     private void OnDestroy()
@@ -142,8 +150,6 @@ public class PlayerSpawner : MonoBehaviour
             return;
 
         SelectedCharacterId = characterId.Trim();
-        if (persistSelection)
-            PlayerPrefs.SetString(PrefsKey, SelectedCharacterId);
     }
 
     private PlayerController SpawnSelected(SpawnPose pose)
@@ -175,6 +181,10 @@ public class PlayerSpawner : MonoBehaviour
             spawned.SetFacingSign(pose.facingSign);
 
         spawned.RefreshPlayerPhaseCollisions();
+
+        // WARNING intro / replay may already be locking the fight — keep the new player frozen.
+        if (WarningText.BlocksGameplay)
+            spawned.SetInputLocked(true);
 
         if (retargetCamera && CameraFollow.Instance != null)
             CameraFollow.Instance.SetFollowTarget(spawned.transform);
@@ -211,19 +221,33 @@ public class PlayerSpawner : MonoBehaviour
         Destroy(player.gameObject);
     }
 
-    private void LoadSelection()
+    /// <summary>
+    /// First HomeTown visit each session: Kit + Normal attack style.
+    /// Later scene loads (boss fights, return trips) keep Kaboodle picks.
+    /// </summary>
+    private static void ApplyHomeTownFirstLoadDefaultsIfNeeded()
     {
-        if (persistSelection && PlayerPrefs.HasKey(PrefsKey))
-        {
-            string saved = PlayerPrefs.GetString(PrefsKey, defaultCharacterId);
-            if (!string.IsNullOrWhiteSpace(saved))
-            {
-                SelectedCharacterId = saved;
-                return;
-            }
-        }
+        if (homeTownFirstLoadDefaultsApplied)
+            return;
+
+        homeTownFirstLoadDefaultsApplied = true;
+        SelectedCharacterId = "Kit";
+        PlayerAttackStyle.ResetToNormal();
+    }
+
+    private void EnsureValidSelection()
+    {
+        if (!string.IsNullOrWhiteSpace(SelectedCharacterId) && HasPrefab(SelectedCharacterId))
+            return;
 
         SelectedCharacterId = string.IsNullOrWhiteSpace(defaultCharacterId) ? "Kit" : defaultCharacterId;
+    }
+
+    private static bool IsHomeTownScene()
+    {
+        string sceneName = SceneManager.GetActiveScene().name;
+        return sceneName.IndexOf("HomeTown", StringComparison.OrdinalIgnoreCase) >= 0
+            || sceneName.IndexOf("Home Town", StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
     private CharacterEntry FindEntry(string characterId)
@@ -279,8 +303,11 @@ public class PlayerSpawner : MonoBehaviour
 
     private SpawnPose GetSpawnPoseFromPoint()
     {
+        // Temporary: Boss Fight spawns/respawns face right until facing anims are ready.
+        float facing = GetDefaultSpawnFacingSign();
+
         if (spawnPoint != null)
-            return new SpawnPose(spawnPoint.position, -1f);
+            return new SpawnPose(spawnPoint.position, facing);
 
         if (CurrentPlayer != null)
             return new SpawnPose(CurrentPlayer.transform.position, CurrentPlayer.FacingSign);
@@ -288,7 +315,12 @@ public class PlayerSpawner : MonoBehaviour
         if (PlayerController.Active != null)
             return new SpawnPose(PlayerController.Active.transform.position, PlayerController.Active.FacingSign);
 
-        return new SpawnPose(transform.position, -1f);
+        return new SpawnPose(transform.position, facing);
+    }
+
+    private static float GetDefaultSpawnFacingSign()
+    {
+        return BossFightDirector.IsActiveBossFightScene() ? 1f : -1f;
     }
 
     private SpawnPose GetSpawnPoseFromCurrentPlayer()

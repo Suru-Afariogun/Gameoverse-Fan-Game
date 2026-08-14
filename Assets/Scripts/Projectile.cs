@@ -85,6 +85,10 @@ public class Projectile : MonoBehaviour
         if (owner != null && (other.transform == owner || other.transform.IsChildOf(owner)))
             return;
 
+        // Spread / overlapping shots must not cancel each other.
+        if (other.GetComponentInParent<Projectile>() != null)
+            return;
+
         if (((1 << other.gameObject.layer) & hitLayers) == 0)
             return;
 
@@ -139,8 +143,20 @@ public class Projectile : MonoBehaviour
         IDamageable damageable = other.GetComponentInParent<IDamageable>();
         if (damageable != null && !damageable.IsDead)
         {
+            // Boss-owned shots never damage the crystal.
+            if (damageable is Crystal &&
+                owner != null &&
+                owner.GetComponentInParent<Boss>() != null)
+            {
+                if (destroyOnHit)
+                    Destroy(gameObject);
+                return;
+            }
+
             if (damageable is Boss boss)
                 boss.TakeDamage(damage, shotType);
+            else if (damageable is PlayerController player)
+                player.TakeDamage(damage, owner != null ? owner : transform);
             else
                 damageable.TakeDamage(damage);
         }

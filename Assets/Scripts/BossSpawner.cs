@@ -32,6 +32,19 @@ public class BossSpawner : MonoBehaviour
 
     private bool pendingReturnHome;
 
+    /// <summary>World position used for boss spawn / mid-fight retry resets.</summary>
+    public Vector3 GetSpawnWorldPosition()
+    {
+        if (spawnPoint != null)
+            return spawnPoint.position;
+
+        Transform child = transform.Find("SpawnPoint");
+        if (child != null)
+            return child.position;
+
+        return transform.position;
+    }
+
     private void Awake()
     {
         ResolveSelectedBoss();
