@@ -47,10 +47,20 @@ MonoBehaviour:
   masterVolume: 1
   musicVolume: 0.7
   sfxVolume: 1
-  lofiLoopMusic: {fileID: 8300000, guid: 94f0f70181160c54aa63003cb60675c6, type: 3}
+  startScreenMusic: {fileID: 0}
+  startScreenMusicVolume: 1
+  homeTownMusic: {fileID: 0}
+  homeTownMusicVolume: 1
+  levelOneMusic: {fileID: 8300000, guid: 77c1dba218dd2a843ac2df56d3e39192, type: 3}
+  levelOneMusicVolume: 1
+  levelOneCopyBotBossMusic: {fileID: 0}
+  levelOneCopyBotBossMusicVolume: 1
   bossFightMusic: {fileID: 8300000, guid: 71e36907a5872574aa5b397c65f1ee77, type: 3}
-  lofiMusicVolume: 1
-  bossMusicVolume: 1
+  bossFightMusicVolume: 1
+  extraSceneMusic: []
+  musicCrossfadeSeconds: 1.25
+  musicAutoLoopEndTrimSeconds: 6
+  musicLoopProfiles: []
   chargePurrLoop: {fileID: 8300000, guid: 7805a3eed5d41614da82ba08d0181419, type: 3}
   chargePurrVolume: 1
   chargePurrPitch: 1
@@ -69,5 +79,34 @@ MonoBehaviour:
   grappleExtendSpikeTime: 0.713
   grappleReelSpikeTime: 1.038
   grappleExtendMaxDuration: 0.35
+  harlieSwordSwing: {fileID: 8300000, guid: e6bd4e8da6fdfa54e95020e79dd864c5, type: 3}
+  harlieBigSwordClash: {fileID: 8300000, guid: c1aec52dae69a3d439fcc2e6ccbeaad4, type: 3}
+  harlieChargeKickLoop: {fileID: 8300000, guid: b6f29fb3c1745ff428f8e03665269339, type: 3}
+  harlieSwingVolume: 1
+  harlieClashVolume: 1
+  harlieChargeKickVolume: 1
+  harlieChargeKickPitch: 1
+  harlieSwingVoicePoolSize: 5
   uiSoftLaser: {fileID: 8300000, guid: 89ff362ef27a63a4f8efdb57e6aac828, type: 3}
   uiVolume: 1
+  dialogueTypingLoop: {fileID: 8300000, guid: 6e37cf5fcd59e1229db05dab12de1412, type: 3}
+  dialogueTypingVolume: 1
+  jumpSfx: {fileID: 8300000, guid: de5133eed0128d34cad2a8fcc20876a5, type: 3}
+  dashSfx: {fileID: 8300000, guid: d767543b0a15e4940835b3cacf388d34, type: 3}
+  crankyClankyHopSfx: {fileID: 0}
+  collectItemSfx: {fileID: 8300000, guid: ba978b0cd2637ea428727605c3ac47b0, type: 3}
+  itemDropSfx: {fileID: 8300000, guid: 497efc4ff68e96141b67bfa8be07158e, type: 3}
+  itemHitGroundSfx: {fileID: 8300000, guid: dd4fdb9facf2f504b979ec9070c78215, type: 3}
+  crystalHitSfx: {fileID: 8300000, guid: 273e0cda54b37e249a9a3bd895d21929, type: 3}
+  crystalShatterSfx: {fileID: 8300000, guid: c05665fc6ef6bce43bd75aa3ef3b75c8, type: 3}
+  enemyExplosionSfx: {fileID: 8300000, guid: 5c39ca1ff1f656c40b6b05115f6d03c3, type: 3}
+  gameOverSfx: {fileID: 8300000, guid: 2da3a687280bc6c468ec61b71610b45a, type: 3}
+  gameRestartSfx: {fileID: 8300000, guid: b886d994a39ce41478e67ce8107d014c, type: 3}
+  robotWarningSfx: {fileID: 8300000, guid: 7baec5fdea2a1a541923120f5b55f022, type: 3}
+  gameplaySfxVolume: 1
+  projectileHitSmall: {fileID: 8300000, guid: 4075716d870a6e4449cff2b2b111beb0, type: 3}
+  projectileHitMedium: {fileID: 8300000, guid: dc9867361eacf394d825201daf87f69f, type: 3}
+  projectileHitBig: {fileID: 8300000, guid: cf7fc8fae1a7f69408e609383ec321a1, type: 3}
+  projectileHitVolume: 0.85
+  projectileHitVoicePoolSize: 4
+  kitRapidVoicePoolSize: 4

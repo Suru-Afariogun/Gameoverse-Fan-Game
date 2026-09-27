@@ -37,9 +37,11 @@ public class Boss : MonoBehaviour, IDamageable
 
     [Header("Combat - VFX Prefabs")]
     [Tooltip("Assign your Default Stunned prefab. Set Effect Type = Default Stunned on the prefab.")]
-    [SerializeField] protected VisualEffect stunnedEffectPrefab;
+    [SerializeField] protected GameVisualEffect stunnedEffectPrefab;
     [Tooltip("Assign matching Death Energy Ball prefab (Kit balls for Boss Kit, Malice for Boss Malice).")]
-    [SerializeField] protected VisualEffect deathEnergyBallPrefab;
+    [SerializeField] protected GameVisualEffect deathEnergyBallPrefab;
+    [Tooltip("Assign Healed Visual Effect prefab. Set Effect Type = Healed.")]
+    [SerializeField] protected GameVisualEffect healedEffectPrefab;
 
     [Header("Health")]
     [SerializeField] protected int maxHealth = 100;
@@ -73,6 +75,11 @@ public class Boss : MonoBehaviour, IDamageable
     private Color crystalBoostAuraStrongColor = new Color(0.05f, 0.25f, 0.85f, 1f);
 
     private bool combatPaused;
+    private bool isCopyBot;
+    private bool isMainCopyBot;
+    private bool isCopyBotDecoy;
+
+    public GameVisualEffect DeathEnergyBallPrefab => deathEnergyBallPrefab;
 
     public string BossId => bossId;
     public int MaxHealth => maxHealth;
@@ -85,6 +92,9 @@ public class Boss : MonoBehaviour, IDamageable
         (crystalMoveSpeedBonus > 0.001f || crystalAttackBonus > 0) &&
         Time.time < crystalBoostEndsAt;
     public bool CombatPaused => combatPaused;
+    public bool IsCopyBot => isCopyBot;
+    public bool IsMainCopyBot => isMainCopyBot;
+    public bool IsCopyBotDecoy => isCopyBotDecoy;
     public bool IsDead => currentHealth <= 0;
     public float FacingSign => facingSign;
     public Rigidbody2D Body => rb;
@@ -122,15 +132,7 @@ public class Boss : MonoBehaviour, IDamageable
         currentHealth = Mathf.Clamp(currentHealth, 0, Mathf.Max(1, maxHealth));
         ApplyFacingVisual();
         effectSortingGroup = CharacterEffectSorting.EnsureHostSortingGroup(this, spriteRenderer);
-        RefreshPhaseCollisionsWithPlayers();
-
-        // Make sure already-spawned players also ignore this boss's solid collider.
-        PlayerController[] players = FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
-        for (int i = 0; i < players.Length; i++)
-        {
-            if (players[i] != null)
-                players[i].RefreshPlayerPhaseCollisions();
-        }
+        DeferredEnemyPhaseRefresh.Request();
 
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
         ApplyBossFightSpawnFacing();
@@ -140,7 +142,7 @@ public class Boss : MonoBehaviour, IDamageable
     {
         if (attackHitbox != null)
             attackHitbox.SetOwner(this);
-        RefreshPhaseCollisionsWithPlayers();
+        DeferredEnemyPhaseRefresh.Request();
     }
 
     protected virtual void Update()
@@ -148,9 +150,9 @@ public class Boss : MonoBehaviour, IDamageable
         if (IsDead)
             return;
 
-        TickHitReaction(Time.deltaTime);
+        TickHitReaction(BossDeltaTime);
         UpdateGrounded();
-        TickPostHitVisuals(Time.deltaTime);
+        TickPostHitVisuals(BossDeltaTime);
 
         if (combatPaused)
         {
@@ -205,6 +207,12 @@ public class Boss : MonoBehaviour, IDamageable
     /// <summary>Override for physics movement.</summary>
     protected virtual void HandleBossFixedUpdate() { }
 
+    protected float BossDeltaTime => HyperSpeedWorldSlow.WorldDeltaTime;
+
+    protected float BossFixedDeltaTime => HyperSpeedWorldSlow.WorldFixedDeltaTime;
+
+    protected float BossSpeed(float speed) => HyperSpeedWorldSlow.ScaleSpeed(speed);
+
     /// <summary>
     /// Matches Kit/Malice animator parameter names so character controllers can be reused.
     /// </summary>
@@ -212,6 +220,8 @@ public class Boss : MonoBehaviour, IDamageable
     {
         if (animator == null)
             return;
+
+        animator.speed = HyperSpeedWorldSlow.IsActive ? HyperSpeedWorldSlow.WorldTimeScale : 1f;
 
         float verticalSpeed = rb != null ? rb.linearVelocity.y : 0f;
         bool moving = wantsMoveAnim && !isDashing && !isAttacking;
@@ -241,13 +251,18 @@ public class Boss : MonoBehaviour, IDamageable
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayers);
     }
 
-    protected void ApplyFallMultiplier()
+    protected virtual void ApplyFallMultiplier()
     {
         if (rb == null || isGrounded)
             return;
 
         if (rb.linearVelocity.y < 0f)
-            rb.linearVelocity += Vector2.up * Physics2D.gravity.y * (fallMultiplier - 1f) * Time.fixedDeltaTime;
+        {
+            float mult = HyperSpeedWorldSlow.IsActive
+                ? HyperSpeedWorldSlow.ScaleEnemyFallMultiplier(fallMultiplier)
+                : fallMultiplier;
+            rb.linearVelocity += Vector2.up * Physics2D.gravity.y * (mult - 1f) * Time.fixedDeltaTime;
+        }
     }
 
     /// <summary>
@@ -257,15 +272,38 @@ public class Boss : MonoBehaviour, IDamageable
     public void RefreshPhaseCollisionsWithPlayers()
     {
         Collider2D[] myCols = GetComponentsInChildren<Collider2D>(true);
-        PlayerController[] players = FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
+        PlayerController player = PlayerController.ResolveActive();
+        if (player != null)
+            IgnoreSolidColliders(myCols, player.GetComponentsInChildren<Collider2D>(true));
 
-        for (int p = 0; p < players.Length; p++)
+        CrankyClanky[] enemies = EnemyTypeCache.Crankies;
+        for (int e = 0; e < enemies.Length; e++)
         {
-            PlayerController player = players[p];
-            if (player == null)
+            CrankyClanky enemy = enemies[e];
+            if (enemy == null)
                 continue;
 
-            IgnoreSolidColliders(myCols, player.GetComponentsInChildren<Collider2D>(true));
+            IgnoreSolidColliders(myCols, enemy.GetComponentsInChildren<Collider2D>(true));
+        }
+    }
+
+    /// <summary>
+    /// Copy-bot boss and decoys phase through each other so they cannot wedge or stack.
+    /// </summary>
+    public void RefreshPhaseCollisionsWithCopyBots()
+    {
+        if (!isCopyBot)
+            return;
+
+        Collider2D[] myCols = GetComponentsInChildren<Collider2D>(true);
+        Boss[] bosses = EnemyTypeCache.Bosses;
+        for (int i = 0; i < bosses.Length; i++)
+        {
+            Boss other = bosses[i];
+            if (other == null || other == this || !other.isCopyBot)
+                continue;
+
+            IgnoreSolidColliders(myCols, other.GetComponentsInChildren<Collider2D>(true));
         }
     }
 
@@ -355,13 +393,49 @@ public class Boss : MonoBehaviour, IDamageable
     /// <summary>Base walk speed. Override for charge move bonuses (Boss Malice).</summary>
     protected virtual float GetMoveSpeed()
     {
-        return moveSpeed + crystalMoveSpeedBonus;
+        return BossSpeed(moveSpeed + crystalMoveSpeedBonus);
     }
 
     /// <summary>Outgoing attack damage after crystal (and subclass) bonuses.</summary>
     protected int ApplyCrystalAttackBonus(int baseDamage)
     {
         return Mathf.Max(1, baseDamage + Mathf.Max(0, crystalAttackBonus));
+    }
+
+    /// <summary>
+    /// Level-one copy bot: set HP and mark identity without changing prefab type.
+    /// </summary>
+    public void ConfigureAsCopyBot(int hp)
+    {
+        isCopyBot = true;
+        isMainCopyBot = true;
+        isCopyBotDecoy = false;
+        maxHealth = Mathf.Max(1, hp);
+        currentHealth = maxHealth;
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+
+        if (this is BossKit kitBoss)
+            kitBoss.EnableCopyBotMode();
+
+        RefreshPhaseCollisionsWithCopyBots();
+    }
+
+    /// <summary>
+    /// Darker 1-HP copy spawned during the copy-bot fight — chase + stun only, no attacks.
+    /// </summary>
+    public void ConfigureAsCopyBotDecoy(int hp = 1)
+    {
+        isCopyBot = true;
+        isMainCopyBot = false;
+        isCopyBotDecoy = true;
+        maxHealth = Mathf.Max(1, hp);
+        currentHealth = maxHealth;
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+
+        if (this is BossKit kitBoss)
+            kitBoss.EnableCopyBotDecoyMode();
+
+        RefreshPhaseCollisionsWithCopyBots();
     }
 
     public void BeginCrystalSpeedBoost(float bonus, float duration)
@@ -550,7 +624,7 @@ public class Boss : MonoBehaviour, IDamageable
         crystalBoostAuraRenderer.flipX = spriteRenderer.flipX;
         CharacterEffectSorting.ApplyAuraBehindBody(crystalBoostAuraRenderer, spriteRenderer, EffectSortingGroup);
 
-        crystalBoostAuraFlickerPhase += Time.deltaTime * 1.35f;
+        crystalBoostAuraFlickerPhase += BossDeltaTime * 1.35f;
         float shimmer = 0.5f + 0.5f * Mathf.Sin(crystalBoostAuraFlickerPhase * Mathf.PI * 2f);
         Color c = Color.Lerp(crystalBoostAuraColor, crystalBoostAuraStrongColor, 0.45f + 0.55f * shimmer);
         c.a = 0.7f;
@@ -682,6 +756,13 @@ public class Boss : MonoBehaviour, IDamageable
         int healthBefore = currentHealth;
         SetHealth(currentHealth - amount);
 
+        int applied = healthBefore - currentHealth;
+        if (applied > 0 && Crystal.Instance != null)
+            Crystal.Instance.NotifyBossDamageDealt(applied);
+
+        if (applied > 0)
+            SoundManager.Instance?.PlayBossHit();
+
         if (currentHealth <= 0)
             return;
 
@@ -710,7 +791,11 @@ public class Boss : MonoBehaviour, IDamageable
     {
         if (amount <= 0 || IsDead)
             return;
+
+        int before = currentHealth;
         SetHealth(currentHealth + amount);
+        if (currentHealth > before)
+            VisualEffects.PlayHealed(healedEffectPrefab, this);
     }
 
     protected virtual void BeginHitReaction()
@@ -790,10 +875,7 @@ public class Boss : MonoBehaviour, IDamageable
 
     protected PlayerController FindPlayer()
     {
-        if (PlayerSpawner.Instance != null && PlayerSpawner.Instance.CurrentPlayer != null)
-            return PlayerSpawner.Instance.CurrentPlayer;
-
-        return FindFirstObjectByType<PlayerController>();
+        return PlayerController.ResolveActive();
     }
 
 #if UNITY_EDITOR

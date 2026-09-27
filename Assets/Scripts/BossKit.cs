@@ -21,7 +21,23 @@ public class BossKit : Boss
         AirGrappleChase = 7,
         DashJumpTrapDash = 8,
         DashJumpCatchUp = 9,
-        AirGrabSlash = 10
+        AirGrabSlash = 10,
+        HoverBarrage = 11,
+        HoverDashStrike = 12
+    }
+
+    private enum HoverPhase
+    {
+        GroundJump,
+        DoubleJump,
+        Hovering,
+        HoverDash
+    }
+
+    private enum HoverMode
+    {
+        Barrage,
+        DashStrike
     }
 
     private enum DashJumpMode
@@ -39,7 +55,8 @@ public class BossKit : Boss
         JumpPrep,
         ChargeWindup,
         ShootBurst,
-        Recover
+        Recover,
+        Hover
     }
 
     private enum DashFollowUp
@@ -106,6 +123,31 @@ public class BossKit : Boss
     [SerializeField] private float minAirTimeBeforeAction = 0.12f;
     [SerializeField] private float diveAttackRangeX = 4.5f;
 
+    [Header("Double Jump + Hover (matches playable Kit)")]
+    [Tooltip("Upward speed of the double jump. 0 = same as the normal jump.")]
+    [SerializeField] private float doubleJumpForce = 0f;
+    [Tooltip("If the player is at least this much higher at the jump apex, Hornet Dive / Air Grab Slash add a double jump.")]
+    [SerializeField] private float doubleJumpChaseHeight = 1.5f;
+    [SerializeField] private float hoverLevelSeconds = 2.4f;
+    [SerializeField] private float hoverLevelSecondsEnraged = 1.8f;
+    [SerializeField] private float hoverDescendSpeed = 1.5f;
+    [SerializeField] private float hoverDescendAcceleration = 4f;
+    [Tooltip("Safety cap on one hover pattern (seconds airborne) before she drops.")]
+    [SerializeField] private float hoverMaxSeconds = 6f;
+    [SerializeField] private float hoverShotInterval = 0.6f;
+    [SerializeField] private float hoverShotIntervalEnraged = 0.42f;
+    [SerializeField] private float hoverFirstShotDelay = 0.25f;
+    [SerializeField] [Range(0.1f, 1f)] private float hoverDriftSpeedMul = 0.45f;
+    [Tooltip("Hover Dash Strike: seconds hovering before the boosted dash.")]
+    [SerializeField] private float hoverDashDelay = 0.55f;
+    [Tooltip("45° down-shots only while airborne and the player is at least this far below.")]
+    [SerializeField] private float aimDownThreshold = 1f;
+
+    [Header("Boosted Dash")]
+    [Tooltip("Used at max charge and for the hover dash.")]
+    [SerializeField] private float boostedDashSpeedMultiplier = 1.3f;
+    [SerializeField] private float boostedDashDistanceMultiplier = 1.45f;
+
     [Header("Auto Charge")]
     [SerializeField] private float chargeCooldownSeconds = 3f;
     [SerializeField] private float chargePepperShotInterval = 0.38f;
@@ -141,13 +183,15 @@ public class BossKit : Boss
 
     [Header("Shooting")]
     [SerializeField] private Transform firePoint;
+    [Tooltip("Left-facing FirePoint keys are mirrored across this local X when she faces right (same as playable Kit).")]
+    [SerializeField] private Vector2 firePointFlipCenterLocal = Vector2.zero;
     [SerializeField] private Projectile smallProjectilePrefab;
     [SerializeField] private Projectile mediumProjectilePrefab;
     [SerializeField] private Projectile bigProjectilePrefab;
     [SerializeField] private int shotsPerBurst = 3;
     [SerializeField] private float timeBetweenShots = 0.22f;
     [SerializeField] private float machineGunShotInterval = 0.14f;
-    [SerializeField] private int machineGunMaxShots = 5;
+    [SerializeField] private int machineGunMaxShots = 4;
     [SerializeField] private float shootAnimDuration = 0.28f;
     [SerializeField] private float recoverDuration = 0.55f;
     [SerializeField] private float recoverDurationEnraged = 0.38f;
@@ -155,11 +199,23 @@ public class BossKit : Boss
     [SerializeField] private float spreadShotAngleDegrees = 45f;
     [Tooltip("Hard cap on live boss-owned projectiles (oldest removed when over).")]
     [SerializeField] private int maxLiveProjectiles = 14;
+    [Tooltip("Boss Kit shots fly at prefab speed × this (below 1 = easier to dodge).")]
+    [SerializeField] [Range(0.4f, 1f)] private float projectileSpeedMultiplier = 0.8f;
+
+    [Header("Attack Spacing (readability)")]
+    [Tooltip("World-unit gap between consecutive shots, rows, and spread volleys.")]
+    [SerializeField] private float attackSpacingWorldUnits = 2f;
+    [SerializeField] private int burstGroupMaxShots = 4;
+    [SerializeField] private int spreadVolleyMaxCount = 3;
+    [SerializeField] private float attackBreakMinSeconds = 0.4f;
+    [SerializeField] private float attackBreakMaxSeconds = 0.8f;
+    [Tooltip("Slightly below 1 — tiny movement slowdown for Kit boss and copy bot.")]
+    [SerializeField] [Range(0.85f, 1f)] private float bossMovementSpeedScale = 0.94f;
 
     [Header("Boss Kit - VFX Prefabs")]
-    [SerializeField] private VisualEffect busterBlastSmallPrefab;
+    [SerializeField] private GameVisualEffect busterBlastSmallPrefab;
     [FormerlySerializedAs("busterBlastMediumPrefab")]
-    [SerializeField] private VisualEffect busterBlastMediumBigPrefab;
+    [SerializeField] private GameVisualEffect busterBlastMediumBigPrefab;
 
     [Header("Enrage")]
     [SerializeField] private float enrageHpFraction = 0.5f;
@@ -172,11 +228,13 @@ public class BossKit : Boss
         Pattern.NeedleDash,
         Pattern.HornetDive,
         Pattern.DashJumpDive,
+        Pattern.HoverBarrage,
         Pattern.DashJumpTrapDash,
         Pattern.DashJumpCatchUp,
         Pattern.RayHook,
         Pattern.GrabHook,
         Pattern.AirGrabSlash,
+        Pattern.HoverDashStrike,
         Pattern.AirGrappleChase
     };
 
@@ -190,13 +248,15 @@ public class BossKit : Boss
 
     private bool openingCycleActive = true;
     private int openingIndex;
-    private readonly List<Pattern> patternRotation = new List<Pattern>(11);
+    private readonly List<Pattern> patternRotation = new List<Pattern>(15);
     private int rotationIndex;
     private Pattern lastUsedPattern = (Pattern)(-1);
     private int lastPatternStreak;
 
     private int shotsLeft;
     private float nextShotTime;
+    private float burstPauseUntil;
+    private int shotsFiredInCurrentGroup;
     private ProjectileShotType burstShotType = ProjectileShotType.Small;
     private float shootAnimTimer;
     private bool shootAnimActive;
@@ -220,6 +280,18 @@ public class BossKit : Boss
     private JumpPrepGoal jumpPrepGoal;
     private float jumpPrepAirTime;
     private bool jumpPrepHasLeftGround;
+    private bool jumpPrepDoubleJumped;
+
+    private int bossAirJumpsRemaining = 1;
+    private bool isBossHovering;
+    private HoverPhase hoverPhase;
+    private HoverMode hoverMode;
+    private float hoverPatternTimer;
+    private float hoverPhaseTimer;
+    private float nextHoverShotTime;
+    private bool hoverHasLeftGround;
+    private bool bossBoostedDashActive;
+    private bool aimDown;
 
     private float chargeTimer;
     private float chargeReleaseAt;
@@ -249,6 +321,21 @@ public class BossKit : Boss
 
     private readonly List<Projectile> liveProjectiles = new List<Projectile>(16);
 
+    private bool copyBotMode;
+    private bool copyBotDecoyMode;
+    private float copyBotDecoyCooldownTimer;
+    private float copyBotDecoyGrayLevel = 0.52f;
+    private float decoyContactStunCooldown;
+    private readonly List<Boss> liveCopyBotDecoys = new List<Boss>(2);
+    private const int CopyBotMaxLiveBigShots = 4;
+    private float copyBotAirStuckTimer;
+    private const float CopyBotMaxAirStateSeconds = 2.6f;
+    private BossSpawner cachedBossSpawner;
+
+    private Vector3 firePointLeftFacingLocal;
+    private Vector3 firePointLastWrittenLocal;
+    private bool firePointHasLastWritten;
+
     protected override void Awake()
     {
         SetBossId("BossKit");
@@ -275,12 +362,58 @@ public class BossKit : Boss
             Destroy(chargeAuraMaterial);
     }
 
+    private void LateUpdate()
+    {
+        MirrorFirePointForFacing();
+    }
+
+    /// <summary>
+    /// Same as playable Kit: FirePoint keys are authored left-facing, then X is reflected when facing right.
+    /// </summary>
+    private void MirrorFirePointForFacing()
+    {
+        if (firePoint == null)
+            return;
+
+        Vector3 currentLocal = firePoint.parent == transform
+            ? firePoint.localPosition
+            : transform.InverseTransformPoint(firePoint.position);
+
+        bool unchangedSinceWeWrote = firePointHasLastWritten &&
+            (currentLocal - firePointLastWrittenLocal).sqrMagnitude < 1e-10f;
+
+        if (!unchangedSinceWeWrote)
+            firePointLeftFacingLocal = currentLocal;
+
+        Vector3 target = firePointLeftFacingLocal;
+        bool mirror = spriteFacesLeft ? facingSign > 0f : facingSign < 0f;
+        if (mirror)
+        {
+            float centerX = firePointFlipCenterLocal.x;
+            target.x = centerX - (firePointLeftFacingLocal.x - centerX);
+        }
+
+        if (firePoint.parent == transform)
+            firePoint.localPosition = target;
+        else
+            firePoint.position = transform.TransformPoint(target);
+
+        firePointLastWrittenLocal = target;
+        firePointHasLastWritten = true;
+    }
+
     protected override void OnHitStunStarted()
     {
         CancelAttackImmediate();
         state = AiState.Chase;
         decideTimer = 0f;
         base.OnHitStunStarted();
+    }
+
+    protected override void Die()
+    {
+        EndBossHover();
+        base.Die();
     }
 
     protected override void OnCombatPaused()
@@ -303,17 +436,28 @@ public class BossKit : Boss
 
     protected override void HandleBossUpdate()
     {
+        if (copyBotDecoyMode)
+        {
+            TickCopyBotDecoyBehavior();
+            return;
+        }
+
+        TickCopyBotAirStuckRecovery();
+
         if (!usePlaceholderAi)
             return;
 
         TickShootAnimTimer();
         PruneLiveProjectiles();
 
+        if (isGrounded && !isBossHovering && (rb == null || rb.linearVelocity.y <= 0.1f))
+            bossAirJumpsRemaining = 1;
+
         if (dashJumpCatchUpCooldownTimer > 0f)
-            dashJumpCatchUpCooldownTimer -= Time.deltaTime;
+            dashJumpCatchUpCooldownTimer -= BossDeltaTime;
 
         if (chargeCooldownTimer > 0f)
-            chargeCooldownTimer -= Time.deltaTime;
+            chargeCooldownTimer -= BossDeltaTime;
 
         PlayerController player = FindPlayer();
         if (player == null || player.IsDead)
@@ -353,17 +497,35 @@ public class BossKit : Boss
             case AiState.Recover:
                 TickRecover();
                 break;
+            case AiState.Hover:
+                TickHoverPattern(player);
+                break;
         }
+
+        TickCopyBotDecoys(player);
     }
 
     protected override void HandleBossFixedUpdate()
     {
+        if (copyBotDecoyMode)
+        {
+            TickCopyBotDecoyMovement();
+            TickCopyBotAirStuckRecovery();
+            return;
+        }
+
         if (!usePlaceholderAi)
             return;
 
         if (state == AiState.Dash || state == AiState.DashJump)
         {
             ApplyDashVelocity();
+            return;
+        }
+
+        if (state == AiState.Hover && rb != null)
+        {
+            ApplyHoverVelocity();
             return;
         }
 
@@ -440,11 +602,21 @@ public class BossKit : Boss
             return;
 
         animator.SetBool("IsShooting", shootAnimActive);
+        animator.SetBool("AimDown", aimDown);
+        animator.SetBool("IsHovering", isBossHovering);
+        animator.SetBool("IsBoostedDashing", isDashing && bossBoostedDashActive);
+    }
+
+    protected override void ApplyFallMultiplier()
+    {
+        if (isBossHovering)
+            return;
+        base.ApplyFallMultiplier();
     }
 
     protected override float GetMoveSpeed()
     {
-        float speed = base.GetMoveSpeed();
+        float speed = base.GetMoveSpeed() * bossMovementSpeedScale;
 
         if (isCharging)
         {
@@ -485,7 +657,7 @@ public class BossKit : Boss
 
     private void TickChase(PlayerController player)
     {
-        decideTimer -= Time.deltaTime;
+        decideTimer -= BossDeltaTime;
         if (decideTimer > 0f)
             return;
 
@@ -525,6 +697,15 @@ public class BossKit : Boss
         if (tryStayInFrame && IsOffCamera() && Random.value < 0.5f)
         {
             StartPattern(Random.value < 0.6f ? Pattern.DashSlash : Pattern.DashJumpCatchUp, player);
+            return;
+        }
+
+        if (copyBotMode &&
+            CanStartChargePattern() &&
+            CanStartCopyBotBigShotPattern() &&
+            Random.value < 0.38f)
+        {
+            StartPattern(Pattern.GrabHook, player);
             return;
         }
 
@@ -601,7 +782,39 @@ public class BossKit : Boss
 
         facingSign = sign;
         ApplyFacingVisual();
+        wantsMoveAnim = true;
         rb.linearVelocity = new Vector2(sign * GetMoveSpeed() * Mathf.Clamp(speedMul, 0.15f, 1f), rb.linearVelocity.y);
+    }
+
+    private void TickCopyBotAirStuckRecovery()
+    {
+        if (!copyBotMode && !copyBotDecoyMode)
+            return;
+
+        if (isGrounded || state == AiState.Hover)
+        {
+            copyBotAirStuckTimer = 0f;
+            return;
+        }
+
+        copyBotAirStuckTimer += BossDeltaTime;
+        if (copyBotAirStuckTimer < CopyBotMaxAirStateSeconds)
+            return;
+
+        bool stuckAirState = state == AiState.DashJump ||
+                             state == AiState.Dash ||
+                             state == AiState.JumpPrep ||
+                             state == AiState.ChargeWindup ||
+                             isDashing ||
+                             isBossDashJumping;
+
+        if (!stuckAirState)
+            return;
+
+        CancelAttackImmediate();
+        state = AiState.Chase;
+        decideTimer = 0.1f;
+        copyBotAirStuckTimer = 0f;
     }
 
     private Pattern TakeNextPatternFromRotation()
@@ -626,6 +839,12 @@ public class BossKit : Boss
         patternRotation.Clear();
         for (int i = 0; i < OpeningCycle.Length; i++)
             patternRotation.Add(OpeningCycle[i]);
+
+        if (copyBotMode)
+        {
+            patternRotation.Add(Pattern.GrabHook);
+            patternRotation.Add(Pattern.GrabHook);
+        }
 
         for (int i = patternRotation.Count - 1; i > 0; i--)
         {
@@ -725,9 +944,10 @@ public class BossKit : Boss
                 break;
 
             case Pattern.GrabHook:
-                if (!CanStartChargePattern())
+                if (!CanStartChargePattern() ||
+                    (copyBotMode && !CanStartCopyBotBigShotPattern()))
                 {
-                    StartPattern(Pattern.NeedleDash, player);
+                    StartPattern(copyBotMode ? Pattern.RayHook : Pattern.NeedleDash, player);
                     return;
                 }
 
@@ -748,6 +968,14 @@ public class BossKit : Boss
                 BeginJumpPrep(JumpPrepGoal.HornetDive, player);
                 break;
 
+            case Pattern.HoverBarrage:
+                BeginHoverPattern(HoverMode.Barrage, player);
+                break;
+
+            case Pattern.HoverDashStrike:
+                BeginHoverPattern(HoverMode.DashStrike, player);
+                break;
+
             default:
                 BeginShootBurst(ProjectileShotType.Small, shotsPerBurst);
                 break;
@@ -761,11 +989,19 @@ public class BossKit : Boss
         isAttacking = true;
         state = AiState.ShootBurst;
         burstShotType = type;
+        shotsFiredInCurrentGroup = 0;
+        burstPauseUntil = 0f;
 
         if (attackStyle == BossKitAttackStyle.MachineGun)
         {
-            shotsLeft = Mathf.Clamp(count > 0 ? count : machineGunMaxShots, 1, machineGunMaxShots);
+            int requested = count > 0 ? count : machineGunMaxShots;
+            shotsLeft = Mathf.Clamp(requested, 1, burstGroupMaxShots);
             burstShotType = ProjectileShotType.Small;
+        }
+        else if (attackStyle == BossKitAttackStyle.SpreadShot)
+        {
+            int requested = count > 0 ? count : shotsPerBurst;
+            shotsLeft = Mathf.Clamp(requested, 1, spreadVolleyMaxCount);
         }
         else
         {
@@ -777,6 +1013,9 @@ public class BossKit : Boss
 
     private void TickShootBurst(PlayerController player)
     {
+        if (Time.time < burstPauseUntil)
+            return;
+
         if (Time.time < nextShotTime)
             return;
 
@@ -788,14 +1027,54 @@ public class BossKit : Boss
 
         FireVolley(player, burstShotType);
         shotsLeft--;
+        shotsFiredInCurrentGroup++;
 
-        float interval = attackStyle == BossKitAttackStyle.MachineGun
-            ? machineGunShotInterval
-            : timeBetweenShots;
-        nextShotTime = Time.time + Mathf.Max(0.06f, interval);
+        float interval = GetSpacingIntervalForCurrentBurst();
+        bool needsGroupPause = ShouldPauseBetweenBurstGroups();
+
+        if (needsGroupPause && shotsLeft > 0)
+        {
+            burstPauseUntil = Time.time + interval;
+            shotsFiredInCurrentGroup = 0;
+        }
+        else
+        {
+            nextShotTime = Time.time + interval;
+        }
 
         if (shotsLeft <= 0)
             FinishIntoRecover();
+    }
+
+    private bool ShouldPauseBetweenBurstGroups()
+    {
+        if (attackStyle == BossKitAttackStyle.SpreadShot)
+            return true;
+
+        if (attackStyle == BossKitAttackStyle.MachineGun)
+            return shotsFiredInCurrentGroup >= burstGroupMaxShots;
+
+        return burstShotType == ProjectileShotType.Big;
+    }
+
+    private float GetSpacingIntervalForCurrentBurst()
+    {
+        float shotSpeed = GetEffectiveProjectileSpeed(burstShotType);
+        float spacingTime = attackSpacingWorldUnits / Mathf.Max(0.5f, shotSpeed);
+
+        if (attackStyle == BossKitAttackStyle.MachineGun)
+            return Mathf.Max(machineGunShotInterval, spacingTime);
+
+        return Mathf.Max(timeBetweenShots, spacingTime);
+    }
+
+    private float GetEffectiveProjectileSpeed(ProjectileShotType type)
+    {
+        Projectile prefab = GetProjectilePrefab(type);
+        if (prefab == null)
+            return 10f;
+
+        return prefab.Speed * Mathf.Clamp(projectileSpeedMultiplier, 0.4f, 1f);
     }
 
     private void FireVolley(PlayerController player, ProjectileShotType type)
@@ -821,22 +1100,33 @@ public class BossKit : Boss
         if (prefab == null)
             return;
 
-        CapLiveProjectiles();
+        if (copyBotMode && type == ProjectileShotType.Big)
+        {
+            PruneLiveProjectiles();
+            if (GetLiveBigShotCount() >= CopyBotMaxLiveBigShots)
+                return;
+        }
+        else
+        {
+            CapLiveProjectiles();
+        }
 
         Vector2 origin = firePoint != null
             ? (Vector2)firePoint.position
             : (Vector2)transform.position + new Vector2(facingSign * 0.6f, 0.2f);
 
-        Vector2 dir = GetAimDirection(player);
+        Vector2 aimDir = GetAimDirection(player);
+        Vector2 dir = aimDir;
         if (Mathf.Abs(angleOffset) > 0.01f)
             dir = RotateDirection(dir, angleOffset);
 
         Projectile shot = Instantiate(prefab, origin, Quaternion.identity);
-        shot.Launch(dir, prefab.Speed, prefab.Damage, transform);
+        float shotSpeed = prefab.Speed * Mathf.Clamp(projectileSpeedMultiplier, 0.4f, 1f);
+        shot.Launch(dir, shotSpeed, prefab.Damage, transform);
         liveProjectiles.Add(shot);
 
         Transform muzzle = firePoint != null ? firePoint : transform;
-        VisualEffect blastPrefab = VisualEffects.ResolveBusterBlastPrefab(
+        GameVisualEffect blastPrefab = VisualEffects.ResolveBusterBlastPrefab(
             shot.ShotType,
             busterBlastSmallPrefab,
             busterBlastMediumBigPrefab);
@@ -845,7 +1135,7 @@ public class BossKit : Boss
         if (playSound)
         {
             if (forceNormalStyle)
-                SoundManager.Instance?.PlayKitFire(shot.ShotType);
+                SoundManager.Instance?.PlayBossKitFire(shot.ShotType);
             else
                 PlayShotSound(shot.ShotType);
         }
@@ -853,15 +1143,18 @@ public class BossKit : Boss
         shootAnimActive = true;
         shootAnimTimer = shootAnimDuration;
         if (animator != null)
-            animator.SetTrigger(aimUp ? "ShootUp" : "Shoot");
+        {
+            string trigger = aimDir.y < -0.3f ? "ShootDown" : aimDir.y > 0.3f ? "ShootUp" : "Shoot";
+            animator.SetTrigger(trigger);
+        }
     }
 
     private void PlayShotSound(ProjectileShotType type)
     {
         if (attackStyle == BossKitAttackStyle.MachineGun)
-            SoundManager.Instance?.PlayKitFireRapid();
+            SoundManager.Instance?.PlayBossKitFireRapid();
         else
-            SoundManager.Instance?.PlayKitFire(type);
+            SoundManager.Instance?.PlayBossKitFire(type);
     }
 
     private Vector2 GetAimDirection(PlayerController player)
@@ -875,7 +1168,22 @@ public class BossKit : Boss
         if (Mathf.Abs(toPlayer.y) >= aimUpThreshold && toPlayer.y > 0f)
             return new Vector2(Mathf.Sign(facingSign) * 0.35f, 1f).normalized;
 
+        if (ShouldAimDownAt(toPlayer))
+            return new Vector2(Mathf.Sign(facingSign), -1f).normalized;
+
         return new Vector2(facingSign, 0f);
+    }
+
+    private bool ShouldAimDownAt(Vector2 toPlayer)
+    {
+        if (isGrounded && !isBossHovering)
+            return false;
+
+        float below = -toPlayer.y;
+        if (below < aimDownThreshold)
+            return false;
+
+        return Mathf.Abs(toPlayer.x) <= below * 2f + 1.5f;
     }
 
     private static Vector2 RotateDirection(Vector2 dir, float degrees)
@@ -906,11 +1214,162 @@ public class BossKit : Boss
         int cap = Mathf.Max(4, maxLiveProjectiles);
         while (liveProjectiles.Count >= cap)
         {
-            Projectile oldest = liveProjectiles[0];
-            liveProjectiles.RemoveAt(0);
+            int removeIndex = -1;
+            for (int i = 0; i < liveProjectiles.Count; i++)
+            {
+                Projectile candidate = liveProjectiles[i];
+                if (candidate == null)
+                {
+                    removeIndex = i;
+                    break;
+                }
+
+                if (copyBotMode && candidate.ShotType == ProjectileShotType.Big)
+                    continue;
+
+                removeIndex = i;
+                break;
+            }
+
+            if (removeIndex < 0)
+                break;
+
+            Projectile oldest = liveProjectiles[removeIndex];
+            liveProjectiles.RemoveAt(removeIndex);
             if (oldest != null)
                 Destroy(oldest.gameObject);
         }
+    }
+
+    private int GetLiveBigShotCount()
+    {
+        PruneLiveProjectiles();
+        int count = 0;
+        for (int i = 0; i < liveProjectiles.Count; i++)
+        {
+            Projectile shot = liveProjectiles[i];
+            if (shot != null && shot.ShotType == ProjectileShotType.Big)
+                count++;
+        }
+
+        return count;
+    }
+
+    private bool CanStartCopyBotBigShotPattern()
+    {
+        return !copyBotMode || GetLiveBigShotCount() == 0;
+    }
+
+    private void TickCopyBotDecoys(PlayerController player)
+    {
+        if (!copyBotMode || copyBotDecoyMode || player == null || player.IsDead || CombatPaused)
+            return;
+
+        PruneLiveCopyBotDecoys();
+
+        if (copyBotDecoyCooldownTimer > 0f)
+        {
+            copyBotDecoyCooldownTimer -= BossDeltaTime;
+            return;
+        }
+
+        if (liveCopyBotDecoys.Count >= 2)
+            return;
+
+        BossSpawner spawner = GetBossSpawner();
+        if (spawner == null)
+            return;
+
+        Vector3 spawnPos = transform.position + new Vector3(liveCopyBotDecoys.Count == 0 ? -3f : 3f, 0f, 0f);
+        Boss decoy = spawner.SpawnCopyBotDecoyNear(spawnPos, 1);
+        if (decoy == null)
+            return;
+
+        float darkerGray = Mathf.Clamp(copyBotDecoyGrayLevel - 0.12f, 0.08f, 1f);
+        CopyBossAppearance.Apply(decoy, darkerGray);
+        liveCopyBotDecoys.Add(decoy);
+        copyBotDecoyCooldownTimer = 10f;
+
+        decoy.RefreshPhaseCollisionsWithCopyBots();
+        RefreshPhaseCollisionsWithCopyBots();
+    }
+
+    private void PruneLiveCopyBotDecoys()
+    {
+        for (int i = liveCopyBotDecoys.Count - 1; i >= 0; i--)
+        {
+            Boss decoy = liveCopyBotDecoys[i];
+            if (decoy == null || decoy.IsDead)
+                liveCopyBotDecoys.RemoveAt(i);
+        }
+    }
+
+    private BossSpawner GetBossSpawner()
+    {
+        if (cachedBossSpawner == null)
+            cachedBossSpawner = FindFirstObjectByType<BossSpawner>();
+
+        return cachedBossSpawner;
+    }
+
+    private void TickCopyBotDecoyBehavior()
+    {
+        isAttacking = false;
+        isCharging = false;
+        isDashing = false;
+
+        if (attackHitbox != null && attackHitbox.IsActive)
+            attackHitbox.Deactivate();
+
+        if (decoyContactStunCooldown > 0f)
+            decoyContactStunCooldown -= BossDeltaTime;
+
+        PlayerController player = FindPlayer();
+        if (player == null || player.IsDead)
+        {
+            StopHorizontal();
+            return;
+        }
+
+        FaceToward(player.transform);
+        float dx = player.transform.position.x - transform.position.x;
+        wantsMoveAnim = Mathf.Abs(dx) > 0.12f;
+        TryCopyBotDecoyContactStun(player);
+    }
+
+    private void TickCopyBotDecoyMovement()
+    {
+        PlayerController player = FindPlayer();
+        if (player == null || player.IsDead)
+        {
+            StopHorizontal();
+            return;
+        }
+
+        float dx = player.transform.position.x - transform.position.x;
+        float dist = Mathf.Abs(dx);
+
+        if (dist > 0.12f)
+            MoveHorizontal(Mathf.Sign(dx));
+        else
+            StopHorizontal();
+    }
+
+    private void TryCopyBotDecoyContactStun(PlayerController player)
+    {
+        if (player == null || decoyContactStunCooldown > 0f)
+            return;
+
+        Collider2D playerCol = player.GetComponent<Collider2D>();
+        Collider2D myCol = bodyCollider != null ? bodyCollider : GetComponent<Collider2D>();
+        if (playerCol == null || myCol == null)
+            return;
+
+        if (!myCol.IsTouching(playerCol))
+            return;
+
+        player.ApplyStunOnly(0.55f);
+        decoyContactStunCooldown = 0.45f;
     }
 
     private void PruneLiveProjectiles()
@@ -940,11 +1399,20 @@ public class BossKit : Boss
                 dashDir = frameNudge;
         }
 
-        dashSpeedCurrent = dashSpeed * Mathf.Max(0.1f, speedMul);
+        dashSpeedCurrent = dashSpeed * bossMovementSpeedScale * Mathf.Max(0.1f, speedMul);
         if (!isGrounded)
             dashSpeedCurrent *= airDashSpeedMul;
+        float distance = dashDistance;
+        bossBoostedDashActive = !pendingConvertToDashJump && IsAtMaxCharge();
+        if (bossBoostedDashActive)
+        {
+            dashSpeedCurrent *= Mathf.Max(1f, boostedDashSpeedMultiplier);
+            distance *= Mathf.Max(1f, boostedDashDistanceMultiplier);
+        }
 
-        dashDuration = Mathf.Max(0.05f, dashDistance / dashSpeedCurrent);
+        dashSpeedCurrent = BossSpeed(dashSpeedCurrent);
+
+        dashDuration = Mathf.Max(0.05f, distance / dashSpeedCurrent);
         dashTimer = 0f;
         isDashing = true;
         isAttacking = true;
@@ -963,7 +1431,7 @@ public class BossKit : Boss
 
     private void TickDash(PlayerController player)
     {
-        dashTimer += Time.deltaTime;
+        dashTimer += BossDeltaTime;
 
         if (pendingConvertToDashJump)
         {
@@ -1049,11 +1517,11 @@ public class BossKit : Boss
 
         if (rb != null)
         {
-            rb.linearVelocity = new Vector2(dashDir * speed, hop);
+            rb.linearVelocity = new Vector2(dashDir * BossSpeed(speed), hop);
             isGrounded = false;
         }
 
-        dashSpeedCurrent = speed;
+        dashSpeedCurrent = BossSpeed(speed);
         dashDuration = Mathf.Max(0.2f, airTime);
         dashTimer = 0f;
         isBossDashJumping = true;
@@ -1070,10 +1538,18 @@ public class BossKit : Boss
     private void TickDashJump(PlayerController player)
     {
         FaceToward(player != null ? player.transform : null);
-        dashTimer += Time.deltaTime;
+        dashTimer += BossDeltaTime;
+
+        float maxDashJumpSeconds = Mathf.Max(2.75f, dashDuration + 1.75f);
+        if (copyBotMode && dashTimer >= maxDashJumpSeconds)
+        {
+            EndDashJumpImmediate();
+            FinishIntoRecover();
+            return;
+        }
 
         if (!isGrounded)
-            dashJumpAirTime += Time.deltaTime;
+            dashJumpAirTime += BossDeltaTime;
 
         bool enoughAir = dashJumpAirTime >= minAirTimeBeforeDashJumpAction;
         bool peaked = rb != null && rb.linearVelocity.y <= 0.85f && enoughAir;
@@ -1307,6 +1783,7 @@ public class BossKit : Boss
         jumpPrepGoal = goal;
         jumpPrepAirTime = 0f;
         jumpPrepHasLeftGround = false;
+        jumpPrepDoubleJumped = false;
         stateTimer = jumpPrepTimeout;
         isAttacking = true;
         state = AiState.JumpPrep;
@@ -1317,12 +1794,12 @@ public class BossKit : Boss
     private void TickJumpPrep(PlayerController player)
     {
         FaceToward(player != null ? player.transform : null);
-        stateTimer -= Time.deltaTime;
+        stateTimer -= BossDeltaTime;
 
         if (!isGrounded || (rb != null && rb.linearVelocity.y > 0.5f))
         {
             jumpPrepHasLeftGround = true;
-            jumpPrepAirTime += Time.deltaTime;
+            jumpPrepAirTime += BossDeltaTime;
         }
 
         if (!jumpPrepHasLeftGround && isGrounded && stateTimer < jumpPrepTimeout - 0.05f)
@@ -1333,7 +1810,17 @@ public class BossKit : Boss
         if (jumpPrepGoal == JumpPrepGoal.HornetDive && ready)
         {
             bool nearApex = rb == null || rb.linearVelocity.y <= 1.5f;
-            if (nearApex || jumpPrepAirTime >= minAirTimeBeforeAction * 2f)
+
+            if (nearApex && !jumpPrepDoubleJumped && bossAirJumpsRemaining > 0 && player != null &&
+                player.transform.position.y - transform.position.y >= doubleJumpChaseHeight)
+            {
+                PerformBossDoubleJump();
+                jumpPrepDoubleJumped = true;
+                stateTimer = Mathf.Max(stateTimer, 0f) + 0.8f;
+                return;
+            }
+
+            if (nearApex || (!jumpPrepDoubleJumped && jumpPrepAirTime >= minAirTimeBeforeAction * 2f))
             {
                 ResolveJumpPrep(player);
                 return;
@@ -1366,6 +1853,240 @@ public class BossKit : Boss
         isGrounded = false;
     }
 
+    private void PerformBossDoubleJump()
+    {
+        if (rb == null || bossAirJumpsRemaining <= 0)
+            return;
+
+        bossAirJumpsRemaining--;
+        float force = doubleJumpForce > 0.01f ? doubleJumpForce : Mathf.Max(jumpForce, 10f);
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, force);
+        isGrounded = false;
+
+        if (animator != null && !shootAnimActive && !isDashing)
+            animator.Play("Jump", 0, 0f);
+    }
+
+    // --- Hover patterns (double jump → hover, like playable Kit) ---
+
+    private void BeginHoverPattern(HoverMode mode, PlayerController player)
+    {
+        SetChargingVisual(false);
+        isAttacking = true;
+        state = AiState.Hover;
+        hoverMode = mode;
+        hoverPatternTimer = 0f;
+        hoverPhaseTimer = 0f;
+        hoverHasLeftGround = !isGrounded;
+        FaceToward(player != null ? player.transform : null);
+
+        if (isGrounded)
+        {
+            hoverPhase = HoverPhase.GroundJump;
+            ForceBossJump();
+        }
+        else if (bossAirJumpsRemaining > 0)
+        {
+            hoverPhase = HoverPhase.DoubleJump;
+            PerformBossDoubleJump();
+        }
+        else
+        {
+            StartBossHover();
+        }
+    }
+
+    private void TickHoverPattern(PlayerController player)
+    {
+        float dt = BossDeltaTime;
+        hoverPatternTimer += dt;
+        hoverPhaseTimer += dt;
+
+        if (hoverPatternTimer >= hoverMaxSeconds)
+        {
+            EndHoverIntoRecover();
+            return;
+        }
+
+        switch (hoverPhase)
+        {
+            case HoverPhase.GroundJump:
+                if (!isGrounded || (rb != null && rb.linearVelocity.y > 0.5f))
+                    hoverHasLeftGround = true;
+
+                if (!hoverHasLeftGround)
+                {
+                    if (hoverPhaseTimer > 0.15f && isGrounded)
+                        ForceBossJump();
+                    return;
+                }
+
+                if ((rb != null && rb.linearVelocity.y <= 1.5f) || hoverPhaseTimer >= 0.9f)
+                {
+                    hoverPhase = HoverPhase.DoubleJump;
+                    hoverPhaseTimer = 0f;
+                    PerformBossDoubleJump();
+                }
+                break;
+
+            case HoverPhase.DoubleJump:
+                if (isGrounded && hoverPhaseTimer > 0.2f)
+                {
+                    EndHoverIntoRecover();
+                    return;
+                }
+
+                if ((rb != null && rb.linearVelocity.y <= 0f) || hoverPhaseTimer >= 0.9f)
+                    StartBossHover();
+                break;
+
+            case HoverPhase.Hovering:
+                if (isGrounded && hoverPhaseTimer > 0.2f)
+                {
+                    EndHoverIntoRecover();
+                    return;
+                }
+
+                if (hoverMode == HoverMode.DashStrike && hoverPhaseTimer >= hoverDashDelay)
+                {
+                    BeginHoverBoostedDash(player);
+                    return;
+                }
+
+                if (Time.time >= nextHoverShotTime)
+                {
+                    FireVolley(player, ProjectileShotType.Small);
+                    nextHoverShotTime = Time.time + (IsEnraged() ? hoverShotIntervalEnraged : hoverShotInterval);
+                }
+                break;
+
+            case HoverPhase.HoverDash:
+                dashTimer += dt;
+                if (dashTimer < dashDuration)
+                    return;
+
+                isDashing = false;
+                FaceToward(player != null ? player.transform : null);
+                FireVolley(player, ProjectileShotType.Medium);
+                EndHoverIntoRecover();
+                break;
+        }
+    }
+
+    private void StartBossHover()
+    {
+        if (rb == null || isStunned)
+            return;
+
+        isBossHovering = true;
+        hoverPhase = HoverPhase.Hovering;
+        hoverPhaseTimer = 0f;
+        rb.gravityScale = 0f;
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
+        nextHoverShotTime = Time.time + hoverFirstShotDelay;
+
+        if (animator != null)
+            animator.SetTrigger("Hover");
+    }
+
+    private void EndBossHover()
+    {
+        if (!isBossHovering)
+            return;
+
+        isBossHovering = false;
+        if (rb != null)
+            rb.gravityScale = defaultGravityScale;
+        if (animator != null)
+            animator.ResetTrigger("Hover");
+    }
+
+    private void EndHoverIntoRecover()
+    {
+        EndBossHover();
+        FinishIntoRecover();
+    }
+
+    private void BeginHoverBoostedDash(PlayerController player)
+    {
+        dashDir = facingSign;
+        if (player != null)
+        {
+            float dx = player.transform.position.x - transform.position.x;
+            if (Mathf.Abs(dx) > 0.05f)
+                dashDir = Mathf.Sign(dx);
+        }
+
+        dashSpeedCurrent = BossSpeed(dashSpeed * bossMovementSpeedScale * Mathf.Max(1f, boostedDashSpeedMultiplier));
+        dashDuration = Mathf.Max(0.05f, dashDistance * Mathf.Max(1f, boostedDashDistanceMultiplier) / dashSpeedCurrent);
+        dashTimer = 0f;
+        isDashing = true;
+        bossBoostedDashActive = true;
+        hoverPhase = HoverPhase.HoverDash;
+        hoverPhaseTimer = 0f;
+
+        if (animator != null)
+            animator.SetTrigger("Dash");
+
+        BeginDashAfterimageTrail(dashDuration);
+    }
+
+    private void ApplyHoverVelocity()
+    {
+        PlayerController player = FindPlayer();
+
+        switch (hoverPhase)
+        {
+            case HoverPhase.HoverDash:
+                rb.linearVelocity = new Vector2(dashDir * dashSpeedCurrent, 0f);
+                facingSign = dashDir;
+                ApplyFacingVisual();
+                return;
+
+            case HoverPhase.Hovering:
+            {
+                float levelSeconds = IsEnraged() ? hoverLevelSecondsEnraged : hoverLevelSeconds;
+                float vy = 0f;
+                if (hoverMode == HoverMode.Barrage && hoverPhaseTimer >= levelSeconds)
+                {
+                    vy = Mathf.MoveTowards(rb.linearVelocity.y, -BossSpeed(hoverDescendSpeed),
+                        hoverDescendAcceleration * Time.fixedDeltaTime);
+                }
+
+                rb.linearVelocity = new Vector2(GetHoverDriftVelocityX(player), vy);
+                return;
+            }
+
+            default:
+                rb.linearVelocity = new Vector2(GetHoverDriftVelocityX(player), rb.linearVelocity.y);
+                return;
+        }
+    }
+
+    /// <summary>Drifts toward a spot diagonally above the player so 45° down-shots line up.</summary>
+    private float GetHoverDriftVelocityX(PlayerController player)
+    {
+        if (player == null)
+            return 0f;
+
+        Vector3 p = player.transform.position;
+        float height = transform.position.y - p.y;
+        float side = Mathf.Abs(transform.position.x - p.x) > 0.05f
+            ? Mathf.Sign(transform.position.x - p.x)
+            : -facingSign;
+        float targetX = p.x + side * Mathf.Clamp(height, 1.5f, 4f);
+        float diff = targetX - transform.position.x;
+        if (Mathf.Abs(diff) < 0.25f)
+            return 0f;
+
+        return Mathf.Sign(diff) * GetMoveSpeed() * hoverDriftSpeedMul;
+    }
+
+    private bool IsAtMaxCharge()
+    {
+        return chargeTimer >= bigChargeSeconds && chargeCooldownTimer <= 0f;
+    }
+
     private bool CanStartChargePattern()
     {
         return chargeCooldownTimer <= 0f;
@@ -1379,7 +2100,7 @@ public class BossKit : Boss
             return;
         }
 
-        chargeTimer += Time.deltaTime;
+        chargeTimer += BossDeltaTime;
         chargeTimer = Mathf.Min(chargeTimer, bigChargeSeconds);
         SetChargingVisual(chargeTimer > 0.08f);
 
@@ -1402,7 +2123,7 @@ public class BossKit : Boss
     {
         if (shouldPlay && !chargeLoopActive)
         {
-            SoundManager.Instance?.StartChargeLoop();
+            SoundManager.Instance?.StartChargeLoop(SoundManager.ChargeLoopId.BossKit);
             chargeLoopActive = true;
         }
         else if (!shouldPlay && chargeLoopActive)
@@ -1439,7 +2160,7 @@ public class BossKit : Boss
 
         if (chargeCooldownTimer <= 0f)
         {
-            chargeTimer += Time.deltaTime;
+            chargeTimer += BossDeltaTime;
             chargeTimer = Mathf.Min(chargeTimer, bigChargeSeconds);
         }
 
@@ -1478,24 +2199,34 @@ public class BossKit : Boss
             chargeCooldownTimer = chargeCooldownSeconds;
 
         chargeTimer = 0f;
-        BeginShootBurst(type, type == ProjectileShotType.Big ? 1 : 2);
+        int burstCount = 2;
+        if (type == ProjectileShotType.Big)
+            burstCount = copyBotMode ? CopyBotMaxLiveBigShots : 1;
+        BeginShootBurst(type, burstCount);
     }
 
     private void FinishIntoRecover()
     {
+        EndBossHover();
         isAttacking = false;
         isDashing = false;
         isCharging = false;
         isBossDashJumping = false;
         pendingConvertToDashJump = false;
         state = AiState.Recover;
-        recoverTimer = IsEnraged() ? recoverDurationEnraged : recoverDuration;
+        burstPauseUntil = 0f;
+        shotsFiredInCurrentGroup = 0;
+        float minBreak = Mathf.Min(attackBreakMinSeconds, attackBreakMaxSeconds);
+        float maxBreak = Mathf.Max(attackBreakMinSeconds, attackBreakMaxSeconds);
+        recoverTimer = Random.Range(minBreak, maxBreak);
+        if (IsEnraged())
+            recoverTimer = Mathf.Min(recoverTimer, recoverDurationEnraged);
         StopHorizontal();
     }
 
     private void TickRecover()
     {
-        recoverTimer -= Time.deltaTime;
+        recoverTimer -= BossDeltaTime;
         if (recoverTimer > 0f)
             return;
 
@@ -1508,7 +2239,7 @@ public class BossKit : Boss
         if (shootAnimTimer <= 0f)
             return;
 
-        shootAnimTimer -= Time.deltaTime;
+        shootAnimTimer -= BossDeltaTime;
         if (shootAnimTimer <= 0f)
         {
             shootAnimTimer = 0f;
@@ -1521,14 +2252,18 @@ public class BossKit : Boss
         if (player == null)
         {
             aimUp = false;
+            aimDown = false;
             return;
         }
 
-        aimUp = player.transform.position.y - transform.position.y >= aimUpThreshold;
+        Vector2 toPlayer = (Vector2)(player.transform.position - transform.position);
+        aimUp = toPlayer.y >= aimUpThreshold;
+        aimDown = !aimUp && ShouldAimDownAt(toPlayer);
     }
 
     private void CancelAttackImmediate()
     {
+        EndBossHover();
         isAttacking = false;
         isDashing = false;
         isCharging = false;
@@ -1611,7 +2346,7 @@ public class BossKit : Boss
 
         Color pink = Color.Lerp(chargeAuraColor, chargeAuraStrongColor, charge01);
         float flickerSpeed = Mathf.Lerp(auraFlickerSpeed, Mathf.Min(auraFlickerSpeed * 1.75f, 2.4f), charge01);
-        auraFlickerPhase += Time.deltaTime * flickerSpeed;
+        auraFlickerPhase += BossDeltaTime * flickerSpeed;
         float shimmer = 0.5f + 0.5f * Mathf.Sin(auraFlickerPhase * Mathf.PI * 2f);
         float yellowMix = shimmer * auraFlickerStrength * Mathf.Lerp(0.55f, 1f, charge01);
         Color auraColor = Color.Lerp(pink, chargeAuraFlickerColor, yellowMix);
@@ -1635,6 +2370,33 @@ public class BossKit : Boss
     }
 
     // --- Dash afterimages (player / Malice boss parity) ---
+
+    public void SetCopyBotAfterimageStyle(float grayLevel)
+    {
+        grayLevel = Mathf.Clamp(grayLevel, 0.05f, 1f);
+        copyBotDecoyGrayLevel = grayLevel;
+        dashAfterimageColor = new Color(grayLevel, grayLevel, grayLevel, 1f);
+    }
+
+    /// <summary>Copy-bot boss fight: more big shots, decoy copies, big-shot cap.</summary>
+    public void EnableCopyBotMode()
+    {
+        copyBotMode = true;
+    }
+
+    /// <summary>1-HP decoy: chase + stun only.</summary>
+    public void EnableCopyBotDecoyMode()
+    {
+        copyBotDecoyMode = true;
+        copyBotMode = false;
+        usePlaceholderAi = false;
+        isAttacking = false;
+        isCharging = false;
+        isDashing = false;
+
+        if (attackHitbox != null)
+            attackHitbox.Deactivate();
+    }
 
     private void SetupDashAfterimages()
     {
@@ -1805,10 +2567,17 @@ public class BossKit : Boss
         dashDistance = Mathf.Max(0.1f, dashDistance);
         dashSpeed = Mathf.Max(0.1f, dashSpeed);
         shotsPerBurst = Mathf.Max(1, shotsPerBurst);
-        machineGunMaxShots = Mathf.Clamp(machineGunMaxShots, 1, 8);
+        machineGunMaxShots = Mathf.Clamp(machineGunMaxShots, 1, burstGroupMaxShots);
+        burstGroupMaxShots = Mathf.Clamp(burstGroupMaxShots, 1, 8);
+        spreadVolleyMaxCount = Mathf.Clamp(spreadVolleyMaxCount, 1, 6);
+        attackSpacingWorldUnits = Mathf.Max(0.5f, attackSpacingWorldUnits);
+        attackBreakMinSeconds = Mathf.Max(0.1f, attackBreakMinSeconds);
+        attackBreakMaxSeconds = Mathf.Max(attackBreakMinSeconds, attackBreakMaxSeconds);
+        bossMovementSpeedScale = Mathf.Clamp(bossMovementSpeedScale, 0.85f, 1f);
         machineGunShotInterval = Mathf.Max(0.08f, machineGunShotInterval);
         timeBetweenShots = Mathf.Max(0.06f, timeBetweenShots);
         maxLiveProjectiles = Mathf.Max(4, maxLiveProjectiles);
+        projectileSpeedMultiplier = Mathf.Clamp(projectileSpeedMultiplier, 0.4f, 1f);
         spreadShotAngleDegrees = Mathf.Clamp(spreadShotAngleDegrees, 10f, 75f);
         enrageHpFraction = Mathf.Clamp(enrageHpFraction, 0.05f, 0.95f);
         dashJumpTrapLead = Mathf.Max(0.5f, dashJumpTrapLead);
@@ -1827,6 +2596,20 @@ public class BossKit : Boss
         frameEdgeViewportX = Mathf.Clamp(frameEdgeViewportX, 0.05f, 0.4f);
         frameNudgeMoveSpeedMul = Mathf.Clamp(frameNudgeMoveSpeedMul, 0.2f, 1f);
         frameDashBiasChance = Mathf.Clamp01(frameDashBiasChance);
+        doubleJumpForce = Mathf.Max(0f, doubleJumpForce);
+        doubleJumpChaseHeight = Mathf.Max(0.25f, doubleJumpChaseHeight);
+        hoverLevelSeconds = Mathf.Max(0.2f, hoverLevelSeconds);
+        hoverLevelSecondsEnraged = Mathf.Max(0.2f, hoverLevelSecondsEnraged);
+        hoverDescendSpeed = Mathf.Max(0.1f, hoverDescendSpeed);
+        hoverDescendAcceleration = Mathf.Max(0.1f, hoverDescendAcceleration);
+        hoverMaxSeconds = Mathf.Max(1f, hoverMaxSeconds);
+        hoverShotInterval = Mathf.Max(0.15f, hoverShotInterval);
+        hoverShotIntervalEnraged = Mathf.Max(0.15f, hoverShotIntervalEnraged);
+        hoverFirstShotDelay = Mathf.Max(0f, hoverFirstShotDelay);
+        hoverDashDelay = Mathf.Max(0.1f, hoverDashDelay);
+        aimDownThreshold = Mathf.Max(0.25f, aimDownThreshold);
+        boostedDashSpeedMultiplier = Mathf.Max(1f, boostedDashSpeedMultiplier);
+        boostedDashDistanceMultiplier = Mathf.Max(1f, boostedDashDistanceMultiplier);
     }
 #endif
 }

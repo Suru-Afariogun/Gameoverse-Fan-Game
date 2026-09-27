@@ -14,6 +14,9 @@ public static class CharacterEffectSorting
     /// <summary>In-group order for charge aura (behind body, above trail ghosts).</summary>
     public const int AuraOrderInGroup = 0;
 
+    /// <summary>In-group order for charge particles drawn in front of the body (MM Dual Override style).</summary>
+    public const int FrontEffectOrderInGroup = 15;
+
     /// <summary>
     /// Ensures a Sorting Group on the character root. Captures the body's world sort into the
     /// group once, then keeps the body in front within the group.
@@ -69,6 +72,52 @@ public static class CharacterEffectSorting
 
         aura.sortingLayerID = body.sortingLayerID;
         aura.sortingOrder = body.sortingOrder - 1;
+    }
+
+    /// <summary>
+    /// Floating charge particles (balls/lines): in front of the body, inside the Sorting Group.
+    /// </summary>
+    public static void ApplyEffectInFrontOfBody(SpriteRenderer effect, SpriteRenderer body, SortingGroup group)
+    {
+        if (effect == null)
+            return;
+
+        if (group != null)
+        {
+            effect.sortingLayerID = group.sortingLayerID;
+            effect.sortingOrder = FrontEffectOrderInGroup;
+            if (body != null)
+                body.sortingOrder = BodyOrderInGroup;
+            return;
+        }
+
+        if (body == null)
+            return;
+
+        effect.sortingLayerID = body.sortingLayerID;
+        effect.sortingOrder = body.sortingOrder + 1;
+    }
+
+    /// <summary>
+    /// World-space FX detached from the character: match host depth on the sorting plane.
+    /// </summary>
+    public static void ApplyDetachedEffectNearHost(SpriteRenderer effect, SortingGroup group, SpriteRenderer body, int worldOrderOffset = 5)
+    {
+        if (effect == null)
+            return;
+
+        if (group != null)
+        {
+            effect.sortingLayerID = group.sortingLayerID;
+            effect.sortingOrder = group.sortingOrder + worldOrderOffset;
+            return;
+        }
+
+        if (body == null)
+            return;
+
+        effect.sortingLayerID = body.sortingLayerID;
+        effect.sortingOrder = body.sortingOrder + worldOrderOffset;
     }
 
     /// <summary>

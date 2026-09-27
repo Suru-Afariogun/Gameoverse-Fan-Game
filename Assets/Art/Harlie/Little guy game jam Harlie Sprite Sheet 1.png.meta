@@ -1,0 +1,2244 @@
+fileFormatVersion: 2
+guid: c193b6668123c304ba1df0db8f0322a9
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -6295221103491985825
+    second: Little guy game jam Harlie Sprite Sheet 1_0
+  - first:
+      213: 6487019373001833966
+    second: Little guy game jam Harlie Sprite Sheet 1_1
+  - first:
+      213: 1494182851156553043
+    second: Little guy game jam Harlie Sprite Sheet 1_2
+  - first:
+      213: 5406240913589853408
+    second: Little guy game jam Harlie Sprite Sheet 1_3
+  - first:
+      213: -6768660005405677195
+    second: Little guy game jam Harlie Sprite Sheet 1_4
+  - first:
+      213: -4872094395242154598
+    second: Little guy game jam Harlie Sprite Sheet 1_5
+  - first:
+      213: -7709646380269188066
+    second: Little guy game jam Harlie Sprite Sheet 1_6
+  - first:
+      213: -1958637658180290742
+    second: Little guy game jam Harlie Sprite Sheet 1_7
+  - first:
+      213: -4409006604959909361
+    second: Little guy game jam Harlie Sprite Sheet 1_8
+  - first:
+      213: 5802139716970863480
+    second: Little guy game jam Harlie Sprite Sheet 1_9
+  - first:
+      213: -7150061387569608649
+    second: Little guy game jam Harlie Sprite Sheet 1_10
+  - first:
+      213: -3600799115554609505
+    second: Little guy game jam Harlie Sprite Sheet 1_11
+  - first:
+      213: 1932676411790401785
+    second: Little guy game jam Harlie Sprite Sheet 1_12
+  - first:
+      213: -187862597449141340
+    second: Little guy game jam Harlie Sprite Sheet 1_13
+  - first:
+      213: -3679567963727609857
+    second: Little guy game jam Harlie Sprite Sheet 1_14
+  - first:
+      213: 8098389511736292677
+    second: Little guy game jam Harlie Sprite Sheet 1_15
+  - first:
+      213: 8788347212341452510
+    second: Little guy game jam Harlie Sprite Sheet 1_16
+  - first:
+      213: 8578463755865679852
+    second: Little guy game jam Harlie Sprite Sheet 1_17
+  - first:
+      213: 2241217530007787231
+    second: Little guy game jam Harlie Sprite Sheet 1_18
+  - first:
+      213: 7170720393359331635
+    second: Little guy game jam Harlie Sprite Sheet 1_19
+  - first:
+      213: 236219991667474990
+    second: Little guy game jam Harlie Sprite Sheet 1_20
+  - first:
+      213: -1811912952732535506
+    second: Little guy game jam Harlie Sprite Sheet 1_21
+  - first:
+      213: 4027485401589288377
+    second: Little guy game jam Harlie Sprite Sheet 1_22
+  - first:
+      213: 1824352014272630647
+    second: Little guy game jam Harlie Sprite Sheet 1_23
+  - first:
+      213: 3571281282273838413
+    second: Little guy game jam Harlie Sprite Sheet 1_24
+  - first:
+      213: 5274810567734365437
+    second: Little guy game jam Harlie Sprite Sheet 1_25
+  - first:
+      213: -1724979335686556091
+    second: Little guy game jam Harlie Sprite Sheet 1_26
+  - first:
+      213: 1829246730772454043
+    second: Little guy game jam Harlie Sprite Sheet 1_27
+  - first:
+      213: -6763149911172235121
+    second: Little guy game jam Harlie Sprite Sheet 1_28
+  - first:
+      213: -1167773660943706113
+    second: Little guy game jam Harlie Sprite Sheet 1_29
+  - first:
+      213: -7068254612585594640
+    second: Little guy game jam Harlie Sprite Sheet 1_30
+  - first:
+      213: -8374675205708167214
+    second: Little guy game jam Harlie Sprite Sheet 1_31
+  - first:
+      213: -6032268999988557958
+    second: Little guy game jam Harlie Sprite Sheet 1_32
+  - first:
+      213: -2128685413519856283
+    second: Little guy game jam Harlie Sprite Sheet 1_33
+  - first:
+      213: 7704549429926212871
+    second: Little guy game jam Harlie Sprite Sheet 1_34
+  - first:
+      213: -3625076805904739976
+    second: Little guy game jam Harlie Sprite Sheet 1_35
+  - first:
+      213: -9078716138604081097
+    second: Little guy game jam Harlie Sprite Sheet 1_36
+  - first:
+      213: 5547999885452334606
+    second: Little guy game jam Harlie Sprite Sheet 1_37
+  - first:
+      213: 2049502792131316589
+    second: Little guy game jam Harlie Sprite Sheet 1_38
+  - first:
+      213: 5888180788193293112
+    second: Little guy game jam Harlie Sprite Sheet 1_39
+  - first:
+      213: 4269059837448657916
+    second: Little guy game jam Harlie Sprite Sheet 1_40
+  - first:
+      213: -1447120546933203475
+    second: Little guy game jam Harlie Sprite Sheet 1_41
+  - first:
+      213: 8489531634094769696
+    second: Little guy game jam Harlie Sprite Sheet 1_42
+  - first:
+      213: 2310111084364669994
+    second: Little guy game jam Harlie Sprite Sheet 1_43
+  - first:
+      213: -530402671195104809
+    second: Little guy game jam Harlie Sprite Sheet 1_44
+  - first:
+      213: 5423814691585650047
+    second: Little guy game jam Harlie Sprite Sheet 1_45
+  - first:
+      213: -2678458478970454346
+    second: Little guy game jam Harlie Sprite Sheet 1_46
+  - first:
+      213: 1072452946917878587
+    second: Little guy game jam Harlie Sprite Sheet 1_47
+  - first:
+      213: 1308113927184480750
+    second: Little guy game jam Harlie Sprite Sheet 1_48
+  - first:
+      213: -4337224706165931376
+    second: Little guy game jam Harlie Sprite Sheet 1_49
+  - first:
+      213: -8153341006979051293
+    second: Little guy game jam Harlie Sprite Sheet 1_50
+  - first:
+      213: 7265627699857389013
+    second: Little guy game jam Harlie Sprite Sheet 1_51
+  - first:
+      213: 4834978987473038171
+    second: Little guy game jam Harlie Sprite Sheet 1_52
+  - first:
+      213: -2891003912749473527
+    second: Little guy game jam Harlie Sprite Sheet 1_53
+  - first:
+      213: -9132080063600425322
+    second: Little guy game jam Harlie Sprite Sheet 1_54
+  - first:
+      213: -1760985037683291104
+    second: Little guy game jam Harlie Sprite Sheet 1_55
+  - first:
+      213: 7148320279125479158
+    second: Little guy game jam Harlie Sprite Sheet 1_56
+  - first:
+      213: -1622087275684649215
+    second: Little guy game jam Harlie Sprite Sheet 1_57
+  - first:
+      213: 6480047534083917840
+    second: Little guy game jam Harlie Sprite Sheet 1_58
+  - first:
+      213: -606146037134321610
+    second: Little guy game jam Harlie Sprite Sheet 1_59
+  - first:
+      213: -8782286822959896156
+    second: Little guy game jam Harlie Sprite Sheet 1_60
+  - first:
+      213: -22030270153037869
+    second: Little guy game jam Harlie Sprite Sheet 1_61
+  - first:
+      213: 5984465712787208197
+    second: Little guy game jam Harlie Sprite Sheet 1_62
+  - first:
+      213: 7717550343678127593
+    second: Little guy game jam Harlie Sprite Sheet 1_63
+  - first:
+      213: -2196093323943364987
+    second: Little guy game jam Harlie Sprite Sheet 1_64
+  - first:
+      213: 1224363439081584421
+    second: Little guy game jam Harlie Sprite Sheet 1_65
+  - first:
+      213: 2164521856302810875
+    second: Little guy game jam Harlie Sprite Sheet 1_66
+  - first:
+      213: -7984291163897526597
+    second: Little guy game jam Harlie Sprite Sheet 1_67
+  - first:
+      213: -6132474640840359839
+    second: Little guy game jam Harlie Sprite Sheet 1_68
+  - first:
+      213: -5336077919159748582
+    second: Little guy game jam Harlie Sprite Sheet 1_69
+  - first:
+      213: 5075446679477343343
+    second: Little guy game jam Harlie Sprite Sheet 1_70
+  - first:
+      213: 735381222167231374
+    second: Little guy game jam Harlie Sprite Sheet 1_71
+  - first:
+      213: -4591112749977071454
+    second: Little guy game jam Harlie Sprite Sheet 1_72
+  - first:
+      213: -7738905650985436555
+    second: Little guy game jam Harlie Sprite Sheet 1_73
+  - first:
+      213: -6608003552866588923
+    second: Little guy game jam Harlie Sprite Sheet 1_74
+  - first:
+      213: 3970513398809118326
+    second: Little guy game jam Harlie Sprite Sheet 1_75
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_0
+      rect:
+        serializedVersion: 2
+        x: 193
+        y: 3825
+        width: 58
+        height: 81
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f5e41d782c1e2a8a0800000000000000
+      internalID: -6295221103491985825
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_1
+      rect:
+        serializedVersion: 2
+        x: 361
+        y: 3824
+        width: 58
+        height: 81
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eedf9d200c5860a50800000000000000
+      internalID: 6487019373001833966
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_2
+      rect:
+        serializedVersion: 2
+        x: 983
+        y: 3816
+        width: 67
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 35daaa8f2676cb410800000000000000
+      internalID: 1494182851156553043
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_3
+      rect:
+        serializedVersion: 2
+        x: 209
+        y: 3806
+        width: 29
+        height: 17
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0ecd4b8a773d60b40800000000000000
+      internalID: 5406240913589853408
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_4
+      rect:
+        serializedVersion: 2
+        x: 377
+        y: 3805
+        width: 29
+        height: 17
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 579a6644693e012a0800000000000000
+      internalID: -6768660005405677195
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_5
+      rect:
+        serializedVersion: 2
+        x: 2027
+        y: 3591
+        width: 408
+        height: 218
+      alignment: 9
+      pivot: {x: 0.34728944, y: 0.48433805}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a957b6306f7d26cb0800000000000000
+      internalID: -4872094395242154598
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_6
+      rect:
+        serializedVersion: 2
+        x: 2966
+        y: 3553
+        width: 258
+        height: 255
+      alignment: 9
+      pivot: {x: 0.56616306, y: 0.56694144}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e1ccd20f675d10590800000000000000
+      internalID: -7709646380269188066
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_7
+      rect:
+        serializedVersion: 2
+        x: 3321
+        y: 3589
+        width: 373
+        height: 218
+      alignment: 9
+      pivot: {x: 0.6487353, y: 0.51174563}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a47f57c5d6581d4e0800000000000000
+      internalID: -1958637658180290742
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_8
+      rect:
+        serializedVersion: 2
+        x: 209
+        y: 3785
+        width: 27
+        height: 19
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f0a730b4adf00d2c0800000000000000
+      internalID: -4409006604959909361
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_9
+      rect:
+        serializedVersion: 2
+        x: 210
+        y: 3767
+        width: 24
+        height: 18
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 87bdb3fd457558050800000000000000
+      internalID: 5802139716970863480
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_10
+      rect:
+        serializedVersion: 2
+        x: 377
+        y: 3784
+        width: 27
+        height: 19
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7384da7fc01e5cc90800000000000000
+      internalID: -7150061387569608649
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_11
+      rect:
+        serializedVersion: 2
+        x: 1411
+        y: 3586
+        width: 348
+        height: 218
+      alignment: 9
+      pivot: {x: 0.2522867, y: 0.48433918}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f96a3d14844670ec0800000000000000
+      internalID: -3600799115554609505
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_12
+      rect:
+        serializedVersion: 2
+        x: 2537
+        y: 3545
+        width: 228
+        height: 255
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9f02b8ee4fe32da10800000000000000
+      internalID: 1932676411790401785
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_13
+      rect:
+        serializedVersion: 2
+        x: 378
+        y: 3766
+        width: 24
+        height: 18
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4a3367486f3946df0800000000000000
+      internalID: -187862597449141340
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_14
+      rect:
+        serializedVersion: 2
+        x: 212
+        y: 3716
+        width: 23
+        height: 47
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fffbb13ae6c8fecc0800000000000000
+      internalID: -3679567963727609857
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_15
+      rect:
+        serializedVersion: 2
+        x: 380
+        y: 3715
+        width: 23
+        height: 47
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5457ac39a52436070800000000000000
+      internalID: 8098389511736292677
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_16
+      rect:
+        serializedVersion: 2
+        x: 195
+        y: 3588
+        width: 58
+        height: 81
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ede186a1a3b76f970800000000000000
+      internalID: 8788347212341452510
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_17
+      rect:
+        serializedVersion: 2
+        x: 377
+        y: 3585
+        width: 58
+        height: 81
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ce7efe6d553dc0770800000000000000
+      internalID: 8578463755865679852
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_18
+      rect:
+        serializedVersion: 2
+        x: 783
+        y: 3396
+        width: 297
+        height: 250
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fd61e7418776a1f10800000000000000
+      internalID: 2241217530007787231
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_19
+      rect:
+        serializedVersion: 2
+        x: 211
+        y: 3569
+        width: 29
+        height: 17
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 33115d5a434838360800000000000000
+      internalID: 7170720393359331635
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_20
+      rect:
+        serializedVersion: 2
+        x: 393
+        y: 3566
+        width: 29
+        height: 17
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e228f24b4d8374300800000000000000
+      internalID: 236219991667474990
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_21
+      rect:
+        serializedVersion: 2
+        x: 211
+        y: 3548
+        width: 27
+        height: 19
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e25b278f4cacad6e0800000000000000
+      internalID: -1811912952732535506
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_22
+      rect:
+        serializedVersion: 2
+        x: 212
+        y: 3530
+        width: 24
+        height: 18
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9bd0dcb52a084e730800000000000000
+      internalID: 4027485401589288377
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_23
+      rect:
+        serializedVersion: 2
+        x: 393
+        y: 3545
+        width: 27
+        height: 19
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 77f0dfbbd76615910800000000000000
+      internalID: 1824352014272630647
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_24
+      rect:
+        serializedVersion: 2
+        x: 394
+        y: 3527
+        width: 24
+        height: 18
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d450fee976dbf8130800000000000000
+      internalID: 3571281282273838413
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_25
+      rect:
+        serializedVersion: 2
+        x: 214
+        y: 3479
+        width: 23
+        height: 47
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dfc8843a344e33940800000000000000
+      internalID: 5274810567734365437
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_26
+      rect:
+        serializedVersion: 2
+        x: 396
+        y: 3476
+        width: 23
+        height: 47
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 546738bfe64af08e0800000000000000
+      internalID: -1724979335686556091
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_27
+      rect:
+        serializedVersion: 2
+        x: 1371
+        y: 3270
+        width: 384
+        height: 218
+      alignment: 9
+      pivot: {x: 0.32218614, y: 0.4921696}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b9a9c3ab53ac26910800000000000000
+      internalID: 1829246730772454043
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_28
+      rect:
+        serializedVersion: 2
+        x: 1853
+        y: 3279
+        width: 332
+        height: 205
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f804ddd0df67422a0800000000000000
+      internalID: -6763149911172235121
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_29
+      rect:
+        serializedVersion: 2
+        x: 195
+        y: 3321
+        width: 58
+        height: 81
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ff79461ea0c3bcfe0800000000000000
+      internalID: -1167773660943706113
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_30
+      rect:
+        serializedVersion: 2
+        x: 386
+        y: 3319
+        width: 58
+        height: 81
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0f0c1da01e388ed90800000000000000
+      internalID: -7068254612585594640
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_31
+      rect:
+        serializedVersion: 2
+        x: 2339
+        y: 3246
+        width: 332
+        height: 205
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2d74e76754d27cb80800000000000000
+      internalID: -8374675205708167214
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_32
+      rect:
+        serializedVersion: 2
+        x: 2818
+        y: 3252
+        width: 332
+        height: 213
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a77c41a0e43194ca0800000000000000
+      internalID: -6032268999988557958
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_33
+      rect:
+        serializedVersion: 2
+        x: 3354
+        y: 3110
+        width: 133
+        height: 313
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 56de79805e36572e0800000000000000
+      internalID: -2128685413519856283
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_34
+      rect:
+        serializedVersion: 2
+        x: 211
+        y: 3302
+        width: 29
+        height: 17
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 705b035d2ee0cea60800000000000000
+      internalID: 7704549429926212871
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_35
+      rect:
+        serializedVersion: 2
+        x: 402
+        y: 3300
+        width: 29
+        height: 17
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8715a8cf9d321bdc0800000000000000
+      internalID: -3625076805904739976
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_36
+      rect:
+        serializedVersion: 2
+        x: 211
+        y: 3281
+        width: 27
+        height: 19
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 730d5e5e5cbe10280800000000000000
+      internalID: -9078716138604081097
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_37
+      rect:
+        serializedVersion: 2
+        x: 212
+        y: 3263
+        width: 24
+        height: 18
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e065b4250847efc40800000000000000
+      internalID: 5547999885452334606
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_38
+      rect:
+        serializedVersion: 2
+        x: 402
+        y: 3279
+        width: 27
+        height: 19
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d6b88234eeb417c10800000000000000
+      internalID: 2049502792131316589
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_39
+      rect:
+        serializedVersion: 2
+        x: 403
+        y: 3261
+        width: 24
+        height: 18
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8337a8dda3507b150800000000000000
+      internalID: 5888180788193293112
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_40
+      rect:
+        serializedVersion: 2
+        x: 214
+        y: 3212
+        width: 23
+        height: 47
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cfb9300cd4fbe3b30800000000000000
+      internalID: 4269059837448657916
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_41
+      rect:
+        serializedVersion: 2
+        x: 405
+        y: 3210
+        width: 23
+        height: 47
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ded90ec978bcaebe0800000000000000
+      internalID: -1447120546933203475
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_42
+      rect:
+        serializedVersion: 2
+        x: 103
+        y: 2601
+        width: 59
+        height: 373
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 02609afaa00e0d570800000000000000
+      internalID: 8489531634094769696
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_43
+      rect:
+        serializedVersion: 2
+        x: 362
+        y: 2698
+        width: 214
+        height: 200
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a24af3faac92f0020800000000000000
+      internalID: 2310111084364669994
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_44
+      rect:
+        serializedVersion: 2
+        x: 922
+        y: 2849
+        width: 579
+        height: 218
+      alignment: 9
+      pivot: {x: 0.5383267, y: 0.48210382}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7d95f7ba491a3a8f0800000000000000
+      internalID: -530402671195104809
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_45
+      rect:
+        serializedVersion: 2
+        x: 1644
+        y: 2775
+        width: 407
+        height: 356
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f7de183b9b2454b40800000000000000
+      internalID: 5423814691585650047
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_46
+      rect:
+        serializedVersion: 2
+        x: 2204
+        y: 2731
+        width: 407
+        height: 356
+      alignment: 9
+      pivot: {x: 0.5817853, y: 0.4112926}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6be3557543434dad0800000000000000
+      internalID: -2678458478970454346
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_47
+      rect:
+        serializedVersion: 2
+        x: 2845
+        y: 2766
+        width: 578
+        height: 218
+      alignment: 9
+      pivot: {x: 0.41730687, y: 0.50783044}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b3b6c5be54e12ee00800000000000000
+      internalID: 1072452946917878587
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_48
+      rect:
+        serializedVersion: 2
+        x: 306
+        y: 2091
+        width: 426
+        height: 421
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ee97293afaa572210800000000000000
+      internalID: 1308113927184480750
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_49
+      rect:
+        serializedVersion: 2
+        x: 902
+        y: 2261
+        width: 147
+        height: 148
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0928eedfb151fc3c0800000000000000
+      internalID: -4337224706165931376
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_50
+      rect:
+        serializedVersion: 2
+        x: 1379
+        y: 2180
+        width: 348
+        height: 218
+      alignment: 9
+      pivot: {x: 0.25353196, y: 0.4918885}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3e0536a6d8389de80800000000000000
+      internalID: -8153341006979051293
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_51
+      rect:
+        serializedVersion: 2
+        x: 1976
+        y: 2166
+        width: 408
+        height: 218
+      alignment: 9
+      pivot: {x: 0.34612557, y: 0.47160688}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5d5fc38e5e1b4d460800000000000000
+      internalID: 7265627699857389013
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_52
+      rect:
+        serializedVersion: 2
+        x: 2486
+        y: 2120
+        width: 228
+        height: 255
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b5beec4b5cb491340800000000000000
+      internalID: 4834978987473038171
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_53
+      rect:
+        serializedVersion: 2
+        x: 2915
+        y: 2128
+        width: 258
+        height: 255
+      alignment: 9
+      pivot: {x: 0.56169, y: 0.5658835}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 901ad40324711e7d0800000000000000
+      internalID: -2891003912749473527
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_54
+      rect:
+        serializedVersion: 2
+        x: 3270
+        y: 2164
+        width: 373
+        height: 218
+      alignment: 9
+      pivot: {x: 0.64934796, y: 0.5081126}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6968ba4e095544180800000000000000
+      internalID: -9132080063600425322
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_55
+      rect:
+        serializedVersion: 2
+        x: 718
+        y: 1805
+        width: 171
+        height: 118
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 02c0c163079bf87e0800000000000000
+      internalID: -1760985037683291104
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_56
+      rect:
+        serializedVersion: 2
+        x: 1320
+        y: 1845
+        width: 384
+        height: 218
+      alignment: 9
+      pivot: {x: 0.31808725, y: 0.4878316}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6fecef1ab6fe33360800000000000000
+      internalID: 7148320279125479158
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_57
+      rect:
+        serializedVersion: 2
+        x: 1802
+        y: 1854
+        width: 332
+        height: 205
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 107a22a87303d79e0800000000000000
+      internalID: -1622087275684649215
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_58
+      rect:
+        serializedVersion: 2
+        x: 2247
+        y: 1856
+        width: 332
+        height: 205
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 018c7b446e0cde950800000000000000
+      internalID: 6480047534083917840
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_59
+      rect:
+        serializedVersion: 2
+        x: 2690
+        y: 1851
+        width: 332
+        height: 213
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 638199604698697f0800000000000000
+      internalID: -606146037134321610
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_60
+      rect:
+        serializedVersion: 2
+        x: 3303
+        y: 1685
+        width: 133
+        height: 314
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4a9a1e14aac0f1680800000000000000
+      internalID: -8782286822959896156
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_61
+      rect:
+        serializedVersion: 2
+        x: 634
+        y: 1600
+        width: 37
+        height: 38
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3d7e835069bb1bff0800000000000000
+      internalID: -22030270153037869
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_62
+      rect:
+        serializedVersion: 2
+        x: 2006
+        y: 1285
+        width: 407
+        height: 356
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 508bf25dbd71d0350800000000000000
+      internalID: 5984465712787208197
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_63
+      rect:
+        serializedVersion: 2
+        x: 2646
+        y: 1309
+        width: 407
+        height: 356
+      alignment: 9
+      pivot: {x: 0.5869027, y: 0.40064815}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9ede023f52f3a1b60800000000000000
+      internalID: 7717550343678127593
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_64
+      rect:
+        serializedVersion: 2
+        x: 724
+        y: 1557
+        width: 28
+        height: 28
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 586bfbcd1c8e581e0800000000000000
+      internalID: -2196093323943364987
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_65
+      rect:
+        serializedVersion: 2
+        x: 3346
+        y: 1342
+        width: 578
+        height: 218
+      alignment: 9
+      pivot: {x: 0.42044944, y: 0.50405574}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 527fe669f00ddf010800000000000000
+      internalID: 1224363439081584421
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_66
+      rect:
+        serializedVersion: 2
+        x: 652
+        y: 1450
+        width: 32
+        height: 37
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bf68f71092de90e10800000000000000
+      internalID: 2164521856302810875
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_67
+      rect:
+        serializedVersion: 2
+        x: 1163
+        y: 1317
+        width: 580
+        height: 218
+      alignment: 9
+      pivot: {x: 0.53811353, y: 0.47566321}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bb609903d79123190800000000000000
+      internalID: -7984291163897526597
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_68
+      rect:
+        serializedVersion: 2
+        x: 393
+        y: 1007
+        width: 70
+        height: 71
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1608e9e2ec215eaa0800000000000000
+      internalID: -6132474640840359839
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_69
+      rect:
+        serializedVersion: 2
+        x: 557
+        y: 952
+        width: 179
+        height: 183
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a187dae776172f5b0800000000000000
+      internalID: -5336077919159748582
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_70
+      rect:
+        serializedVersion: 2
+        x: 832
+        y: 864
+        width: 355
+        height: 345
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f64dea63ddb9f6640800000000000000
+      internalID: 5075446679477343343
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_71
+      rect:
+        serializedVersion: 2
+        x: 1724
+        y: 26
+        width: 712
+        height: 1092
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e8b35c94359943a00800000000000000
+      internalID: 735381222167231374
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_72
+      rect:
+        serializedVersion: 2
+        x: 361
+        y: 498
+        width: 70
+        height: 71
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2a099d557471940c0800000000000000
+      internalID: -4591112749977071454
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_73
+      rect:
+        serializedVersion: 2
+        x: 525
+        y: 443
+        width: 179
+        height: 183
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 57affba1052e99490800000000000000
+      internalID: -7738905650985436555
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_74
+      rect:
+        serializedVersion: 2
+        x: 800
+        y: 355
+        width: 355
+        height: 345
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5072ed487c7ab44a0800000000000000
+      internalID: -6608003552866588923
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_75
+      rect:
+        serializedVersion: 2
+        x: 2535
+        y: 0
+        width: 1465
+        height: 707
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 67642f746e81a1730800000000000000
+      internalID: 3970513398809118326
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_76
+      rect:
+        serializedVersion: 2
+        x: 178
+        y: 3708
+        width: 90
+        height: 210
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 906e00eca2ce6a7409f3d2428972c2f2
+      internalID: 1332609407
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_77
+      rect:
+        serializedVersion: 2
+        x: 339
+        y: 3696
+        width: 101
+        height: 224
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e6b10f3ca20b4ef4384d2d366336411e
+      internalID: 440639605
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_78
+      rect:
+        serializedVersion: 2
+        x: 176
+        y: 3462
+        width: 92
+        height: 219
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f7b653a153e40da49b277d36b55a513f
+      internalID: 389522576
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_79
+      rect:
+        serializedVersion: 2
+        x: 347
+        y: 3465
+        width: 115
+        height: 212
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d26b47aa69c0419419e3d7456ea011c9
+      internalID: -609583556
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_80
+      rect:
+        serializedVersion: 2
+        x: 176
+        y: 3186
+        width: 91
+        height: 230
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3553e096e3fd321448ee38dbb4eff956
+      internalID: -1395861514
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Little guy game jam Harlie Sprite Sheet 1_81
+      rect:
+        serializedVersion: 2
+        x: 375
+        y: 3187
+        width: 80
+        height: 228
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 49d723cf7a634ff45b816414a8e123a1
+      internalID: 1696717760
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 65407b7f4d74c674fadd80cf1c3ed4e6
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Little guy game jam Harlie Sprite Sheet 1_0: -6295221103491985825
+      Little guy game jam Harlie Sprite Sheet 1_1: 6487019373001833966
+      Little guy game jam Harlie Sprite Sheet 1_10: -7150061387569608649
+      Little guy game jam Harlie Sprite Sheet 1_11: -3600799115554609505
+      Little guy game jam Harlie Sprite Sheet 1_12: 1932676411790401785
+      Little guy game jam Harlie Sprite Sheet 1_13: -187862597449141340
+      Little guy game jam Harlie Sprite Sheet 1_14: -3679567963727609857
+      Little guy game jam Harlie Sprite Sheet 1_15: 8098389511736292677
+      Little guy game jam Harlie Sprite Sheet 1_16: 8788347212341452510
+      Little guy game jam Harlie Sprite Sheet 1_17: 8578463755865679852
+      Little guy game jam Harlie Sprite Sheet 1_18: 2241217530007787231
+      Little guy game jam Harlie Sprite Sheet 1_19: 7170720393359331635
+      Little guy game jam Harlie Sprite Sheet 1_2: 1494182851156553043
+      Little guy game jam Harlie Sprite Sheet 1_20: 236219991667474990
+      Little guy game jam Harlie Sprite Sheet 1_21: -1811912952732535506
+      Little guy game jam Harlie Sprite Sheet 1_22: 4027485401589288377
+      Little guy game jam Harlie Sprite Sheet 1_23: 1824352014272630647
+      Little guy game jam Harlie Sprite Sheet 1_24: 3571281282273838413
+      Little guy game jam Harlie Sprite Sheet 1_25: 5274810567734365437
+      Little guy game jam Harlie Sprite Sheet 1_26: -1724979335686556091
+      Little guy game jam Harlie Sprite Sheet 1_27: 1829246730772454043
+      Little guy game jam Harlie Sprite Sheet 1_28: -6763149911172235121
+      Little guy game jam Harlie Sprite Sheet 1_29: -1167773660943706113
+      Little guy game jam Harlie Sprite Sheet 1_3: 5406240913589853408
+      Little guy game jam Harlie Sprite Sheet 1_30: -7068254612585594640
+      Little guy game jam Harlie Sprite Sheet 1_31: -8374675205708167214
+      Little guy game jam Harlie Sprite Sheet 1_32: -6032268999988557958
+      Little guy game jam Harlie Sprite Sheet 1_33: -2128685413519856283
+      Little guy game jam Harlie Sprite Sheet 1_34: 7704549429926212871
+      Little guy game jam Harlie Sprite Sheet 1_35: -3625076805904739976
+      Little guy game jam Harlie Sprite Sheet 1_36: -9078716138604081097
+      Little guy game jam Harlie Sprite Sheet 1_37: 5547999885452334606
+      Little guy game jam Harlie Sprite Sheet 1_38: 2049502792131316589
+      Little guy game jam Harlie Sprite Sheet 1_39: 5888180788193293112
+      Little guy game jam Harlie Sprite Sheet 1_4: -6768660005405677195
+      Little guy game jam Harlie Sprite Sheet 1_40: 4269059837448657916
+      Little guy game jam Harlie Sprite Sheet 1_41: -1447120546933203475
+      Little guy game jam Harlie Sprite Sheet 1_42: 8489531634094769696
+      Little guy game jam Harlie Sprite Sheet 1_43: 2310111084364669994
+      Little guy game jam Harlie Sprite Sheet 1_44: -530402671195104809
+      Little guy game jam Harlie Sprite Sheet 1_45: 5423814691585650047
+      Little guy game jam Harlie Sprite Sheet 1_46: -2678458478970454346
+      Little guy game jam Harlie Sprite Sheet 1_47: 1072452946917878587
+      Little guy game jam Harlie Sprite Sheet 1_48: 1308113927184480750
+      Little guy game jam Harlie Sprite Sheet 1_49: -4337224706165931376
+      Little guy game jam Harlie Sprite Sheet 1_5: -4872094395242154598
+      Little guy game jam Harlie Sprite Sheet 1_50: -8153341006979051293
+      Little guy game jam Harlie Sprite Sheet 1_51: 7265627699857389013
+      Little guy game jam Harlie Sprite Sheet 1_52: 4834978987473038171
+      Little guy game jam Harlie Sprite Sheet 1_53: -2891003912749473527
+      Little guy game jam Harlie Sprite Sheet 1_54: -9132080063600425322
+      Little guy game jam Harlie Sprite Sheet 1_55: -1760985037683291104
+      Little guy game jam Harlie Sprite Sheet 1_56: 7148320279125479158
+      Little guy game jam Harlie Sprite Sheet 1_57: -1622087275684649215
+      Little guy game jam Harlie Sprite Sheet 1_58: 6480047534083917840
+      Little guy game jam Harlie Sprite Sheet 1_59: -606146037134321610
+      Little guy game jam Harlie Sprite Sheet 1_6: -7709646380269188066
+      Little guy game jam Harlie Sprite Sheet 1_60: -8782286822959896156
+      Little guy game jam Harlie Sprite Sheet 1_61: -22030270153037869
+      Little guy game jam Harlie Sprite Sheet 1_62: 5984465712787208197
+      Little guy game jam Harlie Sprite Sheet 1_63: 7717550343678127593
+      Little guy game jam Harlie Sprite Sheet 1_64: -2196093323943364987
+      Little guy game jam Harlie Sprite Sheet 1_65: 1224363439081584421
+      Little guy game jam Harlie Sprite Sheet 1_66: 2164521856302810875
+      Little guy game jam Harlie Sprite Sheet 1_67: -7984291163897526597
+      Little guy game jam Harlie Sprite Sheet 1_68: -6132474640840359839
+      Little guy game jam Harlie Sprite Sheet 1_69: -5336077919159748582
+      Little guy game jam Harlie Sprite Sheet 1_7: -1958637658180290742
+      Little guy game jam Harlie Sprite Sheet 1_70: 5075446679477343343
+      Little guy game jam Harlie Sprite Sheet 1_71: 735381222167231374
+      Little guy game jam Harlie Sprite Sheet 1_72: -4591112749977071454
+      Little guy game jam Harlie Sprite Sheet 1_73: -7738905650985436555
+      Little guy game jam Harlie Sprite Sheet 1_74: -6608003552866588923
+      Little guy game jam Harlie Sprite Sheet 1_75: 3970513398809118326
+      Little guy game jam Harlie Sprite Sheet 1_76: 1332609407
+      Little guy game jam Harlie Sprite Sheet 1_77: 440639605
+      Little guy game jam Harlie Sprite Sheet 1_78: 389522576
+      Little guy game jam Harlie Sprite Sheet 1_79: -609583556
+      Little guy game jam Harlie Sprite Sheet 1_8: -4409006604959909361
+      Little guy game jam Harlie Sprite Sheet 1_80: -1395861514
+      Little guy game jam Harlie Sprite Sheet 1_81: 1696717760
+      Little guy game jam Harlie Sprite Sheet 1_9: 5802139716970863480
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

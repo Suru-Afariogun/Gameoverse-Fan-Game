@@ -16,6 +16,7 @@ public class AttackHitbox : MonoBehaviour
 
     private PlayerController ownerPlayer;
     private Boss ownerBoss;
+    private ICommonEnemy ownerCommonEnemy;
     private Transform ownerRoot;
     private int damage = 1;
     private bool active;
@@ -25,6 +26,7 @@ public class AttackHitbox : MonoBehaviour
     public bool IsActive => active;
     public PlayerController Owner => ownerPlayer;
     public Boss OwnerBoss => ownerBoss;
+    public ICommonEnemy OwnerCommonEnemy => ownerCommonEnemy;
 
     /// <summary>Fired once per target when first overlapped during this activation.</summary>
     public event Action<Collider2D, PlayerController> OnTargetAcquired;
@@ -45,6 +47,7 @@ public class AttackHitbox : MonoBehaviour
     {
         ownerPlayer = newOwner;
         ownerBoss = null;
+        ownerCommonEnemy = null;
         ownerRoot = newOwner != null ? newOwner.transform : null;
     }
 
@@ -52,7 +55,18 @@ public class AttackHitbox : MonoBehaviour
     {
         ownerBoss = newOwner;
         ownerPlayer = null;
+        ownerCommonEnemy = null;
         ownerRoot = newOwner != null ? newOwner.transform : null;
+    }
+
+    public void SetOwner(ICommonEnemy newOwner)
+    {
+        ownerCommonEnemy = newOwner;
+        ownerPlayer = null;
+        ownerBoss = null;
+        ownerRoot = newOwner is Component component && component != null
+            ? component.transform
+            : null;
     }
 
     public void Activate(int hitDamage, bool applyDamage = true)
@@ -68,6 +82,12 @@ public class AttackHitbox : MonoBehaviour
             hitCollider.enabled = true;
     }
 
+    /// <summary>Changes the damage of an active swing without clearing who it already hit.</summary>
+    public void SetDamage(int hitDamage)
+    {
+        damage = Mathf.Max(0, hitDamage);
+    }
+
     public void Deactivate()
     {
         active = false;
@@ -77,6 +97,12 @@ public class AttackHitbox : MonoBehaviour
 
         if (hitCollider != null)
             hitCollider.enabled = false;
+    }
+
+    /// <summary>Lets Harlie pogo off the same target again during one activation.</summary>
+    public void ForgetHitInstance(int instanceId)
+    {
+        hitInstanceIds.Remove(instanceId);
     }
 
     /// <summary>
@@ -139,9 +165,12 @@ public class AttackHitbox : MonoBehaviour
             (other.transform == ownerRoot || other.transform.IsChildOf(ownerRoot)))
             return;
 
-        // Only playable Malice dissipates projectiles with her active melee / grapple box.
-        // BossMalice (and any other owner) leaves shots alone.
-        if (ownerPlayer is MalicePlayerController)
+        // Enemy detection radius is AI-only — never count it as a body hit.
+        if (EnemyDetectionZone.IsDetectionOnlyCollider(other))
+            return;
+
+        // Player melee boxes — reflect, clash, or block shots (never pass through while active).
+        if (ownerPlayer != null)
         {
             Projectile projectile = other.GetComponent<Projectile>();
             if (projectile == null)
@@ -149,7 +178,11 @@ public class AttackHitbox : MonoBehaviour
 
             if (projectile != null)
             {
-                Destroy(projectile.gameObject);
+                int projectileId = projectile.GetInstanceID();
+                if (!hitInstanceIds.Add(projectileId))
+                    return;
+
+                ownerPlayer.TryHandleProjectileContact(projectile, other);
                 return;
             }
         }
@@ -168,7 +201,11 @@ public class AttackHitbox : MonoBehaviour
                 return;
 
             if (dealDamage && damage > 0)
+            {
+                int before = crystal.CurrentHealth;
                 crystal.TakeDamage(damage);
+                NotifyOwnerDamageDealt(before - crystal.CurrentHealth);
+            }
             return;
         }
 
@@ -177,14 +214,22 @@ public class AttackHitbox : MonoBehaviour
             player = other.GetComponentInParent<PlayerController>();
 
         Boss boss = null;
+        ICommonEnemy enemy = null;
         if (player == null)
         {
-            // Bosses take damage on their body collider only — never via their AttackBox tool.
-            if (!IsBossAttackToolCollider(other))
+            // Bosses and common enemies take damage on their body collider only — never via their AttackBox tool.
+            if (!IsBossAttackToolCollider(other) && !IsEnemyAttackToolCollider(other))
             {
                 boss = other.GetComponent<Boss>();
                 if (boss == null)
                     boss = other.GetComponentInParent<Boss>();
+
+                if (boss == null)
+                {
+                    enemy = other.GetComponent<ICommonEnemy>();
+                    if (enemy == null)
+                        enemy = other.GetComponentInParent<ICommonEnemy>();
+                }
             }
         }
 
@@ -193,6 +238,15 @@ public class AttackHitbox : MonoBehaviour
             id = player.GetInstanceID();
         else if (boss != null)
             id = boss.GetInstanceID();
+        else if (enemy is Component enemyComponent)
+            id = enemyComponent.GetInstanceID();
+        else if (IsBossAttackToolCollider(other) || IsEnemyAttackToolCollider(other))
+        {
+            AttackHitbox tool = other.GetComponent<AttackHitbox>();
+            if (tool == null)
+                tool = other.GetComponentInParent<AttackHitbox>();
+            id = tool != null ? tool.GetInstanceID() : other.GetInstanceID();
+        }
         else if (other.transform.root != null)
             id = other.transform.root.GetInstanceID();
         else
@@ -204,12 +258,81 @@ public class AttackHitbox : MonoBehaviour
         if (dealDamage && damage > 0)
         {
             if (player != null && player != ownerPlayer)
+            {
+                int before = player.CurrentHealth;
                 player.TakeDamage(damage, ownerRoot != null ? ownerRoot : transform);
+                NotifyOwnerDamageDealt(before - player.CurrentHealth);
+            }
             else if (boss != null && boss != ownerBoss)
+            {
+                if (ownerBoss != null && ownerBoss.IsCopyBot && boss.IsCopyBot)
+                    return;
+
+                int before = boss.CurrentHealth;
                 boss.TakeDamage(damage);
+                NotifyOwnerDamageDealt(before - boss.CurrentHealth);
+            }
+            else if (enemy != null && enemy != ownerCommonEnemy)
+            {
+                // Common enemies must never friendly-fire each other when attack boxes overlap in clusters.
+                if (ownerCommonEnemy != null)
+                    return;
+
+                int before = enemy.CurrentHealth;
+                enemy.TakeDamage(damage);
+                NotifyOwnerDamageDealt(before - enemy.CurrentHealth);
+            }
+            else
+            {
+                IDamageable damageable = other.GetComponent<IDamageable>();
+                if (damageable == null)
+                    damageable = other.GetComponentInParent<IDamageable>();
+
+                if (damageable != null &&
+                    damageable is not Crystal &&
+                    damageable is not Boss &&
+                    damageable is not PlayerController &&
+                    damageable is not ICommonEnemy)
+                {
+                    damageable.TakeDamage(damage);
+                }
+            }
         }
 
+        NotifyOwnerMeleeContact(other, player, boss, enemy, crystal);
+
         OnTargetAcquired?.Invoke(other, player);
+    }
+
+    private void NotifyOwnerMeleeContact(
+        Collider2D other,
+        PlayerController player,
+        Boss boss,
+        ICommonEnemy enemy,
+        Crystal crystal)
+    {
+        if (ownerPlayer is not HarliePlayerController harlie || other == null)
+            return;
+
+        bool bossAttackTool = IsBossAttackToolCollider(other);
+        bool enemyAttackTool = IsEnemyAttackToolCollider(other);
+        bool hitProjectile = other.GetComponent<Projectile>() != null
+            || other.GetComponentInParent<Projectile>() != null;
+        bool meaningful = boss != null || enemy != null || crystal != null || player != null
+            || bossAttackTool || enemyAttackTool || hitProjectile;
+        if (!meaningful)
+            return;
+
+        harlie.NotifyMeleeContact(other, bossAttackTool || enemyAttackTool);
+    }
+
+    private void NotifyOwnerDamageDealt(int amountDealt)
+    {
+        if (amountDealt <= 0)
+            return;
+
+        if (ownerPlayer is MalicePlayerController malice)
+            malice.NotifyDamageDealt(amountDealt);
     }
 
     /// <summary>
@@ -233,5 +356,26 @@ public class AttackHitbox : MonoBehaviour
 
         // Body collider lives on the boss root; AttackBox is a child with AttackHitbox.
         return box.gameObject != boss.gameObject;
+    }
+
+    /// <summary>
+    /// True when this collider belongs to a common enemy AttackHitbox (offensive tool), not the enemy body.
+    /// </summary>
+    private static bool IsEnemyAttackToolCollider(Collider2D other)
+    {
+        if (other == null)
+            return false;
+
+        AttackHitbox box = other.GetComponent<AttackHitbox>();
+        if (box == null)
+            box = other.GetComponentInParent<AttackHitbox>();
+
+        if (box == null || box.OwnerCommonEnemy == null)
+            return false;
+
+        if (box.OwnerCommonEnemy is not Component ownerComponent)
+            return false;
+
+        return box.gameObject != ownerComponent.gameObject;
     }
 }

@@ -63,8 +63,7 @@ public class WarningText : MonoBehaviour
         EnsureWarningSoundAssigned();
         SetVisible(false);
 
-        // Freeze immediately on first load — before PlayerSpawner / boss AI Start/Update.
-        if (playOnStart && !HasCompletedAtLeastOnce)
+        if (ShouldAutoPlayOnLoad())
         {
             pendingPlayOnStart = true;
             BlocksGameplay = true;
@@ -77,8 +76,13 @@ public class WarningText : MonoBehaviour
 
     private void Start()
     {
-        if (playOnStart && !HasCompletedAtLeastOnce)
+        if (ShouldAutoPlayOnLoad())
             Play();
+    }
+
+    private bool ShouldAutoPlayOnLoad()
+    {
+        return playOnStart && !HasCompletedAtLeastOnce;
     }
 
     private void LateUpdate()
@@ -104,19 +108,52 @@ public class WarningText : MonoBehaviour
         }
     }
 
+    /// <summary>Disable auto-play on load; use before Start when triggering manually (Level one boss room).</summary>
+    public void PrepareForManualTriggerOnly()
+    {
+        playOnStart = false;
+        pendingPlayOnStart = false;
+        HasCompletedAtLeastOnce = false;
+        StopImmediate(hide: true);
+    }
+
+    /// <summary>Reset visuals/state so Play() can run again (boss-room replay after level intro).</summary>
+    public void PrepareForReplay()
+    {
+        EnsurePlayable();
+
+        if (routine != null)
+        {
+            StopCoroutine(routine);
+            routine = null;
+        }
+
+        IsPlaying = false;
+        pendingPlayOnStart = false;
+
+        if (BlocksGameplay)
+            EndGameplayBlock();
+
+        SetVisible(false);
+    }
+
     /// <summary>Start (or restart) the warning flash sequence.</summary>
     public void Play()
     {
-        if (!gameObject.activeSelf)
-            gameObject.SetActive(true);
+        EnsurePlayable();
 
         if (!isActiveAndEnabled)
+        {
+            Debug.LogWarning("[WarningText] Play() skipped — object is inactive or disabled.", this);
             return;
+        }
 
         if (routine != null)
             StopCoroutine(routine);
 
         pendingPlayOnStart = false;
+        IsPlaying = true;
+        BlocksGameplay = true;
         routine = StartCoroutine(FlashRoutine());
     }
 
@@ -127,7 +164,11 @@ public class WarningText : MonoBehaviour
         freezeCameraOverrideValue = freezeCamera;
         try
         {
+            PrepareForReplay();
             Play();
+            if (routine == null)
+                yield break;
+
             while (IsPlaying || BlocksGameplay)
                 yield return null;
         }
@@ -135,6 +176,37 @@ public class WarningText : MonoBehaviour
         {
             freezeCameraOverrideActive = false;
         }
+    }
+
+    private void EnsurePlayable()
+    {
+        Transform node = transform;
+        while (node != null)
+        {
+            if (!node.gameObject.activeSelf)
+                node.gameObject.SetActive(true);
+            node = node.parent;
+        }
+
+        Canvas canvas = GetComponentInParent<Canvas>(true);
+        if (canvas != null)
+        {
+            if (!canvas.gameObject.activeSelf)
+                canvas.gameObject.SetActive(true);
+
+            Transform canvasTransform = canvas.transform;
+            if (canvasTransform.localScale.sqrMagnitude < 0.001f)
+                canvasTransform.localScale = Vector3.one;
+
+            if (canvas.renderMode != RenderMode.WorldSpace && canvas.worldCamera == null)
+            {
+                Camera main = Camera.main;
+                if (main != null)
+                    canvas.worldCamera = main;
+            }
+        }
+
+        enabled = true;
     }
 
     public static WarningText FindInScene(bool includeInactive = true)
@@ -208,14 +280,14 @@ public class WarningText : MonoBehaviour
 
     private void PlayWarningSound()
     {
-        if (robotWarningSound == null)
-            return;
-
         if (useSoundManagerIfAvailable && SoundManager.Instance != null)
         {
-            SoundManager.Instance.PlaySfx(robotWarningSound, warningVolume);
+            SoundManager.Instance.PlayRobotWarning();
             return;
         }
+
+        if (robotWarningSound == null)
+            return;
 
         EnsureLocalSource();
         if (localSource == null)
@@ -264,10 +336,10 @@ public class WarningText : MonoBehaviour
 
         if (ShouldFreezeCamera && CameraFollow.Instance != null)
         {
-            // Remember that follow was on so we can restore it after the warning.
             if (CameraFollow.Instance.FollowEnabled)
                 cameraFollowWasEnabled = true;
 
+            CameraFollow.Instance.SnapToTarget();
             CameraFollow.Instance.SetFollowEnabled(false);
         }
     }

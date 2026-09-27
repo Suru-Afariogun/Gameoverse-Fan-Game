@@ -27,10 +27,12 @@ public class BossSpawner : MonoBehaviour
 
     [Header("Spawn")]
     [SerializeField] private Transform spawnPoint;
+    [SerializeField] private bool spawnOnAwake = true;
     [SerializeField] private bool destroyMismatchedBossesOnStart = true;
     [SerializeField] private string homeTownSceneName = "HomeTown";
 
     private bool pendingReturnHome;
+    private bool autoSpawnDeferred;
 
     /// <summary>World position used for boss spawn / mid-fight retry resets.</summary>
     public Vector3 GetSpawnWorldPosition()
@@ -47,7 +49,111 @@ public class BossSpawner : MonoBehaviour
 
     private void Awake()
     {
+        // Level gates: wait until the player passes a BossBattleStarter.
+        // Level one door encounter also defers until the room closes.
+        if (FindFirstObjectByType<BossBattleStarter>() != null)
+            DeferAutoSpawn();
+        else if (LevelOneBossEncounter.IsCopyBotEncounterScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
+            DeferAutoSpawn();
+
+        if (autoSpawnDeferred || !spawnOnAwake)
+            return;
+
         ResolveSelectedBoss();
+    }
+
+    /// <summary>Level one: wait for the boss-room door to close before spawning the copy bot.</summary>
+    public void DeferAutoSpawn()
+    {
+        autoSpawnDeferred = true;
+        spawnOnAwake = false;
+        DestroyAllSceneBosses();
+    }
+
+    /// <summary>
+    /// Called by <see cref="BossBattleStarter"/> (or other level gates) to spawn the
+    /// selected boss after auto-spawn was deferred.
+    /// </summary>
+    public void SpawnSelectedBossNow()
+    {
+        autoSpawnDeferred = false;
+        spawnOnAwake = false;
+        ResolveSelectedBoss();
+    }
+
+    /// <summary>
+    /// Spawns a gray copy-bot version of the current player character (fallback: Boss Kit).
+    /// </summary>
+    public Boss SpawnCopyBotForPlayer(int maxHealth = 40)
+    {
+        string characterId = ResolvePlayerCharacterId();
+        Boss prefab = FindCopyBotPrefab(characterId);
+        if (prefab == null)
+        {
+            Debug.LogWarning($"[BossSpawner] No copy-bot prefab for '{characterId}'.");
+            return null;
+        }
+
+        Vector3 pos = GetSpawnWorldPosition();
+        Quaternion rot = spawnPoint != null ? spawnPoint.rotation : transform.rotation;
+        Boss instance = Instantiate(prefab, pos, rot);
+        instance.ConfigureAsCopyBot(maxHealth);
+        return instance;
+    }
+
+    /// <summary>
+    /// Spawns a 1-HP decoy copy-bot that only chases and stuns (no attacks).
+    /// </summary>
+    public Boss SpawnCopyBotDecoyNear(Vector3 position, int maxHealth = 1)
+    {
+        string characterId = ResolvePlayerCharacterId();
+        Boss prefab = FindCopyBotPrefab(characterId);
+        if (prefab == null)
+            return null;
+
+        Boss instance = Instantiate(prefab, position, prefab.transform.rotation);
+        instance.ConfigureAsCopyBotDecoy(maxHealth);
+        return instance;
+    }
+
+    private static string ResolvePlayerCharacterId()
+    {
+        if (PlayerSpawner.Instance != null && PlayerSpawner.Instance.CurrentPlayer != null)
+            return PlayerSpawner.Instance.CurrentPlayer.CharacterId;
+
+        if (!string.IsNullOrWhiteSpace(PlayerSpawner.SelectedCharacterId))
+            return PlayerSpawner.SelectedCharacterId;
+
+        return BossEncounter.BossIdKit;
+    }
+
+    /// <summary>
+    /// Boss Fight Mode rival: Kit fights Malice; everyone else fights Kit.
+    /// </summary>
+    public static string GetBossFightOpponentBossId()
+    {
+        string playerId = ResolvePlayerCharacterId();
+        if (string.Equals(playerId, BossEncounter.BossIdKit, StringComparison.OrdinalIgnoreCase))
+            return BossEncounter.BossIdMalice;
+
+        return BossEncounter.BossIdKit;
+    }
+
+    private Boss FindCopyBotPrefab(string characterId)
+    {
+        if (string.IsNullOrWhiteSpace(characterId))
+            characterId = BossEncounter.BossIdKit;
+
+        string id = characterId.Trim();
+        if (string.Equals(id, BossEncounter.BossIdMalice, StringComparison.OrdinalIgnoreCase))
+        {
+            BossEntry malice = FindEntry(BossEncounter.BossIdMalice);
+            if (malice != null && malice.prefab != null)
+                return malice.prefab;
+        }
+
+        BossEntry kit = FindEntry(BossEncounter.BossIdKit);
+        return kit != null ? kit.prefab : null;
     }
 
     private void Start()
@@ -69,7 +175,16 @@ public class BossSpawner : MonoBehaviour
 
     private void ResolveSelectedBoss()
     {
+        string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
         string selectedId = BossEncounter.SelectedBossId;
+
+        if (BossFightDirector.IsBossFightScene(sceneName))
+        {
+            if (BossEncounter.ForcePlayerRivalBoss || !BossEncounter.BossChosenFromKaboodle)
+                selectedId = GetBossFightOpponentBossId();
+
+            BossEncounter.ClearBossFightRoutingFlags();
+        }
 
         if (!BossEncounter.IsBossReady(selectedId))
         {

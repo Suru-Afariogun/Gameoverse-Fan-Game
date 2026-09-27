@@ -114,6 +114,12 @@ public class BossFightDirector : MonoBehaviour
     /// </summary>
     private IEnumerator IntroWarningGate()
     {
+        if (LevelOneBossEncounter.Instance != null ||
+            LevelOneBossEncounter.IsCopyBotEncounterScene(SceneManager.GetActiveScene().name))
+        {
+            yield break;
+        }
+
         ApplyIntroLock();
 
         // Let spawners run their Start() and spawn the player.
@@ -147,12 +153,9 @@ public class BossFightDirector : MonoBehaviour
 
     private static void ApplyIntroLock()
     {
-        PlayerController[] players = FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
-        for (int i = 0; i < players.Length; i++)
-        {
-            if (players[i] != null)
-                players[i].SetInputLocked(true);
-        }
+        PlayerController player = PlayerController.ResolveActive();
+        if (player != null)
+            player.SetInputLocked(true);
 
         SetAllBossesCombatPaused(true);
 
@@ -166,12 +169,9 @@ public class BossFightDirector : MonoBehaviour
         if (WarningText.BlocksGameplay)
             return;
 
-        PlayerController[] players = FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
-        for (int i = 0; i < players.Length; i++)
-        {
-            if (players[i] != null)
-                players[i].SetInputLocked(false);
-        }
+        PlayerController player = PlayerController.ResolveActive();
+        if (player != null)
+            player.SetInputLocked(false);
 
         SetAllBossesCombatPaused(false);
     }
@@ -184,11 +184,12 @@ public class BossFightDirector : MonoBehaviour
             Boss[] bosses = FindObjectsByType<Boss>(FindObjectsSortMode.None);
             for (int i = 0; i < bosses.Length; i++)
             {
-                if (bosses[i] != null && bosses[i].IsDead)
-                {
-                    HandleBossDied();
-                    break;
-                }
+                Boss boss = bosses[i];
+                if (boss == null || !boss.IsDead || boss.IsCopyBotDecoy)
+                    continue;
+
+                HandleBossDied();
+                break;
             }
         }
 
@@ -212,7 +213,7 @@ public class BossFightDirector : MonoBehaviour
         Boss[] bosses = FindObjectsByType<Boss>(FindObjectsSortMode.None);
         for (int i = 0; i < bosses.Length; i++)
         {
-            if (bosses[i] != null)
+            if (bosses[i] != null && !bosses[i].IsCopyBotDecoy)
                 bosses[i].OnDied += HandleBossDied;
         }
     }
@@ -276,6 +277,21 @@ public class BossFightDirector : MonoBehaviour
 
         Boss defeated = FindDefeatedBoss();
 
+        if (LevelOneBossEncounter.TryConsumeCopyBotDefeat(defeated))
+        {
+            bossDeathHandled = true;
+            return;
+        }
+
+        if (defeated != null &&
+            defeated.IsMainCopyBot &&
+            LevelOneBossEncounter.IsCopyBotEncounterScene(SceneManager.GetActiveScene().name))
+        {
+            LevelOneBossEncounter.TryConsumeCopyBotDefeat(defeated);
+            bossDeathHandled = true;
+            return;
+        }
+
         // Crystal still has HP → drain it and respawn the boss instead of ending the fight.
         if (Crystal.Instance != null &&
             defeated != null &&
@@ -312,18 +328,29 @@ public class BossFightDirector : MonoBehaviour
     private static Boss FindDefeatedBoss()
     {
         Boss[] bosses = FindObjectsByType<Boss>(FindObjectsSortMode.None);
+        Boss fallback = null;
+
         for (int i = 0; i < bosses.Length; i++)
         {
-            if (bosses[i] != null && bosses[i].IsDead)
-                return bosses[i];
+            Boss boss = bosses[i];
+            if (boss == null || !boss.IsDead || boss.IsCopyBotDecoy)
+                continue;
+
+            fallback = boss;
+            if (boss.IsMainCopyBot)
+                return boss;
         }
 
-        return bosses.Length > 0 ? bosses[0] : null;
+        return fallback;
     }
 
     private void HandlePlayerDied()
     {
         if (flowBusy || playerDeathHandled)
+            return;
+
+        // Copy Bot level fights (Level one / Tutorial) own despawn + starter/door reset.
+        if (LevelOneBossEncounter.ShouldSuppressDirectorPlayerDeath())
             return;
 
         playerDeathHandled = true;
@@ -333,6 +360,7 @@ public class BossFightDirector : MonoBehaviour
             watchedPlayer.SetInputLocked(true);
 
         SetAllBossesCombatPaused(true);
+        Projectile.DestroyAllLive();
 
         if (CameraFollow.Instance != null)
             CameraFollow.Instance.SetFollowEnabled(false);
@@ -346,6 +374,7 @@ public class BossFightDirector : MonoBehaviour
         {
             if (inv != null)
                 inv.ResetLivesToStarting();
+            SoundManager.Instance?.PlayGameOver();
             StartCoroutine(ReturnHomeAfterDelay(respawnDelayAfterDeath));
             return;
         }
@@ -363,6 +392,8 @@ public class BossFightDirector : MonoBehaviour
         yield return StartCoroutine(fade.FadeToBlack(fadeOutSeconds));
         fade.SetBlackImmediate();
         yield return StartCoroutine(fade.WaitUntilFullyBlack());
+
+        Projectile.DestroyAllLive();
 
         // Screen is fully black: now reset fight state and respawn both at spawn points.
         ResetBossAndCrystalForLifeLoss();
@@ -422,6 +453,7 @@ public class BossFightDirector : MonoBehaviour
         if (player != null)
             player.SetInputLocked(false);
 
+        SoundManager.Instance?.PlayGameRestart();
         SetAllBossesCombatPaused(false);
 
         playerDeathHandled = false;
@@ -441,6 +473,10 @@ public class BossFightDirector : MonoBehaviour
 
     private static Transform FindTemporaryTrackPoint()
     {
+        Transform checkpoint = CheckPointBot.GetWaitingCameraTrackTarget();
+        if (checkpoint != null)
+            return checkpoint;
+
         GameObject found = GameObject.Find("temporary track point");
         if (found != null)
             return found.transform;
@@ -536,9 +572,6 @@ public class BossFightDirector : MonoBehaviour
 
     private static PlayerController FindActivePlayer()
     {
-        if (PlayerSpawner.Instance != null && PlayerSpawner.Instance.CurrentPlayer != null)
-            return PlayerSpawner.Instance.CurrentPlayer;
-
-        return FindFirstObjectByType<PlayerController>();
+        return PlayerController.ResolveActive();
     }
 }

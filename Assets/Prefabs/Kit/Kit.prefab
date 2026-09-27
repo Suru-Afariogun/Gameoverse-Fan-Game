@@ -158,7 +158,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: 0, y: 0.015744925}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -168,7 +168,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 2.1200001, y: 2.63}
+  m_Size: {x: 2.1200001, y: 2.5985103}
   m_EdgeRadius: 0
 --- !u!114 &3672412826225818953
 MonoBehaviour:
@@ -193,6 +193,7 @@ MonoBehaviour:
   firePointFlipCenterLocal: {x: 0, y: 0}
   moveSpeed: 6
   jumpForce: 16
+  coyoteTime: 0.4
   fallMultiplier: 2.5
   spriteFacesLeft: 1
   upAimThreshold: 0.35
@@ -216,10 +217,31 @@ MonoBehaviour:
   dashAfterimageAlphaStart: 0.55
   dashAfterimageAlphaEnd: 0.15
   dashAfterimageLifetimePadding: 0.15
+  platformSeparationDistance: 0.06
+  platformTopNormalThreshold: 0.55
+  wallSlideAcceleration: 20
+  wallSlideMaxFallSpeed: 11
+  wallProbeDistance: 0.55
+  wallProbeSize: {x: 0.12, y: 1.1}
+  wallJumpCoyoteTime: 0.12
+  wallBounceShallowDistance: 5
+  wallBounceSteepClimbHeight: 2.759
+  wallBounceSteepClimbSpeedMultiplier: 1.45
+  wallBounceSteepWallSeparation: 0.2
+  wallBounceShallowAngleDeg: 45
+  wallBounceCooldown: 0.2
+  wallBounceLaunchSpeedMultiplier: 1.32
+  wallBounceCommitVelocityRestore: 96
   hitStunDuration: 0.5
   hitInvincibilityDuration: 1.5
+  invincibilityFlickerAlphaHigh: 0.8
+  invincibilityFlickerAlphaLow: 0.75
+  invincibilityFlickerHalfPeriod: 0.08
+  hitKnockbackDistance: 3
+  hitKnockbackDuration: 0.6
   stunnedEffectPrefab: {fileID: 4654219477525025898, guid: d73abfa741e4f164caac7db19e091ea3, type: 3}
   deathEnergyBallPrefab: {fileID: 5968641805536287327, guid: d69a3996309c9484cb697c2c93c44b08, type: 3}
+  healedEffectPrefab: {fileID: 1455924060657617027, guid: ec3167a989d4308448e773e2f7a690b6, type: 3}
   maxHealth: 10
   currentHealth: 10
   smallProjectilePrefab: {fileID: 5646477003654141351, guid: ca605575e28a2c74e9abbe03d4757177, type: 3}
@@ -252,8 +274,14 @@ MonoBehaviour:
   shootAnimStateNames:
   - Shooting on ground
   - Shooting upward
+  - Shooting downward on ground
   - Jump Shot
   - Fall Shot
+  - Shooting upward in air
+  - Shooting downward in air
+  - Hovering while shooting
+  - Hovering Shooting upward
+  - Hovering Shooting downward
   kitDashDistance: 5.25
   kitDashSpeed: 17
   kitDashSmoothStop: 0.14
@@ -269,6 +297,12 @@ MonoBehaviour:
   kitAfterimageColor: {r: 1, g: 1, b: 1, a: 1}
   kitAfterimageAlphaStart: 0.55
   kitAfterimageAlphaEnd: 0.15
+  spreadShotAngleDegrees: 45
+  machineGunFireInterval: 0.12
+  machineGunMaxLiveShots: 8
+  machineGunAnimEveryNthShot: 2
+  machineGunMediumSpeedMultiplier: 1.35
+  machineGunBigSpeedMultiplier: 1.6
 --- !u!95 &9116989127924374224
 Animator:
   serializedVersion: 7

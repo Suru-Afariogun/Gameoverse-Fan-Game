@@ -411,12 +411,12 @@ public class PauseBInventory : MonoBehaviour
 
         if (isOpen)
         {
-            SoundManager.Instance?.PlayUiConfirmOrBack();
+            SoundManager.Instance?.PlayUiBack();
             Close();
         }
         else
         {
-            SoundManager.Instance?.PlayUiConfirmOrBack();
+            SoundManager.Instance?.PlayUiConfirm();
             Open();
         }
     }
@@ -426,7 +426,7 @@ public class PauseBInventory : MonoBehaviour
         if (!context.performed || !isOpen)
             return;
 
-        SoundManager.Instance?.PlayUiConfirmOrBack();
+        SoundManager.Instance?.PlayUiBack();
         Close();
     }
 
@@ -435,7 +435,7 @@ public class PauseBInventory : MonoBehaviour
         if (!context.performed || !isOpen)
             return;
 
-        SoundManager.Instance?.PlayUiConfirmOrBack();
+        SoundManager.Instance?.PlayUiConfirm();
         UseSelectedItem();
     }
 
@@ -517,8 +517,10 @@ public class PauseBInventory : MonoBehaviour
         if (isOpen)
             return;
 
-        // Don't stack on Kaboodle's menu.
+        // Don't stack on Kaboodle's menu or Pause A.
         if (KaboodleIsBlocking())
+            return;
+        if (PauseA.Instance != null && PauseA.Instance.IsOpen)
             return;
 
         // Real pause replaces any shop peek.

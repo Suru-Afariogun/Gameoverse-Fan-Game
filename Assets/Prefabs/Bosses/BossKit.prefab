@@ -199,6 +199,7 @@ MonoBehaviour:
   hitInvincibilityDuration: 0.75
   stunnedEffectPrefab: {fileID: 4654219477525025898, guid: d73abfa741e4f164caac7db19e091ea3, type: 3}
   deathEnergyBallPrefab: {fileID: 5968641805536287327, guid: d69a3996309c9484cb697c2c93c44b08, type: 3}
+  healedEffectPrefab: {fileID: 1455924060657617027, guid: ec3167a989d4308448e773e2f7a690b6, type: 3}
   maxHealth: 100
   currentHealth: 100
   usePlaceholderAi: 1

@@ -1,0 +1,2383 @@
+fileFormatVersion: 2
+guid: 3713ed55690a41d409aa659e6ddefec3
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 4709738340533698024
+    second: Tic Toc Bot sprite sheet 1_0
+  - first:
+      213: 7790308396788588378
+    second: Tic Toc Bot sprite sheet 1_1
+  - first:
+      213: 685470705655847647
+    second: Tic Toc Bot sprite sheet 1_2
+  - first:
+      213: 7847808787532016549
+    second: Tic Toc Bot sprite sheet 1_3
+  - first:
+      213: 366486439763129399
+    second: Tic Toc Bot sprite sheet 1_4
+  - first:
+      213: -391700869605710458
+    second: Tic Toc Bot sprite sheet 1_5
+  - first:
+      213: 165220085756403796
+    second: Tic Toc Bot sprite sheet 1_6
+  - first:
+      213: 4405959782074535493
+    second: Tic Toc Bot sprite sheet 1_7
+  - first:
+      213: 7084797875106376290
+    second: Tic Toc Bot sprite sheet 1_8
+  - first:
+      213: -2035188204635827944
+    second: Tic Toc Bot sprite sheet 1_9
+  - first:
+      213: 3440616113917542217
+    second: Tic Toc Bot sprite sheet 1_10
+  - first:
+      213: 4597310466111708141
+    second: Tic Toc Bot sprite sheet 1_11
+  - first:
+      213: 2304953373843958372
+    second: Tic Toc Bot sprite sheet 1_12
+  - first:
+      213: -4781046087433519775
+    second: Tic Toc Bot sprite sheet 1_13
+  - first:
+      213: 2576721587400618665
+    second: Tic Toc Bot sprite sheet 1_14
+  - first:
+      213: -7323818663074097708
+    second: Tic Toc Bot sprite sheet 1_15
+  - first:
+      213: -5301247313458983511
+    second: Tic Toc Bot sprite sheet 1_16
+  - first:
+      213: 5990730223523318696
+    second: Tic Toc Bot sprite sheet 1_17
+  - first:
+      213: 4693490666833661008
+    second: Tic Toc Bot sprite sheet 1_18
+  - first:
+      213: -6570581894796279194
+    second: Tic Toc Bot sprite sheet 1_19
+  - first:
+      213: 6880634785075984282
+    second: Tic Toc Bot sprite sheet 1_20
+  - first:
+      213: 5721425052381459703
+    second: Tic Toc Bot sprite sheet 1_21
+  - first:
+      213: -7289966159013078418
+    second: Tic Toc Bot sprite sheet 1_22
+  - first:
+      213: 8533685510210112189
+    second: Tic Toc Bot sprite sheet 1_23
+  - first:
+      213: -2830778093194964170
+    second: Tic Toc Bot sprite sheet 1_24
+  - first:
+      213: 4383918555233342727
+    second: Tic Toc Bot sprite sheet 1_25
+  - first:
+      213: 1255900807505860305
+    second: Tic Toc Bot sprite sheet 1_26
+  - first:
+      213: -3794652452330638349
+    second: Tic Toc Bot sprite sheet 1_27
+  - first:
+      213: -5791390929791404153
+    second: Tic Toc Bot sprite sheet 1_28
+  - first:
+      213: -4328790923250065752
+    second: Tic Toc Bot sprite sheet 1_29
+  - first:
+      213: -5603659397350877787
+    second: Tic Toc Bot sprite sheet 1_30
+  - first:
+      213: -3152168373693156595
+    second: Tic Toc Bot sprite sheet 1_31
+  - first:
+      213: -520005358610897612
+    second: Tic Toc Bot sprite sheet 1_32
+  - first:
+      213: 7712421376704109970
+    second: Tic Toc Bot sprite sheet 1_33
+  - first:
+      213: -8518469720153587424
+    second: Tic Toc Bot sprite sheet 1_34
+  - first:
+      213: 5201860446857006158
+    second: Tic Toc Bot sprite sheet 1_35
+  - first:
+      213: 6744357527327318983
+    second: Tic Toc Bot sprite sheet 1_36
+  - first:
+      213: -7934690824618034087
+    second: Tic Toc Bot sprite sheet 1_37
+  - first:
+      213: 768125411244977466
+    second: Tic Toc Bot sprite sheet 1_38
+  - first:
+      213: -3444662957857144205
+    second: Tic Toc Bot sprite sheet 1_39
+  - first:
+      213: -1423449926906249728
+    second: Tic Toc Bot sprite sheet 1_40
+  - first:
+      213: 3467034013045466235
+    second: Tic Toc Bot sprite sheet 1_41
+  - first:
+      213: 591443878460181543
+    second: Tic Toc Bot sprite sheet 1_42
+  - first:
+      213: 2028599066776835218
+    second: Tic Toc Bot sprite sheet 1_43
+  - first:
+      213: 5119326871490782520
+    second: Tic Toc Bot sprite sheet 1_44
+  - first:
+      213: 8850718032730442083
+    second: Tic Toc Bot sprite sheet 1_45
+  - first:
+      213: -8374766551046107106
+    second: Tic Toc Bot sprite sheet 1_46
+  - first:
+      213: -5233282621465540049
+    second: Tic Toc Bot sprite sheet 1_47
+  - first:
+      213: -843164108893613724
+    second: Tic Toc Bot sprite sheet 1_48
+  - first:
+      213: 6776181410065514432
+    second: Tic Toc Bot sprite sheet 1_49
+  - first:
+      213: 5325815685091345475
+    second: Tic Toc Bot sprite sheet 1_50
+  - first:
+      213: -2769104867528394940
+    second: Tic Toc Bot sprite sheet 1_51
+  - first:
+      213: -2701892763921086801
+    second: Tic Toc Bot sprite sheet 1_52
+  - first:
+      213: -7190186144009135810
+    second: Tic Toc Bot sprite sheet 1_53
+  - first:
+      213: -5890533636643703907
+    second: Tic Toc Bot sprite sheet 1_54
+  - first:
+      213: 8276067470439185000
+    second: Tic Toc Bot sprite sheet 1_55
+  - first:
+      213: 5225512646312992930
+    second: Tic Toc Bot sprite sheet 1_56
+  - first:
+      213: -8287518553594439298
+    second: Tic Toc Bot sprite sheet 1_57
+  - first:
+      213: -5501333816569592501
+    second: Tic Toc Bot sprite sheet 1_58
+  - first:
+      213: 851944796137071827
+    second: Tic Toc Bot sprite sheet 1_59
+  - first:
+      213: -710490098812815932
+    second: Tic Toc Bot sprite sheet 1_60
+  - first:
+      213: 6779752976191024551
+    second: Tic Toc Bot sprite sheet 1_61
+  - first:
+      213: -287684387763811270
+    second: Tic Toc Bot sprite sheet 1_62
+  - first:
+      213: -8881658041427094077
+    second: Tic Toc Bot sprite sheet 1_63
+  - first:
+      213: -4541365922961127860
+    second: Tic Toc Bot sprite sheet 1_64
+  - first:
+      213: 1480828230164881421
+    second: Tic Toc Bot sprite sheet 1_65
+  - first:
+      213: 8947105738705613960
+    second: Tic Toc Bot sprite sheet 1_66
+  - first:
+      213: 5827217007643933127
+    second: Tic Toc Bot sprite sheet 1_67
+  - first:
+      213: 3200515061319163896
+    second: Tic Toc Bot sprite sheet 1_68
+  - first:
+      213: -7849933211252913511
+    second: Tic Toc Bot sprite sheet 1_69
+  - first:
+      213: -5187724478903612950
+    second: Tic Toc Bot sprite sheet 1_70
+  - first:
+      213: -3221585173029232663
+    second: Tic Toc Bot sprite sheet 1_71
+  - first:
+      213: -130896710807586732
+    second: Tic Toc Bot sprite sheet 1_72
+  - first:
+      213: -6498298085014484780
+    second: Tic Toc Bot sprite sheet 1_73
+  - first:
+      213: 5610891451833460933
+    second: Tic Toc Bot sprite sheet 1_74
+  - first:
+      213: 5622668395133422969
+    second: Tic Toc Bot sprite sheet 1_75
+  - first:
+      213: -912456530349912871
+    second: Tic Toc Bot sprite sheet 1_76
+  - first:
+      213: 122910304546617608
+    second: Tic Toc Bot sprite sheet 1_77
+  - first:
+      213: 4821050062931627754
+    second: Tic Toc Bot sprite sheet 1_78
+  - first:
+      213: 1056429087378725591
+    second: Tic Toc Bot sprite sheet 1_79
+  - first:
+      213: 4285910827944213976
+    second: Tic Toc Bot sprite sheet 1_80
+  - first:
+      213: -7981740030812891905
+    second: Tic Toc Bot sprite sheet 1_81
+  - first:
+      213: 5691496913521629209
+    second: Tic Toc Bot sprite sheet 1_82
+  - first:
+      213: 9056417700105765781
+    second: Tic Toc Bot sprite sheet 1_83
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_0
+      rect:
+        serializedVersion: 2
+        x: 157
+        y: 3664
+        width: 204
+        height: 235
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8ed7c84411a5c5140800000000000000
+      internalID: 4709738340533698024
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_1
+      rect:
+        serializedVersion: 2
+        x: 539
+        y: 3666
+        width: 212
+        height: 260
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a5f9359463cbc1c60800000000000000
+      internalID: 7790308396788588378
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_2
+      rect:
+        serializedVersion: 2
+        x: 881
+        y: 3364
+        width: 427
+        height: 539
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fda9d8a99f7438900800000000000000
+      internalID: 685470705655847647
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_3
+      rect:
+        serializedVersion: 2
+        x: 1408
+        y: 3352
+        width: 269
+        height: 395
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5abe806438409ec60800000000000000
+      internalID: 7847808787532016549
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_4
+      rect:
+        serializedVersion: 2
+        x: 1891
+        y: 3719
+        width: 25
+        height: 28
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7343419a975061500800000000000000
+      internalID: 366486439763129399
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_5
+      rect:
+        serializedVersion: 2
+        x: 1929
+        y: 3736
+        width: 33
+        height: 11
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 685a0f86226609af0800000000000000
+      internalID: -391700869605710458
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_6
+      rect:
+        serializedVersion: 2
+        x: 1975
+        y: 3736
+        width: 34
+        height: 11
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4502549eacafa4200800000000000000
+      internalID: 165220085756403796
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_7
+      rect:
+        serializedVersion: 2
+        x: 2022
+        y: 3736
+        width: 31
+        height: 11
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 54ec539f31d152d30800000000000000
+      internalID: 4405959782074535493
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_8
+      rect:
+        serializedVersion: 2
+        x: 2066
+        y: 3736
+        width: 31
+        height: 11
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 26a682b6122425260800000000000000
+      internalID: 7084797875106376290
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_9
+      rect:
+        serializedVersion: 2
+        x: 2110
+        y: 3719
+        width: 50
+        height: 28
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 811dd9b5c1f81c3e0800000000000000
+      internalID: -2035188204635827944
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_10
+      rect:
+        serializedVersion: 2
+        x: 1891
+        y: 3663
+        width: 8
+        height: 34
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 94f3a8e50268fbf20800000000000000
+      internalID: 3440616113917542217
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_11
+      rect:
+        serializedVersion: 2
+        x: 2008
+        y: 3556
+        width: 32
+        height: 164
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: deb16c6e28deccf30800000000000000
+      internalID: 4597310466111708141
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_12
+      rect:
+        serializedVersion: 2
+        x: 2151
+        y: 3663
+        width: 9
+        height: 34
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 46aaecf91e6dcff10800000000000000
+      internalID: 2304953373843958372
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_13
+      rect:
+        serializedVersion: 2
+        x: 1891
+        y: 3605
+        width: 8
+        height: 36
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 16df0cf1aef46adb0800000000000000
+      internalID: -4781046087433519775
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_14
+      rect:
+        serializedVersion: 2
+        x: 2151
+        y: 3605
+        width: 9
+        height: 36
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9a23816b1aa52c320800000000000000
+      internalID: 2576721587400618665
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_15
+      rect:
+        serializedVersion: 2
+        x: 36
+        y: 3363
+        width: 204
+        height: 235
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4d5971caab19c5a90800000000000000
+      internalID: -7323818663074097708
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_16
+      rect:
+        serializedVersion: 2
+        x: 332
+        y: 3366
+        width: 205
+        height: 236
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9ad88c6d7af2e66b0800000000000000
+      internalID: -5301247313458983511
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_17
+      rect:
+        serializedVersion: 2
+        x: 665
+        y: 3367
+        width: 200
+        height: 236
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8abcd46e569532350800000000000000
+      internalID: 5990730223523318696
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_18
+      rect:
+        serializedVersion: 2
+        x: 1891
+        y: 3549
+        width: 8
+        height: 34
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 05c4b31f4e0a22140800000000000000
+      internalID: 4693490666833661008
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_19
+      rect:
+        serializedVersion: 2
+        x: 2151
+        y: 3549
+        width: 9
+        height: 34
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6620e01449a90d4a0800000000000000
+      internalID: -6570581894796279194
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_20
+      rect:
+        serializedVersion: 2
+        x: 1891
+        y: 3491
+        width: 8
+        height: 36
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a9776a1c1ecec7f50800000000000000
+      internalID: 6880634785075984282
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_21
+      rect:
+        serializedVersion: 2
+        x: 2151
+        y: 3491
+        width: 9
+        height: 36
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7f4b73095c5966f40800000000000000
+      internalID: 5721425052381459703
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_22
+      rect:
+        serializedVersion: 2
+        x: 1891
+        y: 3433
+        width: 8
+        height: 36
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e6a186bf666d4da90800000000000000
+      internalID: -7289966159013078418
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_23
+      rect:
+        serializedVersion: 2
+        x: 2003
+        y: 3433
+        width: 37
+        height: 43
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dbac8f412cdbd6670800000000000000
+      internalID: 8533685510210112189
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_24
+      rect:
+        serializedVersion: 2
+        x: 2151
+        y: 3433
+        width: 9
+        height: 36
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6331825825e07b8d0800000000000000
+      internalID: -2830778093194964170
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_25
+      rect:
+        serializedVersion: 2
+        x: 1891
+        y: 3352
+        width: 25
+        height: 59
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7055de0f2bec6dc30800000000000000
+      internalID: 4383918555233342727
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_26
+      rect:
+        serializedVersion: 2
+        x: 1929
+        y: 3352
+        width: 33
+        height: 10
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1d65380612bdd6110800000000000000
+      internalID: 1255900807505860305
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_27
+      rect:
+        serializedVersion: 2
+        x: 1975
+        y: 3352
+        width: 34
+        height: 10
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3f374c413bfa65bc0800000000000000
+      internalID: -3794652452330638349
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_28
+      rect:
+        serializedVersion: 2
+        x: 2022
+        y: 3352
+        width: 31
+        height: 10
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7873d5a22a8d0afa0800000000000000
+      internalID: -5791390929791404153
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_29
+      rect:
+        serializedVersion: 2
+        x: 2066
+        y: 3352
+        width: 31
+        height: 10
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8ae9eb8179b0de3c0800000000000000
+      internalID: -4328790923250065752
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_30
+      rect:
+        serializedVersion: 2
+        x: 2110
+        y: 3352
+        width: 50
+        height: 59
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5a51f92b77dcb32b0800000000000000
+      internalID: -5603659397350877787
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_31
+      rect:
+        serializedVersion: 2
+        x: 63
+        y: 2930
+        width: 204
+        height: 235
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d037cc5a09f3144d0800000000000000
+      internalID: -3152168373693156595
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_32
+      rect:
+        serializedVersion: 2
+        x: 406
+        y: 2929
+        width: 204
+        height: 235
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 435a2b6a1e198c8f0800000000000000
+      internalID: -520005358610897612
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_33
+      rect:
+        serializedVersion: 2
+        x: 788
+        y: 2926
+        width: 249
+        height: 235
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 29dd3944166080b60800000000000000
+      internalID: 7712421376704109970
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_34
+      rect:
+        serializedVersion: 2
+        x: 1268
+        y: 2923
+        width: 249
+        height: 235
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 021035c1ce058c980800000000000000
+      internalID: -8518469720153587424
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_35
+      rect:
+        serializedVersion: 2
+        x: 1773
+        y: 2893
+        width: 236
+        height: 256
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e4c011a0488b03840800000000000000
+      internalID: 5201860446857006158
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_36
+      rect:
+        serializedVersion: 2
+        x: 2152
+        y: 2855
+        width: 260
+        height: 281
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7c3a39e1075c89d50800000000000000
+      internalID: 6744357527327318983
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_37
+      rect:
+        serializedVersion: 2
+        x: 2692
+        y: 2892
+        width: 262
+        height: 225
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 95c371c1cb052e190800000000000000
+      internalID: -7934690824618034087
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_38
+      rect:
+        serializedVersion: 2
+        x: 43
+        y: 2543
+        width: 204
+        height: 235
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a3d2538edfde8aa00800000000000000
+      internalID: 768125411244977466
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_39
+      rect:
+        serializedVersion: 2
+        x: 420
+        y: 2528
+        width: 227
+        height: 229
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3728af95a491230d0800000000000000
+      internalID: -3444662957857144205
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_40
+      rect:
+        serializedVersion: 2
+        x: 841
+        y: 2533
+        width: 216
+        height: 226
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 00e723f45d3ee3ce0800000000000000
+      internalID: -1423449926906249728
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_41
+      rect:
+        serializedVersion: 2
+        x: 1354
+        y: 2514
+        width: 142
+        height: 243
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b74a5c3d0116d1030800000000000000
+      internalID: 3467034013045466235
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_42
+      rect:
+        serializedVersion: 2
+        x: 1764
+        y: 2466
+        width: 252
+        height: 281
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 72cc238e21b353800800000000000000
+      internalID: 591443878460181543
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_43
+      rect:
+        serializedVersion: 2
+        x: 2695
+        y: 2497
+        width: 244
+        height: 235
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2941cee6a18072c10800000000000000
+      internalID: 2028599066776835218
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_44
+      rect:
+        serializedVersion: 2
+        x: 3240
+        y: 2486
+        width: 75
+        height: 83
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 835e1509aa08b0740800000000000000
+      internalID: 5119326871490782520
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_45
+      rect:
+        serializedVersion: 2
+        x: 3429
+        y: 2561
+        width: 28
+        height: 15
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 369ca0c582114da70800000000000000
+      internalID: 8850718032730442083
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_46
+      rect:
+        serializedVersion: 2
+        x: 3478
+        y: 2537
+        width: 38
+        height: 37
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e10d218713ad6cb80800000000000000
+      internalID: -8374766551046107106
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_47
+      rect:
+        serializedVersion: 2
+        x: 3431
+        y: 2470
+        width: 25
+        height: 14
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f2a4252de25af57b0800000000000000
+      internalID: -5233282621465540049
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_48
+      rect:
+        serializedVersion: 2
+        x: 3479
+        y: 2472
+        width: 37
+        height: 38
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4619902d5ba7c44f0800000000000000
+      internalID: -843164108893613724
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_49
+      rect:
+        serializedVersion: 2
+        x: 406
+        y: 2218
+        width: 250
+        height: 226
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0cf7f883715d90e50800000000000000
+      internalID: 6776181410065514432
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_50
+      rect:
+        serializedVersion: 2
+        x: 866
+        y: 2202
+        width: 249
+        height: 222
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 344c211f52919e940800000000000000
+      internalID: 5325815685091345475
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_51
+      rect:
+        serializedVersion: 2
+        x: 1312
+        y: 2177
+        width: 206
+        height: 243
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4473a295bc92299d0800000000000000
+      internalID: -2769104867528394940
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_52
+      rect:
+        serializedVersion: 2
+        x: 1665
+        y: 2293
+        width: 117
+        height: 27
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fa60941b8d2f08ad0800000000000000
+      internalID: -2701892763921086801
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_53
+      rect:
+        serializedVersion: 2
+        x: 1880
+        y: 2277
+        width: 271
+        height: 57
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e3956691cc3573c90800000000000000
+      internalID: -7190186144009135810
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_54
+      rect:
+        serializedVersion: 2
+        x: 2423
+        y: 2256
+        width: 74
+        height: 115
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d93bc5aedde904ea0800000000000000
+      internalID: -5890533636643703907
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_55
+      rect:
+        serializedVersion: 2
+        x: 2959
+        y: 2150
+        width: 169
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 86a71b0148f7ad270800000000000000
+      internalID: 8276067470439185000
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_56
+      rect:
+        serializedVersion: 2
+        x: 3276
+        y: 2172
+        width: 136
+        height: 152
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2a02cccd010c48840800000000000000
+      internalID: 5225512646312992930
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_57
+      rect:
+        serializedVersion: 2
+        x: 3608
+        y: 2314
+        width: 97
+        height: 38
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e795b8fd8c1dcfc80800000000000000
+      internalID: -8287518553594439298
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_58
+      rect:
+        serializedVersion: 2
+        x: 3754
+        y: 2250
+        width: 74
+        height: 87
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b4586888a0657a3b0800000000000000
+      internalID: -5501333816569592501
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_59
+      rect:
+        serializedVersion: 2
+        x: 2422
+        y: 2174
+        width: 75
+        height: 82
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3d42efd3747b2db00800000000000000
+      internalID: 851944796137071827
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_60
+      rect:
+        serializedVersion: 2
+        x: 3736
+        y: 2093
+        width: 90
+        height: 87
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4c574dbf405d326f0800000000000000
+      internalID: -710490098812815932
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_61
+      rect:
+        serializedVersion: 2
+        x: 1862
+        y: 2115
+        width: 41
+        height: 40
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7ad63c24965861e50800000000000000
+      internalID: 6779752976191024551
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_62
+      rect:
+        serializedVersion: 2
+        x: 2005
+        y: 2093
+        width: 78
+        height: 78
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a3c89e3d290f10cf0800000000000000
+      internalID: -287684387763811270
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_63
+      rect:
+        serializedVersion: 2
+        x: 2421
+        y: 2096
+        width: 75
+        height: 75
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3c51f3081130eb480800000000000000
+      internalID: -8881658041427094077
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_64
+      rect:
+        serializedVersion: 2
+        x: 2528
+        y: 2094
+        width: 74
+        height: 74
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c4686d611c3d9f0c0800000000000000
+      internalID: -4541365922961127860
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_65
+      rect:
+        serializedVersion: 2
+        x: 3611
+        y: 2086
+        width: 77
+        height: 34
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d002958fd65fc8410800000000000000
+      internalID: 1480828230164881421
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_66
+      rect:
+        serializedVersion: 2
+        x: 223
+        y: 1842
+        width: 289
+        height: 265
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 884386bf3418a2c70800000000000000
+      internalID: 8947105738705613960
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_67
+      rect:
+        serializedVersion: 2
+        x: 3557
+        y: 1868
+        width: 107
+        height: 98
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7c93bb99efe6ed050800000000000000
+      internalID: 5827217007643933127
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_68
+      rect:
+        serializedVersion: 2
+        x: 788
+        y: 1519
+        width: 65
+        height: 68
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8ff5730cd738a6c20800000000000000
+      internalID: 3200515061319163896
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_69
+      rect:
+        serializedVersion: 2
+        x: 1779
+        y: 694
+        width: 199
+        height: 1023
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 99a8ab8c55f6f0390800000000000000
+      internalID: -7849933211252913511
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_70
+      rect:
+        serializedVersion: 2
+        x: 2080
+        y: 692
+        width: 199
+        height: 1023
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ae90a5a72108108b0800000000000000
+      internalID: -5187724478903612950
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_71
+      rect:
+        serializedVersion: 2
+        x: 2413
+        y: 690
+        width: 199
+        height: 1023
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9ef5de39a51aa43d0800000000000000
+      internalID: -3221585173029232663
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_72
+      rect:
+        serializedVersion: 2
+        x: 2778
+        y: 694
+        width: 199
+        height: 1023
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 458fb029226fe2ef0800000000000000
+      internalID: -130896710807586732
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_73
+      rect:
+        serializedVersion: 2
+        x: 3120
+        y: 688
+        width: 199
+        height: 1023
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4d84c16325861d5a0800000000000000
+      internalID: -6498298085014484780
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_74
+      rect:
+        serializedVersion: 2
+        x: 3439
+        y: 684
+        width: 199
+        height: 1023
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5c82fc33c04eddd40800000000000000
+      internalID: 5610891451833460933
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_75
+      rect:
+        serializedVersion: 2
+        x: 3752
+        y: 685
+        width: 199
+        height: 1023
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 97d4ebd7d1bb70e40800000000000000
+      internalID: 5622668395133422969
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_76
+      rect:
+        serializedVersion: 2
+        x: 165
+        y: 941
+        width: 404
+        height: 286
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9dc028bbe9d4653f0800000000000000
+      internalID: -912456530349912871
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_77
+      rect:
+        serializedVersion: 2
+        x: 634
+        y: 1170
+        width: 403
+        height: 260
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8097cb1554aa4b100800000000000000
+      internalID: 122910304546617608
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_78
+      rect:
+        serializedVersion: 2
+        x: 1069
+        y: 933
+        width: 403
+        height: 284
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aee0a6d3d7fc7e240800000000000000
+      internalID: 4821050062931627754
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_79
+      rect:
+        serializedVersion: 2
+        x: 158
+        y: 443
+        width: 385
+        height: 379
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7da599368a039ae00800000000000000
+      internalID: 1056429087378725591
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_80
+      rect:
+        serializedVersion: 2
+        x: 701
+        y: 772
+        width: 277
+        height: 281
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8dd7d96b03d9a7b30800000000000000
+      internalID: 4285910827944213976
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_81
+      rect:
+        serializedVersion: 2
+        x: 1095
+        y: 471
+        width: 482
+        height: 331
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ff4d1e52bb92b3190800000000000000
+      internalID: -7981740030812891905
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_82
+      rect:
+        serializedVersion: 2
+        x: 662
+        y: 379
+        width: 403
+        height: 327
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 91850bab9424cfe40800000000000000
+      internalID: 5691496913521629209
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_83
+      rect:
+        serializedVersion: 2
+        x: 3786
+        y: 366
+        width: 107
+        height: 98
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5934d505aebdead70800000000000000
+      internalID: 9056417700105765781
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_84
+      rect:
+        serializedVersion: 2
+        x: 1879
+        y: 3343
+        width: 292
+        height: 414
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9800ac82ebd668040beec08ce79577c0
+      internalID: 685365389
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_85
+      rect:
+        serializedVersion: 2
+        x: 3584
+        y: 2058
+        width: 279
+        height: 315
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ed345df9529bea24180acdf187607069
+      internalID: -1063542218
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tic Toc Bot sprite sheet 1_86
+      rect:
+        serializedVersion: 2
+        x: 3402
+        y: 2444
+        width: 138
+        height: 161
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 885840f76fc9dbc42bc8351c7ee13b4a
+      internalID: 870397763
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: cc26f8c3233889b45ac4e4d635844ea4
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Tic Toc Bot sprite sheet 1_0: 4709738340533698024
+      Tic Toc Bot sprite sheet 1_1: 7790308396788588378
+      Tic Toc Bot sprite sheet 1_10: 3440616113917542217
+      Tic Toc Bot sprite sheet 1_11: 4597310466111708141
+      Tic Toc Bot sprite sheet 1_12: 2304953373843958372
+      Tic Toc Bot sprite sheet 1_13: -4781046087433519775
+      Tic Toc Bot sprite sheet 1_14: 2576721587400618665
+      Tic Toc Bot sprite sheet 1_15: -7323818663074097708
+      Tic Toc Bot sprite sheet 1_16: -5301247313458983511
+      Tic Toc Bot sprite sheet 1_17: 5990730223523318696
+      Tic Toc Bot sprite sheet 1_18: 4693490666833661008
+      Tic Toc Bot sprite sheet 1_19: -6570581894796279194
+      Tic Toc Bot sprite sheet 1_2: 685470705655847647
+      Tic Toc Bot sprite sheet 1_20: 6880634785075984282
+      Tic Toc Bot sprite sheet 1_21: 5721425052381459703
+      Tic Toc Bot sprite sheet 1_22: -7289966159013078418
+      Tic Toc Bot sprite sheet 1_23: 8533685510210112189
+      Tic Toc Bot sprite sheet 1_24: -2830778093194964170
+      Tic Toc Bot sprite sheet 1_25: 4383918555233342727
+      Tic Toc Bot sprite sheet 1_26: 1255900807505860305
+      Tic Toc Bot sprite sheet 1_27: -3794652452330638349
+      Tic Toc Bot sprite sheet 1_28: -5791390929791404153
+      Tic Toc Bot sprite sheet 1_29: -4328790923250065752
+      Tic Toc Bot sprite sheet 1_3: 7847808787532016549
+      Tic Toc Bot sprite sheet 1_30: -5603659397350877787
+      Tic Toc Bot sprite sheet 1_31: -3152168373693156595
+      Tic Toc Bot sprite sheet 1_32: -520005358610897612
+      Tic Toc Bot sprite sheet 1_33: 7712421376704109970
+      Tic Toc Bot sprite sheet 1_34: -8518469720153587424
+      Tic Toc Bot sprite sheet 1_35: 5201860446857006158
+      Tic Toc Bot sprite sheet 1_36: 6744357527327318983
+      Tic Toc Bot sprite sheet 1_37: -7934690824618034087
+      Tic Toc Bot sprite sheet 1_38: 768125411244977466
+      Tic Toc Bot sprite sheet 1_39: -3444662957857144205
+      Tic Toc Bot sprite sheet 1_4: 366486439763129399
+      Tic Toc Bot sprite sheet 1_40: -1423449926906249728
+      Tic Toc Bot sprite sheet 1_41: 3467034013045466235
+      Tic Toc Bot sprite sheet 1_42: 591443878460181543
+      Tic Toc Bot sprite sheet 1_43: 2028599066776835218
+      Tic Toc Bot sprite sheet 1_44: 5119326871490782520
+      Tic Toc Bot sprite sheet 1_45: 8850718032730442083
+      Tic Toc Bot sprite sheet 1_46: -8374766551046107106
+      Tic Toc Bot sprite sheet 1_47: -5233282621465540049
+      Tic Toc Bot sprite sheet 1_48: -843164108893613724
+      Tic Toc Bot sprite sheet 1_49: 6776181410065514432
+      Tic Toc Bot sprite sheet 1_5: -391700869605710458
+      Tic Toc Bot sprite sheet 1_50: 5325815685091345475
+      Tic Toc Bot sprite sheet 1_51: -2769104867528394940
+      Tic Toc Bot sprite sheet 1_52: -2701892763921086801
+      Tic Toc Bot sprite sheet 1_53: -7190186144009135810
+      Tic Toc Bot sprite sheet 1_54: -5890533636643703907
+      Tic Toc Bot sprite sheet 1_55: 8276067470439185000
+      Tic Toc Bot sprite sheet 1_56: 5225512646312992930
+      Tic Toc Bot sprite sheet 1_57: -8287518553594439298
+      Tic Toc Bot sprite sheet 1_58: -5501333816569592501
+      Tic Toc Bot sprite sheet 1_59: 851944796137071827
+      Tic Toc Bot sprite sheet 1_6: 165220085756403796
+      Tic Toc Bot sprite sheet 1_60: -710490098812815932
+      Tic Toc Bot sprite sheet 1_61: 6779752976191024551
+      Tic Toc Bot sprite sheet 1_62: -287684387763811270
+      Tic Toc Bot sprite sheet 1_63: -8881658041427094077
+      Tic Toc Bot sprite sheet 1_64: -4541365922961127860
+      Tic Toc Bot sprite sheet 1_65: 1480828230164881421
+      Tic Toc Bot sprite sheet 1_66: 8947105738705613960
+      Tic Toc Bot sprite sheet 1_67: 5827217007643933127
+      Tic Toc Bot sprite sheet 1_68: 3200515061319163896
+      Tic Toc Bot sprite sheet 1_69: -7849933211252913511
+      Tic Toc Bot sprite sheet 1_7: 4405959782074535493
+      Tic Toc Bot sprite sheet 1_70: -5187724478903612950
+      Tic Toc Bot sprite sheet 1_71: -3221585173029232663
+      Tic Toc Bot sprite sheet 1_72: -130896710807586732
+      Tic Toc Bot sprite sheet 1_73: -6498298085014484780
+      Tic Toc Bot sprite sheet 1_74: 5610891451833460933
+      Tic Toc Bot sprite sheet 1_75: 5622668395133422969
+      Tic Toc Bot sprite sheet 1_76: -912456530349912871
+      Tic Toc Bot sprite sheet 1_77: 122910304546617608
+      Tic Toc Bot sprite sheet 1_78: 4821050062931627754
+      Tic Toc Bot sprite sheet 1_79: 1056429087378725591
+      Tic Toc Bot sprite sheet 1_8: 7084797875106376290
+      Tic Toc Bot sprite sheet 1_80: 4285910827944213976
+      Tic Toc Bot sprite sheet 1_81: -7981740030812891905
+      Tic Toc Bot sprite sheet 1_82: 5691496913521629209
+      Tic Toc Bot sprite sheet 1_83: 9056417700105765781
+      Tic Toc Bot sprite sheet 1_84: 685365389
+      Tic Toc Bot sprite sheet 1_85: -1063542218
+      Tic Toc Bot sprite sheet 1_86: 870397763
+      Tic Toc Bot sprite sheet 1_9: -2035188204635827944
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

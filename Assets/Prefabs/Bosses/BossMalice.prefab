@@ -253,6 +253,7 @@ MonoBehaviour:
   hitInvincibilityDuration: 0.75
   stunnedEffectPrefab: {fileID: 5972615910273634524, guid: e1f5bd233756cb441a4a41ad336d286b, type: 3}
   deathEnergyBallPrefab: {fileID: 1951241975811156007, guid: 7eed46c1c08f7fd4781b3fb7cfd83e9e, type: 3}
+  healedEffectPrefab: {fileID: 1455924060657617027, guid: ec3167a989d4308448e773e2f7a690b6, type: 3}
   maxHealth: 30
   currentHealth: 30
   usePlaceholderAi: 1
@@ -267,6 +268,13 @@ MonoBehaviour:
   slash1Damage: 1
   slash2Damage: 1
   slash3Damage: 2
+  slashProjectiles:
+    enabled: 1
+    smallPurplePrefab: {fileID: 4715001000000000005, guid: f37fec78e088488c8d3478fd625853f1, type: 3}
+    smallRedPrefab: {fileID: 4715002000000000005, guid: 922745e5d327413e99ae016f45e9e454, type: 3}
+    bigPurplePrefab: {fileID: 4715003000000000005, guid: fa0ffbb3ecd04ed183c51a8394543002, type: 3}
+    bigRedPrefab: {fileID: 4715004000000000005, guid: 5db0fa5ada644453afe52de13d4617dd, type: 3}
+    smallPurpleSpacing: 0.75
 --- !u!1 &4872862993242002997
 GameObject:
   m_ObjectHideFlags: 0

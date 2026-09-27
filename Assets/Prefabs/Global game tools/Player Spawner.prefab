@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1152093269042220587
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3327100007589403974}
+  - component: {fileID: 2593963072494537193}
+  - component: {fileID: 8745129630851742036}
+  m_Layer: 0
+  m_Name: Player Spawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3327100007589403974
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1152093269042220587}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 4.53, y: -3.46, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2593963072494537193
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1152093269042220587}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d317980c1ffb914fbf9a6dae30abbf3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerSpawner
+  characters:
+  - characterId: Kit
+    prefab: {fileID: 3672412826225818953, guid: 19d3f4e8eb49ccf42b640c6aaee3b296, type: 3}
+  - characterId: Malice
+    prefab: {fileID: 8322281807962035337, guid: 31dd0af3592d2d54faedf1afd77fdeca, type: 3}
+  - characterId: Harlie
+    prefab: {fileID: 1425409008181505920, guid: 21d75f6d1bcba9e4490944ea837997e1, type: 3}
+  - characterId: Count
+    prefab: {fileID: 3672412826225818953, guid: d4e5f6478990abcdef1234567890ab10, type: 3}
+  defaultCharacterId: Kit
+  spawnPoint: {fileID: 3327100007589403974}
+  spawnOnStart: 1
+  destroyScenePlayersOnStart: 1
+  keepPoseOnSwitch: 1
+  retargetCamera: 1
+--- !u!114 &8745129630851742036
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1152093269042220587}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a7b8c9d0e1f234567890abcdef123456, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SceneEnemyRespawner
+  commonEnemyPrefabs:
+  - enemyKey: CrankyClanky
+    prefab: {fileID: 3582337511130764416, guid: 4bcf3a4bc20f38c469fec0037900484f, type: 3}
+  - enemyKey: LaserBot
+    prefab: {fileID: 4024275913677320218, guid: 4a1472bd43d663649bd062b66e10d732, type: 3}
+  - enemyKey: BlockerBot
+    prefab: {fileID: 3036110211760470095, guid: b6ecba60c9d82e041ab44f1455f343e2, type: 3}
+  - enemyKey: ChaoticTanker
+    prefab: {fileID: 7383768321935035965, guid: 8236b15f684305d448547d7b11c69c00, type: 3}
+  - enemyKey: ScrapNit
+    prefab: {fileID: 3656216235159816094, guid: 9e9485d1564e1bf4580ccaf55a1eace1, type: 3}

@@ -42,6 +42,18 @@ public class MalicePlayerController : PlayerController
     [SerializeField] private bool maliceDashJumpMomentumUntilLanded = true;
     [SerializeField] private int dashContactDamage = 2;
 
+    [Header("Malice - Attack Styles")]
+    [Tooltip("Cruel Claw: added to slash / dash / grapple damage.")]
+    [SerializeField] private int cruelClawAttackBonus = 5;
+    [Tooltip("Cruel Claw: subtracted from walk/run speed.")]
+    [SerializeField] private float cruelClawMoveSpeedPenalty = 0.8f;
+    [Tooltip("Life Steal: HP granted per successful slash (banks until a whole HP).")]
+    [SerializeField] private float lifeStealSlashHeal = 0.5f;
+    [Tooltip("Life Steal: HP granted per successful Grapple Arm hit.")]
+    [SerializeField] private float lifeStealGrappleHeal = 1f;
+    [Tooltip("Life Steal: if another slash hits within this time, only every 2nd slash heals.")]
+    [SerializeField] private float lifeStealRapidWindow = 0.4f;
+
     [Header("Malice - Afterimages")]
     [SerializeField] private bool maliceEnableDashAfterimages = true;
     [SerializeField] private int maliceAfterimageCount = 3;
@@ -76,6 +88,55 @@ public class MalicePlayerController : PlayerController
     [Tooltip("Once Down is pressed during air slash, keep diving/attacking until landing.")]
     [SerializeField] private bool airSlashDiveUntilLand = true;
 
+    [Header("Malice - Double Jump + Pogo")]
+    [SerializeField] private int maliceMaxAirJumps = 1;
+    [Tooltip("Kit's double-jump launch speed; Malice's height is measured against it.")]
+    [SerializeField] private float doubleJumpReferenceForce = 16f;
+    [Tooltip("Fraction of Kit's max double-jump height Malice reaches (0.4 = 60% lower).")]
+    [SerializeField] [Range(0.05f, 1f)] private float doubleJumpHeightFraction = 0.4f;
+    [Tooltip("Upward speed when the diving air slash hits an enemy or boss.")]
+    [SerializeField] private float pogoBounceForce = 12f;
+    [SerializeField] private bool pogoRefreshesDoubleJump = true;
+
+    [Header("Malice - Slash / Grapple Guard")]
+    [Tooltip("Slashes: while the attack box is active, enemy contact that only touches the part of her body inside the attack box deals no damage. Grapple Arm: enemies the arm hits can't hurt her by contact until the grapple ends.")]
+    [SerializeField] private bool slashGuardEnabled = true;
+    [Tooltip("Extra world-unit margin around the attack box when deciding a slash contact is covered.")]
+    [SerializeField] private float slashGuardTolerance = 0.05f;
+    [Tooltip("Seconds after a grapple ends that enemies it hit still can't hurt her by contact.")]
+    [SerializeField] private float grappleGuardGrace = 0.2f;
+
+    [Header("Malice - Upgrades (Scratch's shop)")]
+    [Tooltip("Ariel Action: extra diving air slash (pogo) damage per level. Each level also adds one air jump.")]
+    [SerializeField] private int pogoDamagePerAerialLevel = 1;
+    [Tooltip("Ariel Action: invincible frames (at 60 fps) after a pogo bounce, per level.")]
+    [SerializeField] private int pogoInvincibleFramesPerLevel = 1;
+    [Tooltip("Hyper Ability (max health): attack added to every attack per level.")]
+    [SerializeField] private int hyperDamagePerLevel = 2;
+    [Tooltip("Hyper Ability: extra projectile-slash travel distance per level.")]
+    [SerializeField] private float hyperSlashDistancePerLevel = 2f;
+    [Tooltip("Hyper Ability: extra Slash 1 / 2 projectile pairs per level.")]
+    [SerializeField] private int hyperSlashPairsPerLevel = 1;
+    [Tooltip("Hyper Ability: extra projectile-slash knockback per level.")]
+    [SerializeField] private float hyperKnockbackPerLevel = 1f;
+    [Tooltip("Life Steal: extra HP healed per slash / Grapple Arm hit, per level.")]
+    [SerializeField] private int lifeStealHealPerLevel = 1;
+    [Tooltip("Life Steal level where Malice regenerates while standing still.")]
+    [SerializeField] private int lifeStealRegenLevel = 2;
+    [Tooltip("Life Steal level where regeneration works while moving too.")]
+    [SerializeField] private int lifeStealRegenAnywhereLevel = 5;
+    [Tooltip("Seconds per 1 HP of Life Steal regeneration.")]
+    [SerializeField] private float lifeStealRegenInterval = 2f;
+    [Tooltip("Cruel Claw: walk speed added per level.")]
+    [SerializeField] private float cruelClawMoveSpeedPerLevel = 1f;
+    [Tooltip("Cruel Claw: slash speed multiplier added per level (0.08 = 8% faster per level).")]
+    [SerializeField] private float cruelClawAttackSpeedPerLevel = 0.08f;
+    [Tooltip("Cruel Claw: attack added per level.")]
+    [SerializeField] private int cruelClawDamagePerLevel = 2;
+
+    [Header("Malice - Projectile Slashes")]
+    [SerializeField] private MaliceSlashProjectileSettings slashProjectiles = new MaliceSlashProjectileSettings();
+
     [Header("Malice - Rapid Attack Speed")]
     [Tooltip("Every N attack presses (within the idle window) increases attack speed by Attack Speed Per Tier.")]
     [SerializeField] private int pressesPerSpeedTier = 6;
@@ -90,6 +151,8 @@ public class MalicePlayerController : PlayerController
     [SerializeField] private float dashCancelSlashSpeedMul = 1.5f;
     [Tooltip("How long after a dash ends that a slash still gets the dash-cancel speed boost.")]
     [SerializeField] private float dashCancelSlashWindow = 0.2f;
+    [Tooltip("Invincibility starts this far through the dash (0.5 = second half). No flicker.")]
+    [SerializeField] [Range(0.05f, 0.95f)] private float dashIFrameStartNormalized = 0.5f;
 
     [Header("Malice - Grapple Charge (Kit-style timing)")]
     [SerializeField] private float mediumChargeSeconds = 1.5f;
@@ -109,8 +172,6 @@ public class MalicePlayerController : PlayerController
     [SerializeField] private float grapplePullSpeed = 18f;
     [Tooltip("How close Malice's body must get to the AttackBox front edge to count as fully reeled in.")]
     [SerializeField] private float grapplePullArriveDistance = 0.03f;
-    [Tooltip("While holding Up, AttackBox can latch onto these layers and pull Malice to that object.")]
-    [SerializeField] private LayerMask grapplePullLatchLayers = ~0;
     [Header("Malice - Grapple Pull Anchor Frame")]
     [Tooltip("0-based full-extension frame in 'Grapple Arm'. Up-pull waits until this frame, then reels Malice to that AttackBox pose. At 60fps, frame 8 ≈ 0.133s.")]
     [SerializeField] private int grapplePullAnchorFrame = 8;
@@ -147,6 +208,8 @@ public class MalicePlayerController : PlayerController
     private float meleeDuration;
     private bool queuedSlash2;
     private bool queuedSlash3;
+    private bool slashProjectilesFired;
+    private float comboSkipAtElapsed = float.PositiveInfinity;
     private float slash1PressTime = -999f;
     private float slash2StartTime = -999f;
     private float slash3GraceUntil = -999f;
@@ -154,7 +217,20 @@ public class MalicePlayerController : PlayerController
     private bool hitboxWasActive;
     private int pendingHitDamage;
     private bool dashHitboxActive;
+    private bool dashDamageUsedThisCycle;
     private bool airSlashDiving;
+    private int airJumpsRemaining;
+
+    private Transform slashGuardedSource;
+    private float slashGuardedAt = -999f;
+
+    private const float SlashGuardContactSkin = 0.03f;
+    private static readonly List<Collider2D> SlashGuardSourceColliders = new List<Collider2D>();
+    private float lifeStealHealBank;
+    private int lifeStealRapidSlashCount;
+    private float lastLifeStealSlashTime = -999f;
+    private float lifeStealRegenTimer;
+    private float pogoInvincibleUntil = -999f;
 
     private int rapidAttackPressCount;
     private float lastAttackPressTime = -999f;
@@ -176,9 +252,6 @@ public class MalicePlayerController : PlayerController
     private Vector3 grappleAnchorWorld;
     private bool grappleAnchorLocked;
     private bool grappleAirHang;
-    private bool grapplePullLatchedToObject;
-    private Transform grapplePullLatchTarget;
-    private Vector3 grapplePullLatchLocalOffset;
     private Vector3 grapplePullAnchorLocalLeft;
     private bool grapplePullAnchorLocalCached;
     private Vector2 grapplePullStartBodyPos;
@@ -189,9 +262,8 @@ public class MalicePlayerController : PlayerController
     private Vector3 attackBoxAnchoredScale = Vector3.one;
     private readonly List<Transform> grabbedTargets = new List<Transform>(4);
     private readonly List<Rigidbody2D> grabbedBodies = new List<Rigidbody2D>(4);
-    private readonly Collider2D[] grappleOverlapBuffer = new Collider2D[24];
-    private ContactFilter2D grappleOverlapFilter;
-    private bool grappleOverlapFilterReady;
+    private readonly List<Transform> grappleHitSources = new List<Transform>(4);
+    private float grappleGuardUntil = -999f;
 
     // AttackBox authored left-facing (same LateUpdate mirror as Kit FirePoint).
     private Vector3 attackBoxLeftFacingLocal;
@@ -207,6 +279,13 @@ public class MalicePlayerController : PlayerController
     public bool IsGrappling => meleeState == MeleeState.GrappleArm;
     public bool IsChargingGrapple => isCharging;
 
+    private int AerialLevel => PlayerUpgrades.GetLevel(this, UpgradeType.AerialAction);
+    private int HyperLevel => PlayerUpgrades.GetLevel(this, UpgradeType.HyperAbility);
+    private int StyleLevel => PlayerUpgrades.GetLevel(this, UpgradeType.AttackStyle);
+    private bool HyperActive => PlayerUpgrades.IsHyperActive(this);
+    private int MaxAirJumps => Mathf.Max(0, maliceMaxAirJumps) + AerialLevel;
+    private int PogoDamageBonus => Mathf.Max(0, pogoDamagePerAerialLevel) * AerialLevel;
+
     protected override bool BlocksActionCancel()
     {
         return IsGrappling;
@@ -221,6 +300,95 @@ public class MalicePlayerController : PlayerController
         animator.SetBool("IsAttacking", IsMeleeAttacking);
         animator.SetBool("IsCharging", isCharging);
         ApplyAnimatorAttackSpeed();
+    }
+
+    // ---------- Double jump + pogo ----------
+
+    protected override void ApplyJump()
+    {
+        if (!jumpRequested)
+            return;
+
+        // Ground jump, drop-through, wall jump, grapple and stun handling stay in the base.
+        if (isStunned || BlocksActionCancel() || IsGrounded || CanWallJumpNow() || airJumpsRemaining <= 0)
+        {
+            base.ApplyJump();
+            return;
+        }
+
+        jumpRequested = false;
+        PerformDoubleJump();
+    }
+
+    private void PerformDoubleJump()
+    {
+        if (rb == null)
+            return;
+
+        // The dive would pin her velocity downward every physics step.
+        if (meleeState == MeleeState.AirSlash && airSlashDiving)
+            EndMeleeImmediate();
+
+        airJumpsRemaining--;
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, GetDoubleJumpForce());
+        SoundManager.Instance?.PlayJump();
+
+        if (!IsMeleeAttacking && !isDashing)
+            PlayJumpAnimation();
+    }
+
+    private void PlayJumpAnimation()
+    {
+        if (animator == null)
+            return;
+
+        int jumpState = Animator.StringToHash("Jump");
+        if (animator.HasState(0, jumpState))
+            animator.Play(jumpState, 0, 0f);
+    }
+
+    /// <summary>Jump height scales with v², so v = reference × √(height fraction).</summary>
+    private float GetDoubleJumpForce()
+    {
+        float reference = doubleJumpReferenceForce > 0f ? doubleJumpReferenceForce : jumpForce;
+        return reference * Mathf.Sqrt(Mathf.Clamp01(doubleJumpHeightFraction));
+    }
+
+    protected override void OnLanded()
+    {
+        base.OnLanded();
+        airJumpsRemaining = MaxAirJumps;
+    }
+
+    private bool TryPogoOffTarget(Collider2D other, PlayerController player)
+    {
+        if (meleeState != MeleeState.AirSlash || !airSlashDiving || isGrounded || rb == null)
+            return false;
+
+        if (player != null || other == null || other.GetComponentInParent<AttackHitbox>() != null)
+            return false;
+
+        bool isEnemyBody = other.GetComponentInParent<Boss>() != null
+                           || other.GetComponentInParent<ICommonEnemy>() != null;
+        if (!isEnemyBody)
+            return false;
+
+        EndMeleeImmediate();
+
+        if (pogoRefreshesDoubleJump)
+            airJumpsRemaining = MaxAirJumps;
+
+        int iFrames = Mathf.Max(0, pogoInvincibleFramesPerLevel) * AerialLevel;
+        if (iFrames > 0)
+            pogoInvincibleUntil = Time.time + iFrames / 60f;
+
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, Mathf.Max(0f, pogoBounceForce));
+        SoundManager.Instance?.PlayJump();
+
+        if (!isDashing)
+            PlayJumpAnimation();
+
+        return true;
     }
 
     protected override void OnHitStunStarted()
@@ -259,6 +427,7 @@ public class MalicePlayerController : PlayerController
         dashAfterimageAlphaStart = maliceAfterimageAlphaStart;
         dashAfterimageAlphaEnd = maliceAfterimageAlphaEnd;
         airDashesRemaining = Mathf.Max(0, maxAirDashes);
+        airJumpsRemaining = MaxAirJumps;
 
         if (grapplePartialDamage <= 0)
             grapplePartialDamage = Mathf.Max(1, grappleMaxDamage / 2);
@@ -335,7 +504,6 @@ public class MalicePlayerController : PlayerController
         if (attackHitbox == null)
             return;
 
-        RefreshGrapplePullAnchorWorld();
         Transform box = attackHitbox.transform;
         box.position = grappleAnchorWorld;
         box.localScale = attackBoxAnchoredScale;
@@ -379,10 +547,14 @@ public class MalicePlayerController : PlayerController
         }
 
         TickRapidAttackSpeedIdleReset();
+        TickLifeStealRegen(Time.deltaTime);
         TickMelee(Time.deltaTime);
         TickGrapplePullInput();
         TickAirSlashDiveInput();
         EnforceAttackHitboxOnlyDuringAttacks();
+
+        if (isGrounded && !isDashing)
+            dashDamageUsedThisCycle = false;
     }
 
     protected override void HandleCharacterFixedUpdate()
@@ -426,14 +598,130 @@ public class MalicePlayerController : PlayerController
     protected override float GetCurrentMoveSpeed()
     {
         float speed = base.GetCurrentMoveSpeed();
-        if (!IsChargeAuraActive())
-            return speed;
 
-        if (chargeTimer >= bigChargeSeconds)
-            return speed + bigChargeMoveSpeedBonus;
-        if (chargeTimer >= mediumChargeSeconds)
-            return speed + mediumChargeMoveSpeedBonus;
-        return speed;
+        if (UsesCruelClawStyle())
+        {
+            speed -= Mathf.Max(0f, cruelClawMoveSpeedPenalty);
+            speed += Mathf.Max(0f, cruelClawMoveSpeedPerLevel) * StyleLevel;
+        }
+
+        if (IsChargeAuraActive())
+        {
+            if (chargeTimer >= bigChargeSeconds)
+                speed += bigChargeMoveSpeedBonus;
+            else if (chargeTimer >= mediumChargeSeconds)
+                speed += mediumChargeMoveSpeedBonus;
+        }
+
+        return Mathf.Max(0.1f, speed);
+    }
+
+    private static bool UsesLifeStealStyle()
+    {
+        return PlayerAttackStyle.Is(AttackStyleId.SpreadShot);
+    }
+
+    private static bool UsesCruelClawStyle()
+    {
+        return PlayerAttackStyle.Is(AttackStyleId.MachineGun);
+    }
+
+    private int ScaleOutgoingDamage(int baseDamage)
+    {
+        int dmg = Mathf.Max(0, baseDamage);
+        if (UsesCruelClawStyle())
+            dmg += Mathf.Max(0, cruelClawAttackBonus) + Mathf.Max(0, cruelClawDamagePerLevel) * StyleLevel;
+        if (HyperActive)
+            dmg += Mathf.Max(0, hyperDamagePerLevel) * HyperLevel;
+        return dmg;
+    }
+
+    /// <summary>
+    /// Life Steal: slashes bank 0.5 HP (every other slash if mashing). Grapple heals 1. Dash never heals.
+    /// Upgrade levels add whole HP to every slash / grapple hit, even while mashing.
+    /// </summary>
+    public void NotifyDamageDealt(int amountDealt)
+    {
+        if (amountDealt <= 0 || !UsesLifeStealStyle() || currentHealth <= 0)
+            return;
+
+        if (isDashing || dashHitboxActive)
+            return;
+
+        float levelHeal = Mathf.Max(0, lifeStealHealPerLevel) * StyleLevel;
+
+        if (meleeState == MeleeState.GrappleArm)
+        {
+            AddLifeStealHeal(lifeStealGrappleHeal + levelHeal);
+            return;
+        }
+
+        if (meleeState != MeleeState.Slash1 &&
+            meleeState != MeleeState.Slash2 &&
+            meleeState != MeleeState.Slash3 &&
+            meleeState != MeleeState.AirSlash)
+            return;
+
+        bool rapid = Time.time - lastLifeStealSlashTime <= Mathf.Max(0.05f, lifeStealRapidWindow);
+        lastLifeStealSlashTime = Time.time;
+
+        if (rapid)
+        {
+            lifeStealRapidSlashCount++;
+            if ((lifeStealRapidSlashCount & 1) == 0)
+            {
+                AddLifeStealHeal(levelHeal);
+                return;
+            }
+        }
+        else
+        {
+            lifeStealRapidSlashCount = 1;
+        }
+
+        AddLifeStealHeal(lifeStealSlashHeal + levelHeal);
+    }
+
+    /// <summary>Life Steal upgrade: 1 HP every few seconds while standing still (anywhere at the top level).</summary>
+    private void TickLifeStealRegen(float dt)
+    {
+        int level = StyleLevel;
+        if (!UsesLifeStealStyle() || level < Mathf.Max(1, lifeStealRegenLevel) ||
+            IsDead || currentHealth >= MaxHealth || isStunned)
+        {
+            lifeStealRegenTimer = 0f;
+            return;
+        }
+
+        bool anywhere = level >= lifeStealRegenAnywhereLevel;
+        bool standingStill = isGrounded && !isDashing && Mathf.Abs(moveInput.x) < 0.1f;
+        if (!anywhere && !standingStill)
+        {
+            lifeStealRegenTimer = 0f;
+            return;
+        }
+
+        lifeStealRegenTimer += dt;
+        float interval = Mathf.Max(0.1f, lifeStealRegenInterval);
+        if (lifeStealRegenTimer < interval)
+            return;
+
+        lifeStealRegenTimer -= interval;
+        Heal(1);
+    }
+
+    private void AddLifeStealHeal(float amount)
+    {
+        if (amount <= 0f || currentHealth <= 0)
+            return;
+
+        lifeStealHealBank += amount;
+        int whole = Mathf.FloorToInt(lifeStealHealBank);
+        if (whole <= 0)
+            return;
+
+        lifeStealHealBank -= whole;
+        Heal(whole);
     }
 
     protected override bool BlocksRunAnimationWhileShooting()
@@ -474,7 +762,7 @@ public class MalicePlayerController : PlayerController
         chargeStartedInAir = !isGrounded;
         auraAllowedAfterTime = Time.time + Mathf.Max(0f, auraDelayAfterPress);
         SetChargeAuraVisible(false);
-        SoundManager.Instance?.StartChargeLoop();
+        SoundManager.Instance?.StartChargeLoop(SoundManager.ChargeLoopId.Malice);
     }
 
     protected override void OnAttackCanceled(InputAction.CallbackContext context)
@@ -524,13 +812,199 @@ public class MalicePlayerController : PlayerController
             EndMeleeImmediate();
 
         ClearGrabbedTargets();
-        SetDashHitboxActive(true);
+        SetDashHitboxActive(ShouldDashDealDamage());
+    }
+
+    /// <summary>
+    /// Charging dashes always damage. Uncharged: only the first dash after landing.
+    /// </summary>
+    private bool ShouldDashDealDamage()
+    {
+        if (isCharging)
+            return true;
+
+        if (dashDamageUsedThisCycle)
+            return false;
+
+        dashDamageUsedThisCycle = true;
+        return true;
     }
 
     protected override void OnDashEnded()
     {
         dashEndedAt = Time.time;
         SetDashHitboxActive(false);
+    }
+
+    public override void TakeDamage(int amount, Transform hitSource)
+    {
+        TakeDamage(amount, hitSource, applyKnockback: true);
+    }
+
+    public override void TakeDamage(int amount, Transform hitSource, bool applyKnockback)
+    {
+        if (HasDashIFrames() || Time.time < pogoInvincibleUntil)
+            return;
+
+        if (IsHitCoveredByActiveAttackBox(hitSource) || IsHitCoveredByGrapple(hitSource))
+        {
+            slashGuardedSource = hitSource;
+            slashGuardedAt = Time.time;
+            return;
+        }
+
+        base.TakeDamage(amount, hitSource, applyKnockback);
+    }
+
+    protected override bool ShouldIgnoreSoftBounceFrom(Transform source)
+    {
+        if (Time.time < pogoInvincibleUntil)
+            return true;
+
+        if (source == null || slashGuardedSource == null || Time.time - slashGuardedAt > 0.1f)
+            return false;
+
+        return source == slashGuardedSource
+               || source.IsChildOf(slashGuardedSource)
+               || slashGuardedSource.IsChildOf(source);
+    }
+
+    /// <summary>
+    /// True when an enemy/boss only touches the part of Malice's body that her active
+    /// attack box overlaps — she's winning that exchange, so the contact can't hurt her.
+    /// </summary>
+    private bool IsHitCoveredByActiveAttackBox(Transform hitSource)
+    {
+        if (!slashGuardEnabled || IsGrappling || hitSource == null || bodyCollider == null ||
+            attackHitbox == null || !attackHitbox.IsActive || GetGuardEnemyRoot(hitSource) == null)
+            return false;
+
+        Collider2D attackCollider = attackHitbox.GetComponent<Collider2D>();
+        if (attackCollider == null || !attackCollider.enabled)
+            return false;
+
+        Bounds guardZone = attackCollider.bounds;
+        guardZone.Expand(slashGuardTolerance * 2f);
+        Bounds body = bodyCollider.bounds;
+
+        CollectGuardSourceColliders(hitSource);
+
+        bool anyContact = false;
+        for (int i = 0; i < SlashGuardSourceColliders.Count; i++)
+        {
+            Collider2D c = SlashGuardSourceColliders[i];
+            if (c.Distance(bodyCollider).distance > SlashGuardContactSkin)
+                continue;
+
+            Bounds cb = c.bounds;
+            cb.Expand(SlashGuardContactSkin * 2f);
+            if (!cb.Intersects(body))
+                continue;
+
+            Vector3 min = Vector3.Max(cb.min, body.min);
+            Vector3 max = Vector3.Min(cb.max, body.max);
+            anyContact = true;
+
+            bool insideGuard = min.x >= guardZone.min.x && max.x <= guardZone.max.x &&
+                               min.y >= guardZone.min.y && max.y <= guardZone.max.y;
+            if (!insideGuard)
+                return false;
+        }
+
+        return anyContact;
+    }
+
+    /// <summary>
+    /// The grapple arm is thin, so an enemy it hits usually also brushes her body. Any enemy the arm
+    /// has hit this grapple can't hurt her by contact until the grapple ends (plus a short grace).
+    /// </summary>
+    private bool IsHitCoveredByGrapple(Transform hitSource)
+    {
+        if (!slashGuardEnabled || hitSource == null || bodyCollider == null)
+            return false;
+
+        if (!IsGrappling && Time.time > grappleGuardUntil)
+        {
+            grappleHitSources.Clear();
+            return false;
+        }
+
+        Transform enemyRoot = GetGuardEnemyRoot(hitSource);
+        if (enemyRoot == null)
+            return false;
+
+        CollectGuardSourceColliders(hitSource);
+        if (!AnyGuardSourceColliderTouches(bodyCollider))
+            return false;
+
+        for (int i = 0; i < grappleHitSources.Count; i++)
+        {
+            if (grappleHitSources[i] == enemyRoot)
+                return true;
+        }
+
+        // The enemy's contact can land in the same physics step before the arm registers its hit.
+        if (IsGrappling && attackHitbox != null && attackHitbox.IsActive)
+        {
+            Collider2D attackCollider = attackHitbox.GetComponent<Collider2D>();
+            if (attackCollider != null && attackCollider.enabled && AnyGuardSourceColliderTouches(attackCollider))
+            {
+                grappleHitSources.Add(enemyRoot);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void RememberGrappleHitSource(Collider2D other)
+    {
+        if (other.GetComponent<AttackHitbox>() != null)
+            return;
+
+        Transform enemyRoot = GetGuardEnemyRoot(other.transform);
+        if (enemyRoot != null && !grappleHitSources.Contains(enemyRoot))
+            grappleHitSources.Add(enemyRoot);
+    }
+
+    private static Transform GetGuardEnemyRoot(Transform t)
+    {
+        Boss boss = t.GetComponentInParent<Boss>();
+        if (boss != null)
+            return boss.transform;
+
+        return t.GetComponentInParent<ICommonEnemy>() is Component enemy ? enemy.transform : null;
+    }
+
+    private static void CollectGuardSourceColliders(Transform hitSource)
+    {
+        SlashGuardSourceColliders.Clear();
+        hitSource.GetComponentsInChildren(false, SlashGuardSourceColliders);
+        for (int i = SlashGuardSourceColliders.Count - 1; i >= 0; i--)
+        {
+            Collider2D c = SlashGuardSourceColliders[i];
+            if (c == null || !c.enabled || EnemyDetectionZone.IsDetectionOnlyCollider(c))
+                SlashGuardSourceColliders.RemoveAt(i);
+        }
+    }
+
+    private static bool AnyGuardSourceColliderTouches(Collider2D target)
+    {
+        for (int i = 0; i < SlashGuardSourceColliders.Count; i++)
+        {
+            if (SlashGuardSourceColliders[i].Distance(target).distance <= SlashGuardContactSkin)
+                return true;
+        }
+
+        return false;
+    }
+
+    private bool HasDashIFrames()
+    {
+        if (!isDashing || dashDuration <= 0.0001f)
+            return false;
+
+        return dashTimer >= dashDuration * Mathf.Clamp(dashIFrameStartNormalized, 0.05f, 0.95f);
     }
 
     private bool IsChargeAuraActive()
@@ -626,8 +1100,7 @@ public class MalicePlayerController : PlayerController
                 break;
 
             case MeleeState.Slash1:
-                if (Time.time - slash1PressTime <= comboInputWindow)
-                    queuedSlash2 = true;
+                queuedSlash2 = true;
                 break;
 
             case MeleeState.Slash2:
@@ -689,9 +1162,11 @@ public class MalicePlayerController : PlayerController
         // Resolve after animator.speed is set so clip length matches wall-clock at this speed.
         meleeDuration = ResolveAttackDuration(duration, GetClipNameForMeleeState(state));
         meleeTimer = meleeDuration;
-        pendingHitDamage = damage;
+        comboSkipAtElapsed = ComputeComboSkipElapsed(state);
+        pendingHitDamage = ScaleOutgoingDamage(damage);
         hitboxArmed = true;
         hitboxWasActive = false;
+        slashProjectilesFired = false;
         grappleIsGrab = false;
         grapplePullActive = false;
         grappleAnchorLocked = false;
@@ -747,6 +1222,9 @@ public class MalicePlayerController : PlayerController
             dashCancelSlashQueued = false;
         }
 
+        if (isSlash && UsesCruelClawStyle())
+            speed *= 1f + Mathf.Max(0f, cruelClawAttackSpeedPerLevel) * StyleLevel;
+
         return Mathf.Max(0.01f, speed);
     }
 
@@ -773,6 +1251,8 @@ public class MalicePlayerController : PlayerController
         ResetRapidAttackSpeed();
         dashCancelSlashQueued = false;
         ClearGrabbedTargets();
+        grappleHitSources.Clear();
+        grappleGuardUntil = -999f;
 
         if (attackHitbox != null)
             attackHitbox.Deactivate();
@@ -780,7 +1260,7 @@ public class MalicePlayerController : PlayerController
         grappleIsGrab = grab;
         grappleIsAirMove = air;
         ClearGrapplePullState();
-        pendingHitDamage = damage;
+        pendingHitDamage = ScaleOutgoingDamage(damage);
         hitboxArmed = true;
         hitboxWasActive = false;
         currentMeleeSpeed = 1f;
@@ -847,14 +1327,28 @@ public class MalicePlayerController : PlayerController
 
     private float GetAnimatorClipLength(string clipName)
     {
-        if (animator == null || animator.runtimeAnimatorController == null)
+        AnimationClip clip = FindAnimatorClip(clipName);
+        if (clip == null || clip.length <= 0.05f)
             return -1f;
+
+        float length = clip.length;
+        if (animator != null && animator.speed > 0.01f)
+            length /= animator.speed;
+
+        return length;
+    }
+
+    private AnimationClip FindAnimatorClip(string clipName)
+    {
+        if (animator == null || animator.runtimeAnimatorController == null || string.IsNullOrEmpty(clipName))
+            return null;
 
         AnimationClip[] clips = animator.runtimeAnimatorController.animationClips;
         if (clips == null)
-            return -1f;
+            return null;
 
-        float best = -1f;
+        AnimationClip best = null;
+        float bestLength = -1f;
         for (int i = 0; i < clips.Length; i++)
         {
             AnimationClip clip = clips[i];
@@ -864,15 +1358,37 @@ public class MalicePlayerController : PlayerController
             if (!string.Equals(clip.name, clipName, StringComparison.OrdinalIgnoreCase))
                 continue;
 
-            float length = clip.length;
-            if (animator.speed > 0.01f)
-                length /= animator.speed;
-
-            if (length > best)
-                best = length;
+            if (clip.length > bestLength)
+            {
+                bestLength = clip.length;
+                best = clip;
+            }
         }
 
         return best;
+    }
+
+    /// <summary>
+    /// Wall-clock time into the current slash when a queued follow-up may start
+    /// (second-to-last keyframe). Cached once per StartMelee.
+    /// </summary>
+    private float ComputeComboSkipElapsed(MeleeState state)
+    {
+        if (!IsGroundSlashState(state))
+            return float.PositiveInfinity;
+
+        float speed = Mathf.Max(0.01f, currentMeleeSpeed);
+        AnimationClip clip = FindAnimatorClip(GetClipNameForMeleeState(state));
+        if (clip == null || clip.length < 0.05f)
+            return meleeDuration * 0.75f;
+
+        float fps = clip.frameRate > 0.01f ? clip.frameRate : 12f;
+        int frames = Mathf.Max(1, Mathf.RoundToInt(clip.length * fps));
+        if (frames < 3)
+            return (clip.length * 0.75f) / speed;
+
+        float skipUnscaled = (frames - 2) / fps;
+        return skipUnscaled / speed;
     }
 
     private void TickMelee(float dt)
@@ -905,6 +1421,9 @@ public class MalicePlayerController : PlayerController
         }
         else
             UpdateSlashHitbox();
+
+        if (TryAdvanceQueuedGroundSlash())
+            return;
 
         if (meleeTimer > 0f)
             return;
@@ -951,18 +1470,83 @@ public class MalicePlayerController : PlayerController
         EndMeleeImmediate(clearSlash3Grace: false);
     }
 
+    private bool TryAdvanceQueuedGroundSlash()
+    {
+        float elapsed = meleeDuration - meleeTimer;
+        if (elapsed + 0.0001f < comboSkipAtElapsed)
+            return false;
+
+        if (meleeState == MeleeState.Slash1 && queuedSlash2)
+        {
+            queuedSlash2 = false;
+            StartMelee(MeleeState.Slash2, slash2Duration, slash2Damage, "Slash2");
+            return true;
+        }
+
+        if (meleeState == MeleeState.Slash2 && queuedSlash3)
+        {
+            queuedSlash3 = false;
+            slash3GraceUntil = -999f;
+            StartMelee(MeleeState.Slash3, slash3Duration, slash3Damage, "Slash3");
+            return true;
+        }
+
+        return false;
+    }
+
+    private void TickSlashProjectiles()
+    {
+        if (slashProjectilesFired || attackHitbox == null || !slashProjectiles.Enabled)
+            return;
+
+        MaliceSlashKind kind;
+        switch (meleeState)
+        {
+            case MeleeState.Slash1: kind = MaliceSlashKind.Slash1; break;
+            case MeleeState.Slash2: kind = MaliceSlashKind.Slash2; break;
+            case MeleeState.Slash3: kind = MaliceSlashKind.Slash3; break;
+            case MeleeState.AirSlash: kind = MaliceSlashKind.AirSlash; break;
+            default: return;
+        }
+
+        float fireAt = slashProjectiles.GetFireClipTime(kind) / Mathf.Max(0.01f, currentMeleeSpeed);
+        float elapsed = meleeDuration - meleeTimer;
+        if (elapsed + 0.0001f < fireAt)
+            return;
+
+        slashProjectilesFired = true;
+        int hyper = HyperActive ? HyperLevel : 0;
+        slashProjectiles.Fire(
+            kind,
+            transform,
+            attackHitbox.GetComponent<Collider2D>(),
+            facingSign,
+            pendingHitDamage,
+            spriteRenderer,
+            Mathf.Max(0f, hyperSlashDistancePerLevel) * hyper,
+            Mathf.Max(0, hyperSlashPairsPerLevel) * hyper,
+            Mathf.Max(0f, hyperKnockbackPerLevel) * hyper);
+    }
+
     private void UpdateSlashHitbox()
     {
+        TickSlashProjectiles();
+
         if (attackHitbox == null || !hitboxArmed)
             return;
 
         // Down-dive air slash keeps the hurtbox on until she lands.
         if (meleeState == MeleeState.AirSlash && airSlashDiving)
         {
+            int diveDamage = pendingHitDamage + PogoDamageBonus;
             if (!hitboxWasActive)
             {
-                attackHitbox.Activate(pendingHitDamage, applyDamage: true);
+                attackHitbox.Activate(diveDamage, applyDamage: true);
                 hitboxWasActive = true;
+            }
+            else
+            {
+                attackHitbox.SetDamage(diveDamage);
             }
             return;
         }
@@ -994,7 +1578,7 @@ public class MalicePlayerController : PlayerController
         bool shouldBeActive = elapsed >= grappleHitboxDelay &&
                               elapsed <= grappleHitboxDelay + grappleHitboxActiveTime;
 
-        // Keep detecting overlaps while reeling in (latch onto grabbed objects).
+        // The pinned arm tip keeps hitting while she reels in.
         if (grapplePullActive)
             shouldBeActive = true;
 
@@ -1012,7 +1596,7 @@ public class MalicePlayerController : PlayerController
 
     /// <summary>
     /// Up = after full arm extension, world-anchor the AttackBox and reel Malice to its front edge
-    /// at the same timing as the arm-retract portion of the clip. Overlap can latch onto an object.
+    /// at the same timing as the arm-retract portion of the clip. Overlapped objects never change the pull target.
     /// </summary>
     private void TickGrapplePullInput()
     {
@@ -1044,8 +1628,6 @@ public class MalicePlayerController : PlayerController
                 SetAirHang(true);
             }
 
-            TryAcquireGrapplePullLatch();
-            RefreshGrapplePullAnchorWorld();
             grapplePullTargetWorld = ComputeGrapplePullBodyTarget();
 
             PinAttackBoxToGrappleAnchor();
@@ -1132,14 +1714,6 @@ public class MalicePlayerController : PlayerController
     /// </summary>
     private Vector2 ComputeGrapplePullBodyTarget()
     {
-        if (grapplePullLatchedToObject)
-        {
-            Vector2 latch = grappleAnchorWorld;
-            if (!grappleIsAirMove && rb != null)
-                latch.y = rb.position.y;
-            return latch;
-        }
-
         Vector2 edge = ComputeAttackBoxFrontEdgeWorld();
         if (!grappleIsAirMove && rb != null)
             edge.y = rb.position.y;
@@ -1277,7 +1851,6 @@ public class MalicePlayerController : PlayerController
         if (!IsGrappling || !grapplePullActive || rb == null)
             return;
 
-        RefreshGrapplePullAnchorWorld();
         PinAttackBoxToGrappleAnchor();
         grapplePullTargetWorld = ComputeGrapplePullBodyTarget();
 
@@ -1352,114 +1925,12 @@ public class MalicePlayerController : PlayerController
         return Mathf.Clamp(elapsed, 0f, clipLength);
     }
 
-    private void RefreshGrapplePullAnchorWorld()
-    {
-        if (!grapplePullLatchedToObject)
-            return;
-
-        if (grapplePullLatchTarget == null)
-        {
-            // Object destroyed — keep last world point frozen.
-            grapplePullLatchedToObject = false;
-            grapplePullLatchTarget = null;
-            return;
-        }
-
-        grappleAnchorWorld = grapplePullLatchTarget.TransformPoint(grapplePullLatchLocalOffset);
-    }
-
-    private void TryAcquireGrapplePullLatch()
-    {
-        if (grapplePullLatchedToObject || attackHitbox == null)
-            return;
-
-        Collider2D boxCol = attackHitbox.GetComponent<Collider2D>();
-        if (boxCol == null || !boxCol.enabled)
-            return;
-
-        EnsureGrappleOverlapFilter();
-        int count = boxCol.Overlap(grappleOverlapFilter, grappleOverlapBuffer);
-        if (count <= 0)
-            return;
-
-        Collider2D best = null;
-        float bestDistSq = float.PositiveInfinity;
-        Vector2 boxPos = attackHitbox.transform.position;
-
-        for (int i = 0; i < count; i++)
-        {
-            Collider2D other = grappleOverlapBuffer[i];
-            if (!IsValidGrapplePullLatchCollider(other))
-                continue;
-
-            Vector2 closest = other.ClosestPoint(boxPos);
-            float distSq = (closest - boxPos).sqrMagnitude;
-            if (distSq >= bestDistSq)
-                continue;
-
-            bestDistSq = distSq;
-            best = other;
-        }
-
-        if (best == null)
-            return;
-
-        Vector3 latchPoint = best.ClosestPoint(boxPos);
-        LatchGrapplePullTo(best.transform, latchPoint);
-    }
-
-    private bool IsValidGrapplePullLatchCollider(Collider2D other)
-    {
-        if (other == null)
-            return false;
-
-        if (other.transform == transform || other.transform.IsChildOf(transform))
-            return false;
-
-        // Ignore our own hurtboxes / aura helpers.
-        if (other.GetComponent<AttackHitbox>() != null)
-            return false;
-
-        return true;
-    }
-
-    private void LatchGrapplePullTo(Transform target, Vector3 worldPoint)
-    {
-        if (target == null || grapplePullLatchedToObject)
-            return;
-
-        if (target == transform || target.IsChildOf(transform))
-            return;
-
-        // Prefer the root / rigidbody object so moving platforms carry the latch point.
-        Transform latchRoot = target;
-        Rigidbody2D body = target.GetComponentInParent<Rigidbody2D>();
-        if (body != null)
-            latchRoot = body.transform;
-
-        PlayerController player = target.GetComponentInParent<PlayerController>();
-        if (player != null && player != this)
-            latchRoot = player.transform;
-
-        grapplePullLatchTarget = latchRoot;
-        grapplePullLatchLocalOffset = latchRoot.InverseTransformPoint(worldPoint);
-        grapplePullLatchedToObject = true;
-        grappleAnchorWorld = worldPoint;
-        grapplePullTargetWorld = ComputeGrapplePullBodyTarget();
-        grappleAnchorLocked = true;
-        grapplePullActive = true;
-        PinAttackBoxToGrappleAnchor();
-    }
-
     private void ClearGrapplePullState()
     {
         RestoreAttackBoxParent();
 
         grapplePullActive = false;
         grappleAnchorLocked = false;
-        grapplePullLatchedToObject = false;
-        grapplePullLatchTarget = null;
-        grapplePullLatchLocalOffset = Vector3.zero;
         grapplePullAnchorLocalCached = false;
         grapplePullAnchorLocalLeft = Vector3.zero;
         grapplePullArrived = false;
@@ -1467,46 +1938,23 @@ public class MalicePlayerController : PlayerController
         grapplePullTargetWorld = Vector2.zero;
     }
 
-    private void EnsureGrappleOverlapFilter()
-    {
-        if (grappleOverlapFilterReady)
-        {
-            grappleOverlapFilter.SetLayerMask(grapplePullLatchLayers);
-            return;
-        }
-
-        grappleOverlapFilter = new ContactFilter2D
-        {
-            useTriggers = true,
-            useLayerMask = true,
-            useDepth = false
-        };
-        grappleOverlapFilter.SetLayerMask(grapplePullLatchLayers);
-        grappleOverlapFilterReady = true;
-    }
-
     private void HandleAttackTargetAcquired(Collider2D other, PlayerController player)
     {
+        if (TryPogoOffTarget(other, player))
+            return;
+
         if (!IsGrappling || other == null)
             return;
 
-        // Up-pull mode: latch onto whatever the AttackBox hits and reel Malice in.
-        if ((grapplePullActive || moveInput.y >= grappleUpThreshold) && !grapplePullLatchedToObject)
-        {
-            if (IsValidGrapplePullLatchCollider(other))
-            {
-                Vector3 latchPoint = other.ClosestPoint(attackHitbox != null
-                    ? attackHitbox.transform.position
-                    : transform.position);
-                LatchGrapplePullTo(player != null ? player.transform : other.transform, latchPoint);
-            }
-        }
+        RememberGrappleHitSource(other);
 
         // Down-grab mode: stick targets onto the AttackBox.
         if (!grappleIsGrab)
             return;
 
-        Transform target = player != null ? player.transform : other.transform;
+        if (!TryResolveGrabTarget(other, player, out Transform target, out Rigidbody2D body))
+            return;
+
         if (target == transform || target.IsChildOf(transform))
             return;
 
@@ -1514,10 +1962,44 @@ public class MalicePlayerController : PlayerController
             return;
 
         grabbedTargets.Add(target);
-        Rigidbody2D body = player != null
-            ? player.GetComponent<Rigidbody2D>()
-            : other.attachedRigidbody;
         grabbedBodies.Add(body);
+    }
+
+    /// <summary>
+    /// Only combatants and special platforms (Moving Factory / Spiked) can be grabbed;
+    /// static level geometry and everything else is ignored.
+    /// </summary>
+    private static bool TryResolveGrabTarget(Collider2D other, PlayerController player,
+        out Transform target, out Rigidbody2D body)
+    {
+        target = null;
+        body = null;
+
+        if (player != null)
+        {
+            target = player.transform;
+            body = player.GetComponent<Rigidbody2D>();
+            return true;
+        }
+
+        if (other.GetComponent<AttackHitbox>() != null)
+            return false;
+
+        Component root = other.GetComponentInParent<Boss>();
+        if (root == null)
+            root = other.GetComponentInParent<ICommonEnemy>() as Component;
+        if (root == null)
+            root = other.GetComponentInParent<MovingFactoryPlatform>();
+        if (root == null)
+            root = other.GetComponentInParent<SpikedPlatform>();
+        if (root == null)
+            return false;
+
+        target = root.transform;
+        body = root.GetComponent<Rigidbody2D>();
+        if (body == null)
+            body = other.attachedRigidbody;
+        return true;
     }
 
     private void FollowGrabbedTargets()
@@ -1615,6 +2097,7 @@ public class MalicePlayerController : PlayerController
         currentMeleeSpeed = 1f;
         queuedSlash2 = false;
         queuedSlash3 = false;
+        comboSkipAtElapsed = float.PositiveInfinity;
         hitboxArmed = false;
         hitboxWasActive = false;
         pendingHitDamage = 0;
@@ -1632,6 +2115,7 @@ public class MalicePlayerController : PlayerController
 
         if (wasGrapple)
         {
+            grappleGuardUntil = Time.time + Mathf.Max(0f, grappleGuardGrace);
             SoundManager.Instance?.StopMaliceGrapple();
             ClearGrabbedTargets();
             ResetAttackBoxFacingMirrorCapture();
@@ -1676,7 +2160,7 @@ public class MalicePlayerController : PlayerController
                 hitboxWasActive = false;
             }
 
-            box.Activate(dashContactDamage, applyDamage: true);
+            box.Activate(ScaleOutgoingDamage(dashContactDamage), applyDamage: true);
             dashHitboxActive = true;
         }
         else if (dashHitboxActive)
@@ -1773,11 +2257,38 @@ public class MalicePlayerController : PlayerController
         }
     }
 
+    public override bool TryHandleProjectileContact(Projectile projectile, Collider2D hitCollider)
+    {
+        if (projectile == null || attackHitbox == null || !attackHitbox.IsActive)
+            return false;
+
+        if (UsesSlashForReflect())
+        {
+            projectile.ReflectFromDeflector(transform);
+            SoundManager.Instance?.PlayMaliceSlashLight();
+            return true;
+        }
+
+        // Grapple / dash contact — clash and stop the shot without hurting Malice.
+        projectile.ClashAndDespawn();
+        SoundManager.Instance?.PlayMaliceSlashLight();
+        return true;
+    }
+
+    private bool UsesSlashForReflect()
+    {
+        return meleeState == MeleeState.Slash1
+            || meleeState == MeleeState.Slash2
+            || meleeState == MeleeState.Slash3
+            || meleeState == MeleeState.AirSlash;
+    }
+
 #if UNITY_EDITOR
     protected override void OnValidate()
     {
         base.OnValidate();
         comboInputWindow = Mathf.Max(0.05f, comboInputWindow);
+        slashProjectiles?.Validate();
         slash1Duration = Mathf.Max(0.05f, slash1Duration);
         slash2Duration = Mathf.Max(0.05f, slash2Duration);
         slash3Duration = Mathf.Max(0.05f, slash3Duration);
@@ -1786,9 +2297,15 @@ public class MalicePlayerController : PlayerController
         slashHitboxDelay = Mathf.Max(0f, slashHitboxDelay);
         slashHitboxActiveTime = Mathf.Max(0.01f, slashHitboxActiveTime);
         airSlashDiveSpeed = Mathf.Max(0.1f, airSlashDiveSpeed);
+        maliceMaxAirJumps = Mathf.Max(0, maliceMaxAirJumps);
+        doubleJumpReferenceForce = Mathf.Max(0f, doubleJumpReferenceForce);
+        pogoBounceForce = Mathf.Max(0f, pogoBounceForce);
+        slashGuardTolerance = Mathf.Max(0f, slashGuardTolerance);
+        grappleGuardGrace = Mathf.Max(0f, grappleGuardGrace);
         groundSlashStepDistance = Mathf.Max(0f, groundSlashStepDistance);
         dashCancelSlashSpeedMul = Mathf.Max(1f, dashCancelSlashSpeedMul);
         dashCancelSlashWindow = Mathf.Max(0f, dashCancelSlashWindow);
+        dashIFrameStartNormalized = Mathf.Clamp(dashIFrameStartNormalized, 0.05f, 0.95f);
         mediumChargeSeconds = Mathf.Max(0.05f, mediumChargeSeconds);
         bigChargeSeconds = Mathf.Max(mediumChargeSeconds, bigChargeSeconds);
         auraDelayAfterPress = Mathf.Max(0f, auraDelayAfterPress);
@@ -1812,6 +2329,24 @@ public class MalicePlayerController : PlayerController
         maliceAfterimageSpacing = Mathf.Max(0.01f, maliceAfterimageSpacing);
         maliceAfterimageAlphaEnd = Mathf.Min(maliceAfterimageAlphaEnd, maliceAfterimageAlphaStart);
         dashContactDamage = Mathf.Max(0, dashContactDamage);
+        cruelClawAttackBonus = Mathf.Max(0, cruelClawAttackBonus);
+        cruelClawMoveSpeedPenalty = Mathf.Max(0f, cruelClawMoveSpeedPenalty);
+        lifeStealSlashHeal = Mathf.Max(0f, lifeStealSlashHeal);
+        lifeStealGrappleHeal = Mathf.Max(0f, lifeStealGrappleHeal);
+        lifeStealRapidWindow = Mathf.Max(0.05f, lifeStealRapidWindow);
+        pogoDamagePerAerialLevel = Mathf.Max(0, pogoDamagePerAerialLevel);
+        pogoInvincibleFramesPerLevel = Mathf.Max(0, pogoInvincibleFramesPerLevel);
+        hyperDamagePerLevel = Mathf.Max(0, hyperDamagePerLevel);
+        hyperSlashDistancePerLevel = Mathf.Max(0f, hyperSlashDistancePerLevel);
+        hyperSlashPairsPerLevel = Mathf.Max(0, hyperSlashPairsPerLevel);
+        hyperKnockbackPerLevel = Mathf.Max(0f, hyperKnockbackPerLevel);
+        lifeStealHealPerLevel = Mathf.Max(0, lifeStealHealPerLevel);
+        lifeStealRegenLevel = Mathf.Max(1, lifeStealRegenLevel);
+        lifeStealRegenAnywhereLevel = Mathf.Max(lifeStealRegenLevel, lifeStealRegenAnywhereLevel);
+        lifeStealRegenInterval = Mathf.Max(0.1f, lifeStealRegenInterval);
+        cruelClawMoveSpeedPerLevel = Mathf.Max(0f, cruelClawMoveSpeedPerLevel);
+        cruelClawAttackSpeedPerLevel = Mathf.Max(0f, cruelClawAttackSpeedPerLevel);
+        cruelClawDamagePerLevel = Mathf.Max(0, cruelClawDamagePerLevel);
         slash1Damage = Mathf.Max(0, slash1Damage);
         slash2Damage = Mathf.Max(0, slash2Damage);
         slash3Damage = Mathf.Max(0, slash3Damage);

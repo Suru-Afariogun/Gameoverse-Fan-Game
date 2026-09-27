@@ -13,28 +13,42 @@ public class StartScreen : MonoBehaviour
 
     private InputActions controls;
     private bool loading;
+    private bool menuEnabled;
     private RectTransform buttonRect;
     private Vector3 buttonBaseScale = Vector3.one;
     private bool pointerOverButton;
     private bool buttonSelected;
 
+    public Button StartButton => startButton;
+
     private void Awake()
     {
+        // Locked while disclaimer is present; OpeningText unlocks after fade-out.
+        menuEnabled = false;
+
         if (startButton != null)
         {
             startButton.onClick.AddListener(LoadHomeTown);
             buttonRect = startButton.transform as RectTransform;
             if (buttonRect != null)
                 buttonBaseScale = buttonRect.localScale;
+            startButton.interactable = false;
         }
 
         EnsureEventSystem();
-        SelectStartButton();
 
         controls = new InputActions();
         controls.PlayerControls.Enable();
         controls.PlayerControls.Start.performed += OnStartPerformed;
         controls.PlayerControls.Select.performed += OnSelectPerformed;
+    }
+
+    private void Start()
+    {
+        if (OpeningText.Instance != null || OpeningText.IsBlockingStartScreen)
+            SetMenuEnabled(false);
+        else
+            SetMenuEnabled(true);
     }
 
     private void OnDestroy()
@@ -51,8 +65,29 @@ public class StartScreen : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// OpeningText disables the HomeTown Start button until the disclaimer fades out.
+    /// </summary>
+    public void SetMenuEnabled(bool enabled)
+    {
+        menuEnabled = enabled;
+
+        if (startButton != null)
+        {
+            startButton.interactable = enabled;
+            if (enabled)
+                startButton.gameObject.SetActive(true);
+        }
+
+        if (enabled)
+            SelectStartButton();
+    }
+
     private void Update()
     {
+        if (!menuEnabled)
+            return;
+
         TickButtonHoverSelect();
         TickButtonScale();
     }
@@ -114,10 +149,10 @@ public class StartScreen : MonoBehaviour
 
     private void OnStartPerformed(InputAction.CallbackContext context)
     {
-        if (!context.performed || loading)
+        if (!context.performed || loading || !menuEnabled || OpeningText.IsBlockingStartScreen)
             return;
 
-        SoundManager.Instance?.PlayUiConfirmOrBack();
+        SoundManager.Instance?.PlayUiConfirm();
         LoadHomeTown();
     }
 
@@ -126,7 +161,8 @@ public class StartScreen : MonoBehaviour
         if (!context.performed || loading)
             return;
 
-        SoundManager.Instance?.PlayUiConfirmOrBack();
+        // Allow quit even during disclaimer.
+        SoundManager.Instance?.PlayUiConfirm();
         QuitGame();
     }
 
@@ -154,7 +190,7 @@ public class StartScreen : MonoBehaviour
 
     public void LoadHomeTown()
     {
-        if (loading)
+        if (loading || !menuEnabled || OpeningText.IsBlockingStartScreen)
             return;
 
         loading = true;

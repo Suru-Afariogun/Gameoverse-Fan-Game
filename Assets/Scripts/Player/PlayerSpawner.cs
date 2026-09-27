@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -11,6 +13,9 @@ public class PlayerSpawner : MonoBehaviour
     public static PlayerSpawner Instance { get; private set; }
 
     public static string SelectedCharacterId { get; private set; } = "Kit";
+
+    private static readonly Dictionary<string, PlayerController> SharedCharacterPrefabs =
+        new Dictionary<string, PlayerController>(8, StringComparer.OrdinalIgnoreCase);
 
     private static bool homeTownFirstLoadDefaultsApplied;
 
@@ -58,12 +63,20 @@ public class PlayerSpawner : MonoBehaviour
 
     public PlayerController CurrentPlayer { get; private set; }
 
+    /// <summary>Transform the camera should frame before a player exists (spawn point, else this object).</summary>
+    public Transform CameraTrackTransform => spawnPoint != null ? spawnPoint : transform;
+
     public event Action<PlayerController> OnPlayerSpawned;
     public event Action<string> OnCharacterChanged;
+    /// <summary>Fired only from <see cref="RespawnAtSpawnPoint"/> (life-loss respawn), not initial spawn or Kaboodle switches.</summary>
+    public event Action<PlayerController> OnPlayerRespawned;
+
+    private bool firePlayerRespawnedEvent;
 
     private void Awake()
     {
         Instance = this;
+        RegisterCharacterPrefabs();
 
         if (IsHomeTownScene())
             ApplyHomeTownFirstLoadDefaultsIfNeeded();
@@ -91,6 +104,7 @@ public class PlayerSpawner : MonoBehaviour
     /// <summary>Spawn / replace with the currently selected character at the spawn point.</summary>
     public PlayerController RespawnAtSpawnPoint()
     {
+        firePlayerRespawnedEvent = true;
         return SpawnSelected(GetSpawnPoseFromPoint());
     }
 
@@ -152,6 +166,34 @@ public class PlayerSpawner : MonoBehaviour
         SelectedCharacterId = characterId.Trim();
     }
 
+    /// <summary>Moves the respawn / scene-start spawn point (e.g. level-one boss checkpoint).</summary>
+    public void SetSpawnPointWorldPosition(Vector3 worldPosition)
+    {
+        if (spawnPoint == null)
+        {
+            GameObject marker = new GameObject("SpawnPoint");
+            marker.transform.SetParent(transform, false);
+            spawnPoint = marker.transform;
+        }
+
+        spawnPoint.position = worldPosition;
+    }
+
+    private void RegisterCharacterPrefabs()
+    {
+        if (characters == null)
+            return;
+
+        for (int i = 0; i < characters.Length; i++)
+        {
+            CharacterEntry entry = characters[i];
+            if (entry == null || entry.prefab == null || string.IsNullOrWhiteSpace(entry.characterId))
+                continue;
+
+            SharedCharacterPrefabs[entry.characterId.Trim()] = entry.prefab;
+        }
+    }
+
     private PlayerController SpawnSelected(SpawnPose pose)
     {
         CharacterEntry entry = FindEntry(SelectedCharacterId);
@@ -172,6 +214,7 @@ public class PlayerSpawner : MonoBehaviour
         }
 
         DestroyCurrentPlayer();
+        Projectile.DestroyAllLive();
 
         PlayerController spawned = Instantiate(entry.prefab, pose.position, Quaternion.identity);
         spawned.gameObject.name = entry.prefab.gameObject.name;
@@ -187,10 +230,33 @@ public class PlayerSpawner : MonoBehaviour
             spawned.SetInputLocked(true);
 
         if (retargetCamera && CameraFollow.Instance != null)
-            CameraFollow.Instance.SetFollowTarget(spawned.transform);
+        {
+            // Life-loss respawn: frame CheckPoint Bot first (BossFightDirector keeps it through fade/WARNING).
+            Transform respawnCam =
+                firePlayerRespawnedEvent ? CheckPointBot.GetWaitingCameraTrackTarget() : null;
+            if (respawnCam != null)
+            {
+                CameraFollow.Instance.SnapToTarget(respawnCam);
+                CameraFollow.Instance.SetFollowTarget(respawnCam);
+                CameraFollow.Instance.SetFollowEnabled(true);
+            }
+            else
+            {
+                CameraFollow.Instance.SetFollowTarget(spawned.transform);
+                if (WarningText.BlocksGameplay)
+                    CameraFollow.Instance.SnapToTarget();
+            }
+        }
 
         OnPlayerSpawned?.Invoke(spawned);
         OnCharacterChanged?.Invoke(spawned.CharacterId);
+
+        if (firePlayerRespawnedEvent)
+        {
+            firePlayerRespawnedEvent = false;
+            OnPlayerRespawned?.Invoke(spawned);
+        }
+
         return spawned;
     }
 
@@ -263,6 +329,15 @@ public class PlayerSpawner : MonoBehaviour
 
             if (string.Equals(entry.characterId, characterId, StringComparison.OrdinalIgnoreCase))
                 return entry;
+        }
+
+        if (SharedCharacterPrefabs.TryGetValue(characterId.Trim(), out PlayerController sharedPrefab) && sharedPrefab != null)
+        {
+            return new CharacterEntry
+            {
+                characterId = characterId.Trim(),
+                prefab = sharedPrefab
+            };
         }
 
         return null;

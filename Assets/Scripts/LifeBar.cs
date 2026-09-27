@@ -23,6 +23,9 @@ public class LifeBar : MonoBehaviour
 
         [Tooltip("Shown when the player gets hit — flickers with the new current-HP sprite.")]
         public Sprite damagedLifeBarSprite;
+
+        [Tooltip("Moves this character's life bar down by this many in-game spaces (0 = default HUD position).")]
+        public float positionOffsetDownSpaces;
     }
 
     [Header("Per-Character Sprites")]
@@ -56,12 +59,14 @@ public class LifeBar : MonoBehaviour
     private PlayerController boundPlayer;
     private Coroutine hitFlickerRoutine;
     private bool isFlickering;
+    private Vector3 defaultLocalPosition;
 
     private void Awake()
     {
         if (lifeBarSpriteRenderer == null)
             lifeBarSpriteRenderer = GetComponent<SpriteRenderer>();
 
+        defaultLocalPosition = transform.localPosition;
         EnsureSpriteArraySizes();
         ApplyCharacterSprites(fallbackCharacterId);
     }
@@ -245,6 +250,7 @@ public class LifeBar : MonoBehaviour
 
         activeSprites = set != null ? set.lifeBarSprites : null;
         activeDamagedSprite = set != null ? set.damagedLifeBarSprite : null;
+        ApplyCharacterPositionOffset(set);
 
         PlayerController player = GetTrackedPlayer();
         if (player != null)
@@ -271,6 +277,18 @@ public class LifeBar : MonoBehaviour
         return null;
     }
 
+    private void ApplyCharacterPositionOffset(CharacterLifeBarSet set)
+    {
+        float downSpaces = set != null ? Mathf.Max(0f, set.positionOffsetDownSpaces) : 0f;
+        float localYOffset = -downSpaces * GetLifeBarSpaceUnit();
+        transform.localPosition = defaultLocalPosition + new Vector3(0f, localYOffset, 0f);
+    }
+
+    private float GetLifeBarSpaceUnit()
+    {
+        return Mathf.Max(0.01f, Mathf.Abs(transform.localScale.y));
+    }
+
     private void EnsureSpriteArraySizes()
     {
         if (characterLifeBars == null)
@@ -286,6 +304,27 @@ public class LifeBar : MonoBehaviour
         }
     }
 
+    /// <summary>Hide/show this life bar without destroying bind state (e.g. while Kaboodle is open).</summary>
+    public void SetVisible(bool visible)
+    {
+        if (lifeBarSpriteRenderer == null)
+            lifeBarSpriteRenderer = GetComponent<SpriteRenderer>();
+
+        if (lifeBarSpriteRenderer != null)
+            lifeBarSpriteRenderer.enabled = visible;
+    }
+
+    /// <summary>Hide or show every player LifeBar in the loaded scenes.</summary>
+    public static void SetAllVisible(bool visible)
+    {
+        LifeBar[] bars = FindObjectsByType<LifeBar>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+        for (int i = 0; i < bars.Length; i++)
+        {
+            if (bars[i] != null)
+                bars[i].SetVisible(visible);
+        }
+    }
+
 #if UNITY_EDITOR
     private void OnValidate()
     {
@@ -295,6 +334,11 @@ public class LifeBar : MonoBehaviour
         hitFlickerCycles = Mathf.Max(1, hitFlickerCycles);
         hitFlickerHalfPeriod = Mathf.Max(0.02f, hitFlickerHalfPeriod);
         EnsureSpriteArraySizes();
+        for (int i = 0; i < characterLifeBars.Length; i++)
+        {
+            if (characterLifeBars[i] != null)
+                characterLifeBars[i].positionOffsetDownSpaces = Mathf.Max(0f, characterLifeBars[i].positionOffsetDownSpaces);
+        }
     }
 #endif
 }

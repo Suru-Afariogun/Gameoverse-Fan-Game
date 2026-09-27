@@ -397,7 +397,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Crystal
   maxHealth: 1000
   currentHealth: 1000
-  healthLostPerBossDeath: 50
+  healthLostPerBossDeath: 250
   healthText: {fileID: 7492692579375708585}
   sharedEffectCooldown: 10
   boostDuration: 5

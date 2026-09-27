@@ -15,12 +15,35 @@ public static class BossEncounter
 
     public static string SelectedBossId { get; private set; } = BossIdMalice;
 
+    /// <summary>True when the player picked a boss on Kaboodle's Boss Fight page.</summary>
+    public static bool BossChosenFromKaboodle { get; private set; }
+
+    /// <summary>
+    /// When true, the next Boss Fight load uses Kit/Malice rival rules from the active player
+    /// (e.g. Spawner Crystal after Level one) instead of <see cref="SelectedBossId"/>.
+    /// </summary>
+    public static bool ForcePlayerRivalBoss { get; private set; }
+
     public static void SetSelectedBoss(string bossId)
     {
         if (string.IsNullOrWhiteSpace(bossId))
             return;
 
         SelectedBossId = bossId.Trim();
+        BossChosenFromKaboodle = true;
+        ForcePlayerRivalBoss = false;
+    }
+
+    /// <summary>Spawner Crystal → Boss Fight: rival boss from player character, not Kaboodle pick.</summary>
+    public static void PrepareBossFightFromLevelProgress()
+    {
+        ForcePlayerRivalBoss = true;
+        BossChosenFromKaboodle = false;
+    }
+
+    public static void ClearBossFightRoutingFlags()
+    {
+        ForcePlayerRivalBoss = false;
     }
 
     public static bool IsBossReady(string bossId)

@@ -32,6 +32,14 @@ public class Kaboodle : MonoBehaviour
     [Header("UI - Prompt")]
     [Tooltip("Shown only while the player is in range and the box is closed.")]
     [SerializeField] private GameObject interactPrompt;
+    [Tooltip("Scale multiplier for PlayStation / Xbox / Switch Confirm glyphs (not Keyboard or Default).")]
+    [SerializeField] private float controllerPromptScaleMultiplier = 2f;
+
+    private SpriteRenderer interactPromptRenderer;
+    private Sprite interactPromptFallbackSprite;
+    private Vector3 interactPromptBaseScale = Vector3.one;
+    private bool interactPromptBaseScaleCached;
+    private bool subscribedToButtonSprites;
 
     [Header("UI - Kaboodle Box")]
     [Tooltip("Root of the Kaboodle dialogue/menu box. Hidden until the player interacts.")]
@@ -41,6 +49,10 @@ public class Kaboodle : MonoBehaviour
     [SerializeField] private GameObject menuPage;
 
     [SerializeField] private GameObject tutorialPage;
+    [Tooltip("Main tutorial body under Tutorial Page (TMP). Auto-finds Text (TMP) if empty.")]
+    [SerializeField] private TMP_Text tutorialBodyText;
+    [Tooltip("Bottom footer hint: Back / Confirm / Select for the active controller. Auto-finds by name if empty.")]
+    [SerializeField] private TMP_Text navigationHintText;
     [SerializeField] private GameObject itemShopPage;
     [SerializeField] private GameObject characterSelectPage;
     [SerializeField] private GameObject bossFightPage;
@@ -56,6 +68,8 @@ public class Kaboodle : MonoBehaviour
     [Header("UI - Character Select")]
     [SerializeField] private Button kitCharacterButton;
     [SerializeField] private Button maliceCharacterButton;
+    [SerializeField] private Button harlieCharacterButton;
+    [SerializeField] private Button countCharacterButton;
     [Tooltip("How many character buttons per row (usually 2: Kit | Malice).")]
     [SerializeField] private int characterSelectColumns = 2;
     [Tooltip("Solid blue character-shaped highlight behind the portrait when hovered/selected.")]
@@ -121,6 +135,8 @@ public class Kaboodle : MonoBehaviour
     private int characterIndex;
     private int bossIndex;
     private int shopIndex;
+    private int tutorialPartIndex;
+    private readonly List<string> tutorialParts = new List<string>(5);
     private float nextMenuInputTime;
     private bool moveUpHeld;
     private bool moveDownHeld;
@@ -161,12 +177,14 @@ public class Kaboodle : MonoBehaviour
         CacheBossButtons();
         CacheShopButtons();
         CacheButtonVisualDefaults();
+        CacheInteractPrompt();
         HookPointerHover();
         HookCharacterPointerHover();
         HookBossPointerHover();
         HookShopPointerHover();
         EnsureCharacterHighlightShapes();
         EnsureBossHighlightShapes();
+        ButtonSpriteManager.EnsureExists();
         SetPromptVisible(false);
         CloseBox(unlockPlayer: false);
     }
@@ -191,6 +209,7 @@ public class Kaboodle : MonoBehaviour
         WireMenuButtonClicks(true);
         WireBossButtonClicks(true);
         WireShopButtonClicks(true);
+        SubscribeButtonSpriteEvents(true);
     }
 
     private void OnDisable()
@@ -198,6 +217,7 @@ public class Kaboodle : MonoBehaviour
         WireMenuButtonClicks(false);
         WireBossButtonClicks(false);
         WireShopButtonClicks(false);
+        SubscribeButtonSpriteEvents(false);
 
         if (controls == null)
             return;
@@ -258,12 +278,18 @@ public class Kaboodle : MonoBehaviour
             kitCharacterButton = FindNamedButtonUnder(characterSelectPage, "Kit");
         if (maliceCharacterButton == null)
             maliceCharacterButton = FindNamedButtonUnder(characterSelectPage, "Malice");
+        if (harlieCharacterButton == null)
+            harlieCharacterButton = FindNamedButtonUnder(characterSelectPage, "Harlie");
+        if (countCharacterButton == null)
+            countCharacterButton = FindNamedButtonUnder(characterSelectPage, "Count");
 
         AddCharacterButton(kitCharacterButton, "Kit");
         AddCharacterButton(maliceCharacterButton, "Malice");
+        AddCharacterButton(harlieCharacterButton, "Harlie");
+        AddCharacterButton(countCharacterButton, "Count");
 
         if (validCharacterButtons.Count == 0)
-            Debug.LogWarning("[Kaboodle] Character Select has no Kit/Malice buttons assigned.");
+            Debug.LogWarning("[Kaboodle] Character Select has no Kit/Malice/Harlie/Count buttons assigned.");
     }
 
     private void CacheBossButtons()
@@ -1082,20 +1108,24 @@ public class Kaboodle : MonoBehaviour
         if (!context.performed || !CanAcceptMenuInput())
             return;
 
+        NotifyControlDevice(context);
+
         if (!boxOpen)
         {
             if (playerInRange)
             {
-                SoundManager.Instance?.PlayUiConfirmOrBack();
+                SoundManager.Instance?.PlayUiConfirm();
                 OpenBox();
             }
             return;
         }
 
-        SoundManager.Instance?.PlayUiConfirmOrBack();
+        SoundManager.Instance?.PlayUiConfirm();
 
         if (currentPage == BoxPage.Menu)
             ActivateMenuSelection();
+        else if (currentPage == BoxPage.Tutorial)
+            AdvanceTutorialPart();
         else if (currentPage == BoxPage.CharacterSelect)
             ConfirmCharacterSelection();
         else if (currentPage == BoxPage.BossFight)
@@ -1124,7 +1154,7 @@ public class Kaboodle : MonoBehaviour
 
         PlayerAttackStyle.Set(AttackStyleId.Normal);
         RefreshAttackStyleButtonLabels();
-        SoundManager.Instance?.PlayUiConfirmOrBack();
+        SoundManager.Instance?.PlayUiConfirm();
         ConsumeMenuInputCooldown();
     }
 
@@ -1161,7 +1191,7 @@ public class Kaboodle : MonoBehaviour
 
         if (boxOpen)
         {
-            SoundManager.Instance?.PlayUiConfirmOrBack();
+            SoundManager.Instance?.PlayUiBack();
             CloseBox(unlockPlayer: true);
         }
     }
@@ -1171,11 +1201,17 @@ public class Kaboodle : MonoBehaviour
         if (!context.performed || !boxOpen || !CanAcceptMenuInput())
             return;
 
-        SoundManager.Instance?.PlayUiConfirmOrBack();
+        SoundManager.Instance?.PlayUiBack();
 
         if (currentPage == BoxPage.Menu)
         {
             CloseBox(unlockPlayer: true);
+            return;
+        }
+
+        if (currentPage == BoxPage.Tutorial)
+        {
+            RetreatTutorialPart();
             return;
         }
 
@@ -1185,6 +1221,7 @@ public class Kaboodle : MonoBehaviour
 
     private void OnMovementPerformed(InputAction.CallbackContext context)
     {
+        NotifyControlDevice(context);
         Vector2 value = context.ReadValue<Vector2>();
 
         if (!boxOpen && playerInRange && value.y >= stickThreshold && !moveUpHeld)
@@ -1294,6 +1331,9 @@ public class Kaboodle : MonoBehaviour
 
     private bool CanAcceptMenuInput()
     {
+        if (DialogueBox.Instance != null && DialogueBox.Instance.IsOpen)
+            return false;
+
         return Time.unscaledTime >= nextMenuInputTime;
     }
 
@@ -1321,6 +1361,7 @@ public class Kaboodle : MonoBehaviour
         }
 
         ShowMenuPage();
+        LifeBar.SetAllVisible(false);
         ConsumeMenuInputCooldown();
         onOpened?.Invoke();
     }
@@ -1338,6 +1379,7 @@ public class Kaboodle : MonoBehaviour
             kaboodleBox.SetActive(false);
 
         HideAllPages();
+        LifeBar.SetAllVisible(true);
 
         if (unlockPlayer)
         {
@@ -1350,6 +1392,7 @@ public class Kaboodle : MonoBehaviour
         }
 
         SetPromptVisible(playerInRange && !boxOpen);
+        RefreshNavigationHintText();
 
         if (wasOpen)
             onClosed?.Invoke();
@@ -1371,12 +1414,14 @@ public class Kaboodle : MonoBehaviour
         CacheMenuButtons();
         menuIndex = Mathf.Clamp(menuIndex, 0, Mathf.Max(0, validMenuButtons.Count - 1));
         RefreshMenuHighlight();
+        RefreshNavigationHintText();
         ConsumeMenuInputCooldown();
     }
 
     public void OpenTutorialPage()
     {
         OpenContentPage(BoxPage.Tutorial, tutorialPage);
+        BeginTutorial();
         onOpenedTutorial?.Invoke();
     }
 
@@ -1399,6 +1444,90 @@ public class Kaboodle : MonoBehaviour
         OpenContentPage(BoxPage.BossFight, bossFightPage);
         PrepareBossSelectPage();
         onOpenedBossFight?.Invoke();
+    }
+
+    private void EnsureTutorialTextBound()
+    {
+        if (tutorialBodyText != null)
+            return;
+
+        if (tutorialPage == null)
+            return;
+
+        tutorialBodyText = tutorialPage.GetComponentInChildren<TMP_Text>(true);
+    }
+
+    private void BeginTutorial()
+    {
+        EnsureTutorialTextBound();
+        tutorialParts.Clear();
+        tutorialParts.AddRange(KaboodleTutorialContent.BuildParts());
+        tutorialPartIndex = 0;
+        RefreshTutorialText();
+        ConsumeMenuInputCooldown();
+    }
+
+    private void AdvanceTutorialPart()
+    {
+        if (tutorialParts.Count == 0)
+        {
+            BeginTutorial();
+            if (tutorialParts.Count == 0)
+            {
+                ShowMenuPage();
+                return;
+            }
+        }
+
+        if (tutorialPartIndex >= tutorialParts.Count - 1)
+        {
+            MarkCurrentCharacterTutorialComplete();
+            ShowMenuPage();
+            ConsumeMenuInputCooldown();
+            return;
+        }
+
+        tutorialPartIndex++;
+        RefreshTutorialText();
+        ConsumeMenuInputCooldown();
+    }
+
+    private void MarkCurrentCharacterTutorialComplete()
+    {
+        string id = PlayerSpawner.SelectedCharacterId;
+        if (PlayerController.Active != null)
+            id = PlayerController.Active.CharacterId;
+
+        KaboodleTutorialProgress.MarkTutorialDone(id);
+        KaboodleForcedText.Instance?.NotifyTutorialProgressChanged();
+    }
+
+    private void RetreatTutorialPart()
+    {
+        if (tutorialPartIndex <= 0)
+        {
+            ShowMenuPage();
+            ConsumeMenuInputCooldown();
+            return;
+        }
+
+        tutorialPartIndex--;
+        RefreshTutorialText();
+        ConsumeMenuInputCooldown();
+    }
+
+    private void RefreshTutorialText()
+    {
+        EnsureTutorialTextBound();
+        if (tutorialBodyText == null || tutorialParts.Count == 0)
+            return;
+
+        tutorialPartIndex = Mathf.Clamp(tutorialPartIndex, 0, tutorialParts.Count - 1);
+        bool last = tutorialPartIndex >= tutorialParts.Count - 1;
+        tutorialBodyText.richText = true;
+        tutorialBodyText.text = KaboodleTutorialContent.AppendContinuePrompt(
+            tutorialParts[tutorialPartIndex],
+            last);
     }
 
     private void PrepareCharacterSelectPage()
@@ -1460,6 +1589,7 @@ public class Kaboodle : MonoBehaviour
 
         shopIndex = Mathf.Clamp(shopIndex, 0, Mathf.Max(0, validShopButtons.Count - 1));
         RefreshShopHighlight();
+        RefreshAttackStyleButtonLabels();
         PauseBInventory.Instance?.ShowShopPreview();
     }
 
@@ -1481,14 +1611,14 @@ public class Kaboodle : MonoBehaviour
         PauseBInventory.Instance?.ShowShopPreview();
     }
 
-    /// <summary>Temporary Kit attack style: Spread Shot (Item Shop placeholder).</summary>
+    /// <summary>Item Shop slot: Kit Spread Shot / Malice Life Steal.</summary>
     public void EquipSpreadShot()
     {
         PlayerAttackStyle.Set(AttackStyleId.SpreadShot);
         RefreshAttackStyleButtonLabels();
     }
 
-    /// <summary>Temporary Kit attack style: Machine Gun (Item Shop placeholder).</summary>
+    /// <summary>Item Shop slot: Kit Machine Gun / Malice Cruel Claw.</summary>
     public void EquipMachineGun()
     {
         PlayerAttackStyle.Set(AttackStyleId.MachineGun);
@@ -1568,6 +1698,7 @@ public class Kaboodle : MonoBehaviour
         if (pageRoot != null)
             pageRoot.SetActive(true);
 
+        RefreshNavigationHintText();
         ConsumeMenuInputCooldown();
     }
 
@@ -1586,10 +1717,191 @@ public class Kaboodle : MonoBehaviour
             page.SetActive(active);
     }
 
+    private void EnsureNavigationHintBound()
+    {
+        if (navigationHintText != null)
+            return;
+
+        string[] names =
+        {
+            "How to navigate the Kaboodle box text",
+            "How to navigate the Kaboodle box Text",
+            "Kaboodle navigation hint",
+            "Navigation hint"
+        };
+
+        Transform searchRoot = kaboodleBox != null ? kaboodleBox.transform : transform;
+        for (int n = 0; n < names.Length; n++)
+        {
+            Transform found = FindChildByNameRecursive(searchRoot, names[n]);
+            if (found == null)
+                continue;
+
+            navigationHintText = found.GetComponent<TMP_Text>();
+            if (navigationHintText == null)
+                navigationHintText = found.GetComponentInChildren<TMP_Text>(true);
+            if (navigationHintText != null)
+                return;
+        }
+    }
+
+    private static Transform FindChildByNameRecursive(Transform root, string name)
+    {
+        if (root == null || string.IsNullOrEmpty(name))
+            return null;
+
+        if (root.name == name)
+            return root;
+
+        for (int i = 0; i < root.childCount; i++)
+        {
+            Transform found = FindChildByNameRecursive(root.GetChild(i), name);
+            if (found != null)
+                return found;
+        }
+
+        return null;
+    }
+
+    private void RefreshNavigationHintText()
+    {
+        EnsureNavigationHintBound();
+        if (navigationHintText == null)
+            return;
+
+        // Tutorial pages already teach Confirm / Back in their body text.
+        if (!boxOpen || currentPage == BoxPage.None || currentPage == BoxPage.Tutorial)
+        {
+            navigationHintText.gameObject.SetActive(false);
+            return;
+        }
+
+        ButtonSpriteManager manager = ButtonSpriteManager.EnsureExists();
+        manager?.SyncDeviceForPrompts();
+
+        string back = manager != null ? manager.FormatButton("Quit/Back") : "B";
+        string confirm = manager != null ? manager.FormatButton("Confirm") : "M";
+        string select = manager != null ? manager.FormatButton("Select") : "Tab";
+        string attack = manager != null ? manager.FormatButton("Attack") : "M";
+
+        navigationHintText.richText = true;
+        navigationHintText.text = currentPage switch
+        {
+            BoxPage.ItemShop =>
+                $"Back: {back}   Confirm: {confirm}   Unequip style: {attack}   Select: {select}",
+            BoxPage.Menu or BoxPage.CharacterSelect or BoxPage.BossFight =>
+                $"Back: {back}   Confirm: {confirm}   Select: {select}",
+            _ => $"Back: {back}   Confirm: {confirm}   Select: {select}"
+        };
+        navigationHintText.gameObject.SetActive(true);
+    }
+
     private void SetPromptVisible(bool visible)
     {
+        if (visible)
+            RefreshInteractPromptSprite();
+
         if (interactPrompt != null)
             interactPrompt.SetActive(visible);
+    }
+
+    private void CacheInteractPrompt()
+    {
+        if (interactPrompt == null)
+            return;
+
+        interactPromptRenderer = interactPrompt.GetComponent<SpriteRenderer>();
+        if (interactPromptRenderer == null)
+            interactPromptRenderer = interactPrompt.GetComponentInChildren<SpriteRenderer>(true);
+
+        if (interactPromptRenderer != null)
+            interactPromptFallbackSprite = interactPromptRenderer.sprite;
+
+        if (!interactPromptBaseScaleCached)
+        {
+            interactPromptBaseScale = interactPrompt.transform.localScale;
+            interactPromptBaseScaleCached = true;
+        }
+    }
+
+    private static void NotifyControlDevice(InputAction.CallbackContext context)
+    {
+        InputDevice device = context.control != null ? context.control.device : null;
+        if (device == null)
+            return;
+
+        ButtonSpriteManager manager = ButtonSpriteManager.Instance ?? ButtonSpriteManager.EnsureExists();
+        manager?.NotifyDevice(device);
+    }
+
+    private void SubscribeButtonSpriteEvents(bool bind)
+    {
+        ButtonSpriteManager manager = ButtonSpriteManager.EnsureExists();
+        if (manager == null)
+            return;
+
+        if (bind)
+        {
+            if (subscribedToButtonSprites)
+                return;
+            manager.DeviceChanged += OnControlDeviceChanged;
+            subscribedToButtonSprites = true;
+            RefreshInteractPromptSprite();
+        }
+        else
+        {
+            if (!subscribedToButtonSprites)
+                return;
+            manager.DeviceChanged -= OnControlDeviceChanged;
+            subscribedToButtonSprites = false;
+        }
+    }
+
+    private void OnControlDeviceChanged(ButtonSpriteManager.ControlDeviceKind device)
+    {
+        RefreshInteractPromptSprite();
+        RefreshNavigationHintText();
+
+        if (boxOpen && currentPage == BoxPage.Tutorial)
+            RebuildTutorialKeepingPage();
+    }
+
+    private void RefreshInteractPromptSprite()
+    {
+        if (interactPromptRenderer == null)
+            CacheInteractPrompt();
+        if (interactPromptRenderer == null)
+            return;
+
+        if (!interactPromptBaseScaleCached && interactPrompt != null)
+        {
+            interactPromptBaseScale = interactPrompt.transform.localScale;
+            interactPromptBaseScaleCached = true;
+        }
+
+        ButtonSpriteManager manager = ButtonSpriteManager.Instance ?? ButtonSpriteManager.EnsureExists();
+        bool enlarge = false;
+        Sprite sprite = null;
+        if (manager != null)
+            manager.GetSprite("Confirm", manager.CurrentDevice, out sprite, out enlarge);
+
+        interactPromptRenderer.sprite = sprite != null ? sprite : interactPromptFallbackSprite;
+
+        float mult = enlarge ? Mathf.Max(1f, controllerPromptScaleMultiplier) : 1f;
+        if (interactPrompt != null)
+            interactPrompt.transform.localScale = interactPromptBaseScale * mult;
+    }
+
+    private void RebuildTutorialKeepingPage()
+    {
+        int page = tutorialPartIndex;
+        tutorialParts.Clear();
+        tutorialParts.AddRange(KaboodleTutorialContent.BuildParts());
+        if (tutorialParts.Count == 0)
+            return;
+
+        tutorialPartIndex = Mathf.Clamp(page, 0, tutorialParts.Count - 1);
+        RefreshTutorialText();
     }
 
     /// <summary>
@@ -1766,7 +2078,7 @@ public class Kaboodle : MonoBehaviour
         {
             Debug.LogWarning(
                 $"[Kaboodle] PlayerSpawner has no prefab for '{characterId}'. " +
-                "On PlayerSpawner, add Characters entries for Kit and Malice and assign their prefabs.");
+                "On PlayerSpawner, add a Characters entry for Harlie and assign Playable Harlie prefab.");
             ConsumeMenuInputCooldown();
             return;
         }
@@ -1788,6 +2100,7 @@ public class Kaboodle : MonoBehaviour
         }
 
         rangedPlayer = spawned;
+        RefreshAttackStyleButtonLabels();
         ConsumeMenuInputCooldown();
 
         if (closeBoxAfterCharacterSwitch)

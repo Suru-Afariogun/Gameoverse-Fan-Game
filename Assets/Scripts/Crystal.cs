@@ -24,11 +24,15 @@ public class Crystal : MonoBehaviour, IDamageable
     [Header("Health")]
     [SerializeField] private int maxHealth = 1000;
     [SerializeField] private int currentHealth = 1000;
-    [SerializeField] private int healthLostPerBossDeath = 100;
+    [SerializeField] private int healthLostPerBossDeath = 250;
     [Tooltip("Every this much direct crystal damage also damages the boss.")]
     [SerializeField] private int directDamageChunkSize = 20;
     [Tooltip("Percent of the boss's CURRENT HP lost each chunk (30 = 30%).")]
     [SerializeField] [Range(1f, 100f)] private float linkedBossDamagePercentOfCurrent = 30f;
+    [Tooltip("Every this much damage dealt to any boss applies crystalIndirectDamagePerChunk to the crystal.")]
+    [SerializeField] private int bossDamageChunkSize = 20;
+    [Tooltip("Crystal HP lost (indirect — does not trigger crystal→boss linked damage) per boss-damage chunk.")]
+    [SerializeField] private int crystalIndirectDamagePerChunk = 60;
     [SerializeField] private TextMeshProUGUI healthText;
 
     [Header("Boss Support Effects (one at a time)")]
@@ -68,6 +72,7 @@ public class Crystal : MonoBehaviour, IDamageable
     private float nextEffectRollAt;
     private bool effectRunning;
     private int directDamageAccumulator;
+    private int bossDamageAccumulator;
     private Collider2D bodyCollider;
     private SpriteRenderer spriteRenderer;
 
@@ -188,7 +193,48 @@ public class Crystal : MonoBehaviour, IDamageable
         RefreshHealthText();
 
         if (applied > 0)
+        {
+            if (!IsDead)
+                SoundManager.Instance?.PlayCrystalHit();
             ApplyDirectDamageSideEffects(applied);
+        }
+    }
+
+    /// <summary>
+    /// HP loss from boss damage chunks. Does not shorten boosts or feed crystal→boss linked damage.
+    /// </summary>
+    public void ApplyIndirectDamageFromBoss(int amount)
+    {
+        if (amount <= 0 || IsDead)
+            return;
+
+        currentHealth = Mathf.Max(0, currentHealth - amount);
+        RefreshHealthText();
+    }
+
+    /// <summary>
+    /// Called when a boss takes real combat damage. Every <see cref="bossDamageChunkSize"/> HP
+    /// deals <see cref="crystalIndirectDamagePerChunk"/> to the crystal.
+    /// </summary>
+    public void NotifyBossDamageDealt(int appliedToBoss)
+    {
+        if (appliedToBoss <= 0 || IsDead)
+            return;
+
+        int chunk = Mathf.Max(1, bossDamageChunkSize);
+        int crystalHit = Mathf.Max(0, crystalIndirectDamagePerChunk);
+        if (crystalHit <= 0)
+            return;
+
+        bossDamageAccumulator += appliedToBoss;
+        while (bossDamageAccumulator >= chunk)
+        {
+            bossDamageAccumulator -= chunk;
+            if (IsDead)
+                break;
+
+            ApplyIndirectDamageFromBoss(crystalHit);
+        }
     }
 
     /// <summary>
@@ -201,6 +247,7 @@ public class Crystal : MonoBehaviour, IDamageable
         SetWarningAuraVisible(false);
         currentHealth = Mathf.Max(1, maxHealth);
         directDamageAccumulator = 0;
+        bossDamageAccumulator = 0;
         nextEffectAllowedAt = Time.time + 1f;
         nextEffectRollAt = Time.time + Mathf.Max(0.25f, effectRollInterval);
         RefreshHealthText();
@@ -457,6 +504,8 @@ public class Crystal : MonoBehaviour, IDamageable
         healthLostPerBossDeath = Mathf.Max(0, healthLostPerBossDeath);
         directDamageChunkSize = Mathf.Max(1, directDamageChunkSize);
         linkedBossDamagePercentOfCurrent = Mathf.Clamp(linkedBossDamagePercentOfCurrent, 1f, 100f);
+        bossDamageChunkSize = Mathf.Max(1, bossDamageChunkSize);
+        crystalIndirectDamagePerChunk = Mathf.Max(0, crystalIndirectDamagePerChunk);
         sharedEffectCooldown = Mathf.Max(0.1f, sharedEffectCooldown);
         boostDuration = Mathf.Max(0.1f, boostDuration);
         boostWarningSeconds = Mathf.Max(0f, boostWarningSeconds);

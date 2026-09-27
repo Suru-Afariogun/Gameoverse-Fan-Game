@@ -126,7 +126,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dbb757b8876dd0b4cb19730b6dba34a7, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::VisualEffect
+  m_EditorClassIdentifier: Assembly-CSharp::GameVisualEffect
   effectType: 2
   maxTravelDistance: 2
   maxLifetime: 0.3

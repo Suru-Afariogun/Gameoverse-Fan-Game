@@ -17,11 +17,11 @@ public class KitPlayerController : PlayerController
 
     [Header("Kit - VFX Prefabs")]
     [Tooltip("Small Buster Blast prefab for small shots.")]
-    [SerializeField] private VisualEffect busterBlastSmallPrefab;
+    [SerializeField] private GameVisualEffect busterBlastSmallPrefab;
     [Tooltip("Medium + big Buster Blast prefab (big shots scale up from this art).")]
     [FormerlySerializedAs("busterBlastMediumPrefab")]
     [FormerlySerializedAs("busterBlastBigPrefab")]
-    [SerializeField] private VisualEffect busterBlastMediumBigPrefab;
+    [SerializeField] private GameVisualEffect busterBlastMediumBigPrefab;
 
     [Header("Kit - Charge Thresholds")]
     [SerializeField] private float mediumChargeSeconds = 1.5f;
@@ -64,9 +64,38 @@ public class KitPlayerController : PlayerController
     {
         "Shooting on ground",
         "Shooting upward",
+        "Shooting downward on ground",
         "Jump Shot",
-        "Fall Shot"
+        "Fall Shot",
+        "Shooting upward in air",
+        "Shooting downward in air",
+        "Hovering while shooting",
+        "Hovering Shooting upward",
+        "Hovering Shooting downward"
     };
+
+    [Header("Kit - Double Jump")]
+    [Tooltip("Extra jumps allowed in the air. Refills on landing.")]
+    [SerializeField] private int kitMaxAirJumps = 1;
+    [Tooltip("Upward speed of the double jump. <= 0 uses normal Jump Force.")]
+    [SerializeField] private float kitDoubleJumpForce = 0f;
+
+    [Header("Kit - Hover")]
+    [Tooltip("Seconds Kit stays perfectly level after hover starts.")]
+    [SerializeField] private float hoverHoldSeconds = 5f;
+    [Tooltip("Downward speed once the level hover time is over.")]
+    [SerializeField] private float hoverDescendSpeed = 1.5f;
+    [Tooltip("How quickly Kit eases into the slow descent.")]
+    [SerializeField] private float hoverDescendAcceleration = 4f;
+    [Tooltip("Off: the level-hover time is shared across every hover in one air trip (resets on landing). " +
+             "On: each re-press of jump gives a fresh level-hover time.")]
+    [SerializeField] private bool hoverLevelTimeRefreshesOnReactivate = false;
+
+    [Header("Kit - Boosted Dash (max charge)")]
+    [Tooltip("Dash speed multiplier while Kit is at max charge.")]
+    [SerializeField] private float boostedDashSpeedMultiplier = 1.4f;
+    [Tooltip("Dash distance multiplier while Kit is at max charge.")]
+    [SerializeField] private float boostedDashDistanceMultiplier = 1.6f;
 
     [Header("Kit - Dash Override")]
     [SerializeField] private float kitDashDistance = 5.25f;
@@ -101,11 +130,29 @@ public class KitPlayerController : PlayerController
     [Tooltip("Machine Gun big opener speed as a multiple of the small pellet speed (must be > medium).")]
     [SerializeField] private float machineGunBigSpeedMultiplier = 1.6f;
 
+    [Header("Kit - Upgrades (Scratch's shop)")]
+    [Tooltip("Ariel Action: extra level-hover seconds per level. At max level every air hover starts with a free air jump.")]
+    [SerializeField] private float hoverSecondsPerAerialLevel = 2f;
+    [Tooltip("Attack Style: Machine Gun / Spread Shot reach max charge this many seconds sooner per level.")]
+    [SerializeField] private float styleChargeSecondsPerLevel = 0.5f;
+    [SerializeField] private float minUpgradedChargeSeconds = 0.25f;
+    [Tooltip("Attack Style level where Machine Gun / Spread Shot keep auto-charging while firing.")]
+    [SerializeField] private int styleChargeWhileFiringLevel = 2;
+    [Tooltip("Spread Shot bullets = 3 + Attack Style level, capped here.")]
+    [SerializeField] private int spreadMaxBullets = 8;
+    [Tooltip("Hyper Ability (full health): world units between shots in the Normal-style volley row.")]
+    [SerializeField] private float hyperShotSpacing = 1f;
+    [Tooltip("Hyper Ability shots travel this many times faster than a regular max charge shot.")]
+    [SerializeField] private float hyperShotSpeedMultiplier = 2.5f;
+    [Tooltip("Hyper Ability + Machine Gun: seconds between volleys while Attack is held.")]
+    [SerializeField] private float hyperMachineGunVolleyInterval = 0.2f;
+
     private bool isCharging;
     private float chargeTimer;
     private float shootCooldownTimer;
 
     private bool pendingShot;
+    private bool pendingShotHyper;
     private ProjectileShotType pendingShotType;
     private float pendingShotDeadline;
     private Vector2 pendingShotAim;
@@ -123,6 +170,13 @@ public class KitPlayerController : PlayerController
     private int machineGunPelletIndex;
     private readonly System.Collections.Generic.List<Projectile> liveMachineGunShots =
         new System.Collections.Generic.List<Projectile>(16);
+
+    private int airJumpsRemaining;
+    private bool isHovering;
+    private float hoverTimer;
+    // Jump still held from the double-jump press: hover starts when the double jump peaks.
+    private bool hoverQueuedAtApex;
+    private bool boostedDashActive;
 
     protected override void Awake()
     {
@@ -145,6 +199,7 @@ public class KitPlayerController : PlayerController
         dashAfterimageAlphaStart = kitAfterimageAlphaStart;
         dashAfterimageAlphaEnd = kitAfterimageAlphaEnd;
         airDashesRemaining = Mathf.Max(0, maxAirDashes);
+        airJumpsRemaining = Mathf.Max(0, kitMaxAirJumps);
 
         SetupDashAfterimages();
         SetupChargeAura();
@@ -153,6 +208,9 @@ public class KitPlayerController : PlayerController
     protected override void OnDisable()
     {
         base.OnDisable();
+        EndHover();
+        hoverQueuedAtApex = false;
+        boostedDashActive = false;
         machineGunHolding = false;
         machineGunFirstShotQueued = false;
         liveMachineGunShots.Clear();
@@ -176,8 +234,10 @@ public class KitPlayerController : PlayerController
         if (shootCooldownTimer > 0f)
             shootCooldownTimer -= Time.deltaTime;
 
-        if (UsesMachineGunStyle())
-            TickMachineGunStyle();
+        if (UsesAutoCharge())
+            TickAutoChargeStyle();
+        else if (HyperActive)
+            UpdateChargeAura(BigCharge);
         else if (isCharging)
         {
             chargeTimer += Time.deltaTime;
@@ -212,7 +272,33 @@ public class KitPlayerController : PlayerController
         return PlayerAttackStyle.Is(AttackStyleId.SpreadShot);
     }
 
-    private void TickMachineGunStyle()
+    private int AerialLevel => PlayerUpgrades.GetLevel(this, UpgradeType.AerialAction);
+    private int HyperLevel => PlayerUpgrades.GetLevel(this, UpgradeType.HyperAbility);
+    private int StyleLevel => PlayerUpgrades.GetLevel(this, UpgradeType.AttackStyle);
+    private bool HyperActive => PlayerUpgrades.IsHyperActive(this);
+    private bool ChargesWhileFiring => StyleLevel >= Mathf.Max(0, styleChargeWhileFiringLevel);
+
+    /// <summary>Machine Gun always auto-charges; Spread Shot does too once it can charge while firing.</summary>
+    private bool UsesAutoCharge()
+    {
+        return UsesMachineGunStyle() || (UsesSpreadShotStyle() && ChargesWhileFiring);
+    }
+
+    private float BigCharge
+    {
+        get
+        {
+            if (!UsesMachineGunStyle() && !UsesSpreadShotStyle())
+                return bigChargeSeconds;
+
+            float faster = bigChargeSeconds - Mathf.Max(0f, styleChargeSecondsPerLevel) * StyleLevel;
+            return Mathf.Max(Mathf.Max(0.05f, minUpgradedChargeSeconds), faster);
+        }
+    }
+
+    private float MediumCharge => mediumChargeSeconds * (BigCharge / Mathf.Max(0.01f, bigChargeSeconds));
+
+    private void TickAutoChargeStyle()
     {
         if (InputLocked || isStunned)
         {
@@ -221,20 +307,29 @@ public class KitPlayerController : PlayerController
             return;
         }
 
+        if (HyperActive)
+        {
+            UpdateChargeAura(BigCharge);
+            if (machineGunHolding && UsesMachineGunStyle() && !pendingShot && shootCooldownTimer <= 0f)
+                QueueShot(ProjectileShotType.Big, replacePending: true, hyper: true);
+            return;
+        }
+
         if (machineGunHolding)
         {
-            SetChargeAuraVisible(false);
-
             // After the opening (auto-charge level) shot, keep spraying smalls while held.
             if (!machineGunFirstShotQueued && !pendingShot && shootCooldownTimer <= 0f)
                 FireMachineGunPellet();
 
-            return;
+            if (!ChargesWhileFiring)
+            {
+                SetChargeAuraVisible(false);
+                return;
+            }
         }
 
-        // Passive auto-charge while not firing.
         machineGunAutoCharge += Time.deltaTime;
-        machineGunAutoCharge = Mathf.Min(machineGunAutoCharge, bigChargeSeconds);
+        machineGunAutoCharge = Mathf.Min(machineGunAutoCharge, BigCharge);
         chargeTimer = machineGunAutoCharge;
         isCharging = false;
 
@@ -279,7 +374,10 @@ public class KitPlayerController : PlayerController
     /// </summary>
     private bool IsChargeAuraActive()
     {
-        if (UsesMachineGunStyle())
+        if (HyperActive)
+            return true;
+
+        if (UsesAutoCharge())
             return !machineGunHolding && machineGunAutoCharge > 0.01f;
 
         return isCharging && Time.time >= auraAllowedAfterTime;
@@ -297,7 +395,17 @@ public class KitPlayerController : PlayerController
 
         if (shouldLock)
         {
-            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+            // Bass-style: no walk input, but still ride moving platforms.
+            float x = 0f;
+            float y = rb.linearVelocity.y;
+            if (MovingFactoryPlatform.TryGetRideVelocity(this, out Vector2 platVel))
+            {
+                x = platVel.x;
+                if (isGrounded && Mathf.Abs(platVel.y) > 0.01f && rb.linearVelocity.y <= platVel.y + 0.15f)
+                    y = platVel.y;
+            }
+
+            rb.linearVelocity = new Vector2(x, y);
             return;
         }
 
@@ -312,12 +420,12 @@ public class KitPlayerController : PlayerController
         if (!IsChargeAuraActive())
             return speed;
 
-        float charge = UsesMachineGunStyle() ? machineGunAutoCharge : chargeTimer;
+        float charge = HyperActive ? BigCharge : UsesAutoCharge() ? machineGunAutoCharge : chargeTimer;
 
-        if (charge >= bigChargeSeconds)
+        if (charge >= BigCharge)
             return speed + bigChargeMoveSpeedBonus;
 
-        if (charge >= mediumChargeSeconds)
+        if (charge >= MediumCharge)
             return speed + mediumChargeMoveSpeedBonus;
 
         return speed;
@@ -331,14 +439,230 @@ public class KitPlayerController : PlayerController
         return isShooting || pendingShot || isCharging || machineGunHolding;
     }
 
+    protected override Vector2 GetAimDirection()
+    {
+        if (IsAimingDown())
+            return new Vector2(facingSign, -1f).normalized;
+
+        return base.GetAimDirection();
+    }
+
+    protected override void UpdateAnimator()
+    {
+        base.UpdateAnimator();
+        if (animator == null)
+            return;
+
+        animator.SetBool("AimDown", IsAimingDown());
+        animator.SetBool("IsHovering", isHovering);
+        animator.SetBool("IsBoostedDashing", isDashing && boostedDashActive);
+    }
+
+    // ---------- Double jump + hover ----------
+
+    protected override void ApplyJump()
+    {
+        if (!jumpRequested)
+            return;
+
+        // Ground jump, drop-through, wall jump and stun handling stay in the base.
+        if (isStunned || BlocksActionCancel() || IsGrounded || CanWallJumpNow())
+        {
+            if (CanWallJumpNow())
+                EndHover();
+
+            base.ApplyJump();
+            return;
+        }
+
+        jumpRequested = false;
+        if (isHovering)
+            return;
+
+        if (airJumpsRemaining > 0)
+        {
+            PerformDoubleJump();
+            return;
+        }
+
+        // Max Ariel Action: every hover starts with a free air jump (hover kicks in at its peak).
+        if (AerialLevel >= PlayerUpgrades.MaxLevel)
+        {
+            PerformDoubleJump(consumeAirJump: false);
+            return;
+        }
+
+        StartHover();
+    }
+
+    private void PerformDoubleJump(bool consumeAirJump = true)
+    {
+        if (rb == null)
+            return;
+
+        if (consumeAirJump)
+            airJumpsRemaining--;
+        float force = kitDoubleJumpForce > 0f ? kitDoubleJumpForce : jumpForce;
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, force);
+        hoverQueuedAtApex = true;
+        SoundManager.Instance?.PlayJump();
+
+        if (animator != null && !isShooting && !isDashing)
+            animator.Play("Jump", 0, 0f);
+    }
+
+    private bool IsJumpHeld()
+    {
+        return !inputLocked && controls != null && controls.PlayerControls.Jump.IsPressed();
+    }
+
+    private void StartHover()
+    {
+        if (isHovering || rb == null || isStunned)
+            return;
+
+        isHovering = true;
+        hoverQueuedAtApex = false;
+        if (hoverLevelTimeRefreshesOnReactivate)
+            hoverTimer = 0f;
+
+        bool hadDashJumpMomentum = isDashJumping;
+        EndDashJumpMomentum();
+
+        rb.gravityScale = 0f;
+        float vx = hadDashJumpMomentum ? moveInput.x * GetCurrentMoveSpeed() : rb.linearVelocity.x;
+        rb.linearVelocity = new Vector2(vx, 0f);
+
+        if (animator != null)
+            animator.SetTrigger("Hover");
+    }
+
+    private void EndHover()
+    {
+        if (!isHovering)
+            return;
+
+        isHovering = false;
+        if (rb != null)
+            rb.gravityScale = defaultGravityScale;
+
+        if (animator != null)
+            animator.ResetTrigger("Hover");
+    }
+
+    private void TickHover(float dt)
+    {
+        if (rb == null)
+            return;
+
+        if (hoverQueuedAtApex)
+        {
+            // Letting go before the peak cancels; the player can still re-press later.
+            if (!IsJumpHeld() || isGrounded || isStunned || IsDead)
+                hoverQueuedAtApex = false;
+            else if (rb.linearVelocity.y <= 0f)
+                StartHover();
+        }
+
+        if (!isHovering)
+            return;
+
+        if (!IsJumpHeld() || isStunned || isGrounded || IsDead)
+        {
+            EndHover();
+            return;
+        }
+
+        hoverTimer += dt;
+        float levelHoverSeconds = hoverHoldSeconds + Mathf.Max(0f, hoverSecondsPerAerialLevel) * AerialLevel;
+        float vy = hoverTimer < levelHoverSeconds
+            ? 0f
+            : Mathf.MoveTowards(rb.linearVelocity.y, -hoverDescendSpeed, hoverDescendAcceleration * dt);
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, vy);
+    }
+
+    protected override void HandleCharacterFixedUpdate()
+    {
+        base.HandleCharacterFixedUpdate();
+        TickHover(Time.fixedDeltaTime);
+    }
+
+    protected override void ApplyFallMultiplier()
+    {
+        if (isHovering)
+            return;
+
+        base.ApplyFallMultiplier();
+    }
+
+    protected override void OnLanded()
+    {
+        base.OnLanded();
+        airJumpsRemaining = Mathf.Max(0, kitMaxAirJumps);
+        hoverTimer = 0f;
+        hoverQueuedAtApex = false;
+        EndHover();
+    }
+
+    // ---------- Boosted dash (max charge) ----------
+
+    private bool IsAtMaxCharge()
+    {
+        // Hyper Ability keeps Kit at max charge the whole time she is at full health.
+        if (HyperActive)
+            return true;
+
+        if (UsesAutoCharge())
+            return !machineGunHolding && machineGunAutoCharge >= BigCharge;
+
+        return isCharging && Time.time >= auraAllowedAfterTime && chargeTimer >= BigCharge;
+    }
+
+    protected override void OnDashStarted()
+    {
+        base.OnDashStarted();
+        boostedDashActive = IsAtMaxCharge() || isHovering;
+        if (!boostedDashActive)
+            return;
+
+        float speed = Mathf.Max(0.1f, dashSpeed * boostedDashSpeedMultiplier);
+        float distance = Mathf.Max(0.1f, dashDistance * boostedDashDistanceMultiplier);
+        dashDuration = distance / speed;
+        BeginDashAfterimageTrail(dashDuration);
+    }
+
+    protected override void OnDashEnded()
+    {
+        base.OnDashEnded();
+        boostedDashActive = false;
+    }
+
+    protected override float GetCurrentDashVelocityX()
+    {
+        float velocity = base.GetCurrentDashVelocityX();
+        return boostedDashActive ? velocity * boostedDashSpeedMultiplier : velocity;
+    }
+
     protected override void OnAttackStarted(InputAction.CallbackContext context)
     {
         if (InputLocked || isStunned)
             return;
 
+        if (HyperActive)
+        {
+            BeginHyperFire();
+            return;
+        }
+
         if (UsesMachineGunStyle())
         {
             BeginMachineGunFire();
+            return;
+        }
+
+        if (UsesAutoCharge())
+        {
+            FireAutoChargedSpread();
             return;
         }
 
@@ -347,7 +671,7 @@ public class KitPlayerController : PlayerController
         // Aura (and charge-move unlock) only after a small shot actually fires + delay.
         auraAllowedAfterTime = float.PositiveInfinity;
         SetChargeAuraVisible(false);
-        SoundManager.Instance?.StartChargeLoop();
+        SoundManager.Instance?.StartChargeLoop(SoundManager.ChargeLoopId.Kit);
 
         QueueShot(ProjectileShotType.Small);
     }
@@ -359,6 +683,9 @@ public class KitPlayerController : PlayerController
             EndMachineGunFire();
             return;
         }
+
+        if (UsesAutoCharge())
+            return;
 
         if (InputLocked || isStunned)
             return;
@@ -372,10 +699,48 @@ public class KitPlayerController : PlayerController
         SetChargeAuraVisible(false);
         SoundManager.Instance?.StopChargeLoop();
 
-        if (held >= bigChargeSeconds)
+        if (held >= BigCharge)
             QueueShot(ProjectileShotType.Big, replacePending: true);
-        else if (held >= mediumChargeSeconds)
+        else if (held >= MediumCharge)
             QueueShot(ProjectileShotType.Medium, replacePending: true);
+    }
+
+    /// <summary>Hyper Ability: every press fires a max-charge volley; Machine Gun keeps firing while held.</summary>
+    private void BeginHyperFire()
+    {
+        isCharging = false;
+        chargeTimer = 0f;
+        SoundManager.Instance?.StopChargeLoop();
+
+        if (UsesMachineGunStyle())
+        {
+            machineGunHolding = true;
+            machineGunFirstShotQueued = false;
+        }
+
+        if (shootCooldownTimer > 0f || pendingShot)
+            return;
+
+        QueueShot(ProjectileShotType.Big, replacePending: true, hyper: true);
+    }
+
+    /// <summary>
+    /// Upgraded Spread Shot: charge fills on its own. Small spreads don't spend it; a medium/big
+    /// spread fires and empties it.
+    /// </summary>
+    private void FireAutoChargedSpread()
+    {
+        ProjectileShotType type = ShotTypeFromCharge(machineGunAutoCharge);
+        if (type == ProjectileShotType.Small)
+        {
+            QueueShot(ProjectileShotType.Small);
+            return;
+        }
+
+        machineGunAutoCharge = 0f;
+        chargeTimer = 0f;
+        SetChargeAuraVisible(false);
+        QueueShot(type, replacePending: true);
     }
 
     private void BeginMachineGunFire()
@@ -400,9 +765,9 @@ public class KitPlayerController : PlayerController
 
     private ProjectileShotType ShotTypeFromCharge(float charge)
     {
-        if (charge >= bigChargeSeconds)
+        if (charge >= BigCharge)
             return ProjectileShotType.Big;
-        if (charge >= mediumChargeSeconds)
+        if (charge >= MediumCharge)
             return ProjectileShotType.Medium;
         return ProjectileShotType.Small;
     }
@@ -418,10 +783,12 @@ public class KitPlayerController : PlayerController
         SetChargeAuraVisible(false);
         isShooting = false;
         shootAnimTimer = 0f;
+        EndHover();
+        hoverQueuedAtApex = false;
         base.OnHitStunStarted();
     }
 
-    private void QueueShot(ProjectileShotType type, bool replacePending = false)
+    private void QueueShot(ProjectileShotType type, bool replacePending = false, bool hyper = false)
     {
         Projectile prefab = GetPrefab(type);
         if (prefab == null)
@@ -440,6 +807,7 @@ public class KitPlayerController : PlayerController
         CancelPendingShot();
 
         pendingShot = true;
+        pendingShotHyper = hyper;
         pendingShotType = type;
         pendingShotAim = GetAimDirection();
         pendingShotDeadline = Time.time + Mathf.Max(0.05f, shotAnimWaitTimeout);
@@ -464,10 +832,24 @@ public class KitPlayerController : PlayerController
 
         ProjectileShotType firedType = pendingShotType;
         Vector2 aim = pendingShotAim;
+        bool hyper = pendingShotHyper;
         pendingShot = false;
+        pendingShotHyper = false;
 
         if (GetPrefab(firedType) == null)
             return;
+
+        if (hyper)
+        {
+            SpawnHyperVolley(aim);
+            shootCooldownTimer = UsesMachineGunStyle() && machineGunHolding
+                ? Mathf.Max(0.05f, hyperMachineGunVolleyInterval)
+                : shootCooldown;
+            SoundManager.Instance?.PlayKitFire(firedType);
+            if (UsesMachineGunStyle())
+                machineGunFirstShotQueued = false;
+            return;
+        }
 
         // Same spawn path for Normal / Spread / Machine Gun openers (medium+big use prefab speeds).
         SpawnShotBurst(aim, firedType);
@@ -485,6 +867,7 @@ public class KitPlayerController : PlayerController
     private void CancelPendingShot()
     {
         pendingShot = false;
+        pendingShotHyper = false;
     }
 
     private void SpawnShotBurst(
@@ -495,15 +878,52 @@ public class KitPlayerController : PlayerController
     {
         if (UsesSpreadShotStyle())
         {
-            float angle = spreadShotAngleDegrees;
-            // Same prefab speed as a normal shot; tiny muzzle offsets so the three never overlap at spawn.
-            SpawnProjectile(RotateAim(aim, angle), type, 0.12f, spawnBusterBlast, trackAsMachineGunShot);
-            SpawnProjectile(aim, type, 0f, spawnBusterBlast, trackAsMachineGunShot);
-            SpawnProjectile(RotateAim(aim, -angle), type, 0.12f, spawnBusterBlast, trackAsMachineGunShot);
+            SpawnSpread(aim, type, spawnBusterBlast, trackAsMachineGunShot, 1f);
             return;
         }
 
         SpawnProjectile(aim, type, 0f, spawnBusterBlast, trackAsMachineGunShot);
+    }
+
+    private int SpreadBulletCount => Mathf.Clamp(3 + StyleLevel, 3, Mathf.Max(3, spreadMaxBullets));
+
+    /// <summary>Bullets fanned evenly between +/- spread angle. Side bullets get a tiny muzzle offset so none overlap at spawn.</summary>
+    private void SpawnSpread(
+        Vector2 aim,
+        ProjectileShotType type,
+        bool spawnBusterBlast,
+        bool trackAsMachineGunShot,
+        float speedMultiplier)
+    {
+        int count = SpreadBulletCount;
+        float maxAngle = spreadShotAngleDegrees;
+        for (int i = 0; i < count; i++)
+        {
+            float t = count <= 1 ? 0.5f : i / (float)(count - 1);
+            float angle = Mathf.Lerp(maxAngle, -maxAngle, t);
+            float offset = Mathf.Abs(angle) > 0.01f ? 0.12f : 0f;
+            SpawnProjectile(RotateAim(aim, angle), type, offset, spawnBusterBlast, trackAsMachineGunShot, speedMultiplier);
+        }
+    }
+
+    /// <summary>
+    /// Hyper Ability volley: Spread fires its full spread as max charge shots; Normal / Machine Gun
+    /// fire 1 + Hyper level max charge shots in a row, one space apart. All travel faster.
+    /// </summary>
+    private void SpawnHyperVolley(Vector2 aim)
+    {
+        float speedMultiplier = Mathf.Max(1f, hyperShotSpeedMultiplier);
+
+        if (UsesSpreadShotStyle())
+        {
+            SpawnSpread(aim, ProjectileShotType.Big, true, false, speedMultiplier);
+            return;
+        }
+
+        int count = 1 + Mathf.Max(0, HyperLevel);
+        float spacing = Mathf.Max(0f, hyperShotSpacing);
+        for (int i = 0; i < count; i++)
+            SpawnProjectile(aim, ProjectileShotType.Big, -i * spacing, i == 0, false, speedMultiplier);
     }
 
     private static Vector2 RotateAim(Vector2 direction, float degrees)
@@ -597,7 +1017,7 @@ public class KitPlayerController : PlayerController
         return prefab != null ? prefab.Damage : 1;
     }
 
-    private VisualEffect GetBusterBlastPrefab(ProjectileShotType type)
+    private GameVisualEffect GetBusterBlastPrefab(ProjectileShotType type)
     {
         return VisualEffects.ResolveBusterBlastPrefab(
             type,
@@ -610,7 +1030,8 @@ public class KitPlayerController : PlayerController
         ProjectileShotType type,
         float muzzleOffset = 0f,
         bool spawnBusterBlast = true,
-        bool trackAsMachineGunShot = false)
+        bool trackAsMachineGunShot = false,
+        float speedMultiplier = 1f)
     {
         Projectile prefab = GetPrefab(type);
         if (prefab == null)
@@ -619,12 +1040,13 @@ public class KitPlayerController : PlayerController
         if (trackAsMachineGunShot)
             PruneAndCapMachineGunShots();
 
+        // Negative offsets spawn behind the muzzle (Hyper volley rows trail the lead shot).
         Vector2 dir = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector2.right;
-        Vector3 spawnPos = GetFirePosition() + (Vector3)(dir * Mathf.Max(0f, muzzleOffset));
+        Vector3 spawnPos = GetFirePosition() + (Vector3)(dir * muzzleOffset);
         Projectile shot = Instantiate(prefab, spawnPos, Quaternion.identity);
 
         // Canonical stats by shot type. Machine Gun medium/big use boosted speed over small pellets.
-        shot.Launch(dir, GetShotSpeed(type), GetShotDamage(type), transform);
+        shot.Launch(dir, GetShotSpeed(type) * Mathf.Max(0.01f, speedMultiplier), GetShotDamage(type), transform);
 
         if (trackAsMachineGunShot)
             liveMachineGunShots.Add(shot);
@@ -659,14 +1081,18 @@ public class KitPlayerController : PlayerController
         if (animator == null)
             return;
 
-        if (IsAimingUp() && isGrounded)
+        // Up/Down/Shoot are routed to ground, air or hover states by the Animator's
+        // IsGrounded / IsHovering conditions. Straight air shots keep Jump/Fall Shot.
+        if (IsAimingUp())
             animator.SetTrigger("ShootUp");
-        else if (!isGrounded && rb != null && rb.linearVelocity.y >= 0f)
-            animator.SetTrigger("JumpShot");
-        else if (!isGrounded)
-            animator.SetTrigger("FallShot");
-        else
+        else if (IsAimingDown())
+            animator.SetTrigger("ShootDown");
+        else if (IsGrounded || isHovering)
             animator.SetTrigger("Shoot");
+        else if (rb != null && rb.linearVelocity.y >= 0f)
+            animator.SetTrigger("JumpShot");
+        else
+            animator.SetTrigger("FallShot");
     }
 
     private void SetupChargeAura()
@@ -715,7 +1141,9 @@ public class KitPlayerController : PlayerController
         if (chargeAuraRenderer == null || spriteRenderer == null)
             return;
 
-        float charge01 = Mathf.Clamp01(chargeSeconds / Mathf.Max(0.01f, bigChargeSeconds));
+        float big = BigCharge;
+        float medium = MediumCharge;
+        float charge01 = Mathf.Clamp01(chargeSeconds / Mathf.Max(0.01f, big));
 
         chargeAuraObject.SetActive(true);
         chargeAuraRenderer.sprite = spriteRenderer.sprite;
@@ -725,12 +1153,12 @@ public class KitPlayerController : PlayerController
 
         // More solid (less transparent) as charge grows.
         float alpha;
-        if (chargeSeconds >= bigChargeSeconds)
+        if (chargeSeconds >= big)
             alpha = auraAlphaAtBig;
-        else if (chargeSeconds >= mediumChargeSeconds)
-            alpha = Mathf.Lerp(auraAlphaAtMedium, auraAlphaAtBig, Mathf.InverseLerp(mediumChargeSeconds, bigChargeSeconds, chargeSeconds));
+        else if (chargeSeconds >= medium)
+            alpha = Mathf.Lerp(auraAlphaAtMedium, auraAlphaAtBig, Mathf.InverseLerp(medium, big, chargeSeconds));
         else
-            alpha = Mathf.Lerp(auraAlphaStart, auraAlphaAtMedium, chargeSeconds / Mathf.Max(0.01f, mediumChargeSeconds));
+            alpha = Mathf.Lerp(auraAlphaStart, auraAlphaAtMedium, chargeSeconds / Mathf.Max(0.01f, medium));
 
         // Soft equal pink/yellow shimmer — no hard flashes (photosensitivity-safe).
         // Rate stays well under 3 Hz even at full charge; yellow only gently tints pink.
@@ -782,6 +1210,12 @@ public class KitPlayerController : PlayerController
         kitDashSpeed = Mathf.Max(0.1f, kitDashSpeed);
         kitDashSmoothStop = Mathf.Max(0f, kitDashSmoothStop);
         kitMaxAirDashes = Mathf.Max(0, kitMaxAirDashes);
+        kitMaxAirJumps = Mathf.Max(0, kitMaxAirJumps);
+        hoverHoldSeconds = Mathf.Max(0f, hoverHoldSeconds);
+        hoverDescendSpeed = Mathf.Max(0.1f, hoverDescendSpeed);
+        hoverDescendAcceleration = Mathf.Max(0.1f, hoverDescendAcceleration);
+        boostedDashSpeedMultiplier = Mathf.Max(1f, boostedDashSpeedMultiplier);
+        boostedDashDistanceMultiplier = Mathf.Max(1f, boostedDashDistanceMultiplier);
         kitDashJumpMomentumDuration = Mathf.Max(0.01f, kitDashJumpMomentumDuration);
         kitAfterimageCount = Mathf.Max(1, kitAfterimageCount);
         kitAfterimageSpacing = Mathf.Max(0.01f, kitAfterimageSpacing);
@@ -794,6 +1228,14 @@ public class KitPlayerController : PlayerController
         machineGunBigSpeedMultiplier = Mathf.Max(
             machineGunMediumSpeedMultiplier + 0.01f,
             machineGunBigSpeedMultiplier);
+        hoverSecondsPerAerialLevel = Mathf.Max(0f, hoverSecondsPerAerialLevel);
+        styleChargeSecondsPerLevel = Mathf.Max(0f, styleChargeSecondsPerLevel);
+        minUpgradedChargeSeconds = Mathf.Max(0.05f, minUpgradedChargeSeconds);
+        styleChargeWhileFiringLevel = Mathf.Max(0, styleChargeWhileFiringLevel);
+        spreadMaxBullets = Mathf.Max(3, spreadMaxBullets);
+        hyperShotSpacing = Mathf.Max(0f, hyperShotSpacing);
+        hyperShotSpeedMultiplier = Mathf.Max(1f, hyperShotSpeedMultiplier);
+        hyperMachineGunVolleyInterval = Mathf.Max(0.05f, hyperMachineGunVolleyInterval);
     }
 #endif
 }

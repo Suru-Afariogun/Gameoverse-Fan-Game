@@ -1,0 +1,93 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &5151770207371813016
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5805629488484123955}
+  - component: {fileID: 3455138570539661823}
+  - component: {fileID: 1685092038782787850}
+  - component: {fileID: 7890123456789012345}
+  m_Layer: 0
+  m_Name: Boss Spawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5805629488484123955
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5151770207371813016}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 10.04, y: -4.08, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3455138570539661823
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5151770207371813016}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 642b275eb32e72445967e83cc7c68d02, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossSpawner
+  bosses:
+  - bossId: Malice
+    prefab: {fileID: 6231144415895922472, guid: d551dcf1c478deb469f6d53da0a8a8e3, type: 3}
+  - bossId: Kit
+    prefab: {fileID: 3672412826225818953, guid: 3f9e8c2b1a0d4e7f9b6c5a4d3e2f1a08, type: 3}
+  spawnPoint: {fileID: 5805629488484123955}
+  destroyMismatchedBossesOnStart: 1
+  homeTownSceneName: HomeTown
+--- !u!114 &1685092038782787850
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5151770207371813016}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69cfb3ba773fbd24dba674291a8728fd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossFightDirector
+  homeTownSceneName: HomeTown
+  fadeOutSeconds: 0.45
+  fadeInSeconds: 0.45
+  returnDelayAfterBossDeath: 0.75
+  respawnDelayAfterDeath: 0.35
+  cameraCatchUpTimeout: 2.5
+  cameraCatchUpDistance: 0.65
+--- !u!114 &7890123456789012345
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5151770207371813016}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3d4e5f6789012345678abcdef012345, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LevelOneBossEncounter
+  copyBotMaxHealth: 40
+  energyBallRecallDistance: 9
+  respawnDelayBeforeRecall: 0.35
+  healthBarIntroStart: 1
+  healthBarIntroDuration: 1.35
+  spawnerCrystalPrefab: {fileID: 6178910075858227176, guid: 98fde83bc9d13e04096a19ee1102ee7e, type: 3}

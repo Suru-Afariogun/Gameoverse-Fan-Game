@@ -81,6 +81,20 @@ public class BossMalice : Boss
     [SerializeField] private float groundSlashSlideSpeed = 9f;
     [SerializeField] private float dashCancelSlashSpeedMul = 1.5f;
     [SerializeField] private float airSlashDiveSpeed = 22f;
+
+    [Header("Boss Malice - Projectile Slashes")]
+    [SerializeField] private MaliceSlashProjectileSettings slashProjectiles = new MaliceSlashProjectileSettings();
+
+    [Header("Boss Malice - Shot Defend (bonus)")]
+    [Tooltip("Start a short parry burst mainly when this many live player small shots are on screen.")]
+    [SerializeField] private int shotDefendMinSmallShots = 8;
+    [SerializeField] private float shotDefendMaxSeconds = 2.5f;
+    [Tooltip("Chance to start a burst when the shot threshold is met (kept low — bonus, not a new mode).")]
+    [SerializeField] [Range(0.05f, 0.5f)] private float shotDefendChance = 0.22f;
+    [Tooltip("Minimum wait after a check (pass or fail) before another roll.")]
+    [SerializeField] private float shotDefendCheckCooldown = 10f;
+    [Tooltip("Extra wait after a burst actually happens.")]
+    [SerializeField] private float shotDefendAfterBurstCooldown = 16f;
     [Tooltip("Player must be within this X range for Hornet dive / dive air slash.")]
     [SerializeField] private float diveAttackRangeX = 4.25f;
     [Tooltip("Spaces (world units) past the player to land when trapping with a dash-jump.")]
@@ -213,6 +227,7 @@ public class BossMalice : Boss
     private float stateDuration;
     private float decideTimer;
     private int pendingDamage;
+    private bool slashProjectilesFired;
     private bool hitboxWasActive;
     private bool dashCancelBoost;
     private bool diving;
@@ -267,6 +282,9 @@ public class BossMalice : Boss
     private float dashJumpCatchUpCooldownTimer;
     private bool grappleAirMove;
     private bool pendingAirSlashAfterGrapple;
+    private bool shotDefendActive;
+    private float shotDefendUntil;
+    private float shotDefendNextCheckAt;
     private float slashSlideRemaining;
     private float slashSlideDir;
     private bool pendingConvertToDashJump;
@@ -513,7 +531,7 @@ public class BossMalice : Boss
         FollowGrabbedTarget();
 
         if (dashJumpCatchUpCooldownTimer > 0f)
-            dashJumpCatchUpCooldownTimer -= Time.deltaTime;
+            dashJumpCatchUpCooldownTimer -= BossDeltaTime;
 
         ApplyAggressionAnimatorSpeed();
 
@@ -681,11 +699,14 @@ public class BossMalice : Boss
 
     private void TickChase(PlayerController player)
     {
-        decideTimer -= Time.deltaTime;
+        decideTimer -= BossDeltaTime;
         if (decideTimer > 0f)
             return;
 
         decideTimer = CurrentDecideInterval();
+        if (TryBeginShotDefend(player))
+            return;
+
         PickAndStartPattern(player);
     }
 
@@ -952,6 +973,61 @@ public class BossMalice : Boss
         return IsGroundSlashState() || state == AiState.AirSlash;
     }
 
+    private bool TryBeginShotDefend(PlayerController player)
+    {
+        if (openingCycleActive || shotDefendActive || player == null || player.IsDead)
+            return false;
+
+        if (Time.time < shotDefendNextCheckAt)
+            return false;
+
+        if (CountLivePlayerSmallShots() < Mathf.Max(1, shotDefendMinSmallShots))
+            return false;
+
+        shotDefendNextCheckAt = Time.time + Mathf.Max(4f, shotDefendCheckCooldown);
+
+        if (Random.value > Mathf.Clamp01(shotDefendChance))
+            return false;
+
+        float hold = Random.Range(1.4f, Mathf.Max(1.5f, shotDefendMaxSeconds));
+        shotDefendActive = true;
+        shotDefendUntil = Time.time + hold;
+        BeginSlash(AiState.Slash1, slash1Duration, slash1Damage, "Slash1", step: false);
+        return true;
+    }
+
+    private void EndShotDefend()
+    {
+        shotDefendActive = false;
+        shotDefendNextCheckAt = Time.time + Mathf.Max(shotDefendCheckCooldown, shotDefendAfterBurstCooldown);
+    }
+
+    private static int CountLivePlayerSmallShots()
+    {
+        Projectile[] shots = FindObjectsByType<Projectile>(FindObjectsSortMode.None);
+        int count = 0;
+        for (int i = 0; i < shots.Length; i++)
+        {
+            Projectile shot = shots[i];
+            if (shot == null || shot.ShotType != ProjectileShotType.Small)
+                continue;
+
+            Transform shotOwner = shot.Owner;
+            if (shotOwner == null)
+                continue;
+
+            if (shotOwner.GetComponentInParent<PlayerController>() == null)
+                continue;
+
+            if (shotOwner.GetComponentInParent<Boss>() != null)
+                continue;
+
+            count++;
+        }
+
+        return count;
+    }
+
     private float GetBossDashJumpHorizontalSpeed()
     {
         float baseSpeed = dashJumpHorizontalSpeed > 0.01f ? dashJumpHorizontalSpeed : dashSpeed;
@@ -1169,12 +1245,12 @@ public class BossMalice : Boss
     private void TickJumpPrep(PlayerController player)
     {
         FaceToward(player != null ? player.transform : null);
-        stateTimer -= Time.deltaTime;
+        stateTimer -= BossDeltaTime;
 
         if (!isGrounded || (rb != null && rb.linearVelocity.y > 0.5f))
         {
             jumpPrepHasLeftGround = true;
-            jumpPrepAirTime += Time.deltaTime;
+            jumpPrepAirTime += BossDeltaTime;
         }
 
         // Relight the jump if she never left the ground (sticky ground check / failed impulse).
@@ -1302,7 +1378,7 @@ public class BossMalice : Boss
     private void TickApproachForSlash(PlayerController player)
     {
         FaceToward(player != null ? player.transform : null);
-        stateTimer -= Time.deltaTime;
+        stateTimer -= BossDeltaTime;
 
         if (IsPlayerInSlashRange(player))
         {
@@ -1341,6 +1417,7 @@ public class BossMalice : Boss
         stateDuration = Mathf.Max(0.05f, duration / speedMul);
         stateTimer = stateDuration;
         pendingDamage = ScaleDamage(damage);
+        slashProjectilesFired = false;
         BeginAttack(trigger);
 
         if (step)
@@ -1355,9 +1432,9 @@ public class BossMalice : Boss
             return;
 
         if (slashState == AiState.Slash3)
-            SoundManager.Instance.PlayMaliceSlashHeavy();
+            SoundManager.Instance.PlayBossMaliceSlashHeavy();
         else if (slashState == AiState.Slash1 || slashState == AiState.Slash2)
-            SoundManager.Instance.PlayMaliceSlashLight();
+            SoundManager.Instance.PlayBossMaliceSlashLight();
     }
 
     private void BeginAirSlash(bool dive)
@@ -1367,6 +1444,7 @@ public class BossMalice : Boss
         stateDuration = Mathf.Max(0.05f, airSlashDuration / speedMul);
         stateTimer = stateDuration;
         pendingDamage = ScaleDamage(airSlashDamage);
+        slashProjectilesFired = false;
         diving = dive;
 
         if (dive)
@@ -1389,7 +1467,7 @@ public class BossMalice : Boss
         if (!isGrounded && jumpPrepAirTime < minAirTimeBeforeAirAttack)
             jumpPrepAirTime = minAirTimeBeforeAirAttack;
         BeginAttack("AirSlash");
-        SoundManager.Instance?.PlayMaliceSlashLight();
+        SoundManager.Instance?.PlayBossMaliceSlashLight();
     }
 
     private void BeginRayHook()
@@ -1416,7 +1494,7 @@ public class BossMalice : Boss
         state = AiState.ChargeWindup;
         stateTimer = airGrappleChaseTimeout;
         isAttacking = false;
-        SoundManager.Instance?.StartChargeLoop();
+        SoundManager.Instance?.StartChargeLoop(SoundManager.ChargeLoopId.BossMalice);
         SetChargeAuraVisible(false);
         FaceToward(player != null ? player.transform : null);
         aimUp = pendingGrappleAimUp;
@@ -1433,8 +1511,8 @@ public class BossMalice : Boss
              player.transform.position.y > transform.position.y + 0.25f);
         aimUp = pendingGrappleAimUp;
 
-        chargeTimer += Time.deltaTime;
-        stateTimer -= Time.deltaTime;
+        chargeTimer += BossDeltaTime;
+        stateTimer -= BossDeltaTime;
 
         if (Time.time >= auraAllowedAfterTime)
             UpdateChargeAura();
@@ -1505,7 +1583,7 @@ public class BossMalice : Boss
 
         grappleReelSfxPlayed = false;
         float animSpeed = animator != null ? animator.speed : AttackSpeedMul();
-        SoundManager.Instance?.PlayMaliceGrappleExtend(animSpeed);
+        SoundManager.Instance?.PlayBossMaliceGrappleExtend(animSpeed);
     }
 
     private float GetBossGrapplePullAnchorTimeSeconds(bool air)
@@ -1596,19 +1674,65 @@ public class BossMalice : Boss
 
         grappleReelSfxPlayed = true;
         float animSpeed = animator != null ? animator.speed : AttackSpeedMul();
-        SoundManager.Instance?.PlayMaliceGrappleReel(animSpeed);
+        SoundManager.Instance?.PlayBossMaliceGrappleReel(animSpeed);
+    }
+
+    private void TickSlashProjectiles(float elapsed)
+    {
+        if (slashProjectilesFired || attackHitbox == null || !slashProjectiles.Enabled)
+            return;
+
+        MaliceSlashKind kind;
+        switch (state)
+        {
+            case AiState.Slash1: kind = MaliceSlashKind.Slash1; break;
+            case AiState.Slash2: kind = MaliceSlashKind.Slash2; break;
+            case AiState.Slash3: kind = MaliceSlashKind.Slash3; break;
+            case AiState.AirSlash: kind = MaliceSlashKind.AirSlash; break;
+            default: return;
+        }
+
+        float clipTime = elapsed * (animator != null && animator.speed > 0.01f ? animator.speed : AttackSpeedMul());
+        if (clipTime + 0.0001f < slashProjectiles.GetFireClipTime(kind))
+            return;
+
+        slashProjectilesFired = true;
+        slashProjectiles.Fire(
+            kind,
+            transform,
+            attackHitbox.GetComponent<Collider2D>(),
+            facingSign,
+            pendingDamage,
+            spriteRenderer);
     }
 
     private void TickGroundSlash()
     {
         float elapsed = stateDuration - stateTimer;
-        stateTimer -= Time.deltaTime;
-        UpdateTimedHitbox(elapsed, slashHitboxDelay / AttackSpeedMul(), slashHitboxActiveTime / AttackSpeedMul());
+        stateTimer -= BossDeltaTime;
+        TickSlashProjectiles(elapsed);
+        float hitboxActive = shotDefendActive
+            ? Mathf.Max(slashHitboxActiveTime, stateDuration * 0.85f)
+            : slashHitboxActiveTime;
+        UpdateTimedHitbox(elapsed, slashHitboxDelay / AttackSpeedMul(), hitboxActive / AttackSpeedMul());
+
+        if (shotDefendActive && Time.time >= shotDefendUntil)
+        {
+            EndShotDefend();
+            FinishIntoRecover();
+            return;
+        }
 
         if (stateTimer > 0f)
             return;
 
         DeactivateHitbox();
+
+        if (shotDefendActive)
+        {
+            BeginSlash(AiState.Slash1, slash1Duration, slash1Damage, "Slash1", step: false);
+            return;
+        }
 
         if (state == AiState.Slash1)
         {
@@ -1642,14 +1766,15 @@ public class BossMalice : Boss
     private void TickAirSlash(PlayerController player)
     {
         float elapsed = stateDuration - stateTimer;
-        stateTimer -= Time.deltaTime;
+        stateTimer -= BossDeltaTime;
+        TickSlashProjectiles(elapsed);
 
         if (diving || (!isGrounded && player != null &&
                         player.transform.position.y < transform.position.y - 0.15f))
             diving = true;
 
         if (!isGrounded)
-            jumpPrepAirTime += Time.deltaTime;
+            jumpPrepAirTime += BossDeltaTime;
 
         float active = diving
             ? 999f
@@ -1706,7 +1831,7 @@ public class BossMalice : Boss
         // Legacy short telegraph path (if somehow entered without ChargeWindup).
         if (isCharging && !isGrappleCharging)
         {
-            stateTimer -= Time.deltaTime;
+            stateTimer -= BossDeltaTime;
             if (stateTimer > 0f)
                 return;
 
@@ -1722,7 +1847,7 @@ public class BossMalice : Boss
         }
 
         float elapsed = stateDuration - stateTimer;
-        stateTimer -= Time.deltaTime;
+        stateTimer -= BossDeltaTime;
         UpdateTimedHitbox(
             elapsed,
             grappleHitboxDelay / AttackSpeedMul(),
@@ -1796,8 +1921,8 @@ public class BossMalice : Boss
         if (!isGrounded && !pendingConvertToDashJump)
             speed *= airDashSpeedMul;
 
-        dashSpeedCurrent = speed;
-        dashDuration = Mathf.Max(0.05f, dashDistance / speed);
+        dashSpeedCurrent = BossSpeed(speed);
+        dashDuration = Mathf.Max(0.05f, dashDistance / dashSpeedCurrent);
         dashTimer = 0f;
         isDashing = true;
         isBossDashJumping = false;
@@ -1841,8 +1966,8 @@ public class BossMalice : Boss
         int dashIndex = metalSonicDashCount - metalSonicDashesLeft;
         speed *= 1f + 0.06f * Mathf.Max(0, dashIndex);
 
-        dashSpeedCurrent = speed;
-        dashDuration = Mathf.Max(0.05f, dashDistance / speed);
+        dashSpeedCurrent = BossSpeed(speed);
+        dashDuration = Mathf.Max(0.05f, dashDistance / dashSpeedCurrent);
         dashTimer = 0f;
         isDashing = true;
         isBossDashJumping = false;
@@ -1907,11 +2032,11 @@ public class BossMalice : Boss
 
         if (rb != null)
         {
-            rb.linearVelocity = new Vector2(dashDir * speed, hop);
+            rb.linearVelocity = new Vector2(dashDir * BossSpeed(speed), hop);
             isGrounded = false;
         }
 
-        dashSpeedCurrent = speed;
+        dashSpeedCurrent = BossSpeed(speed);
         dashDuration = Mathf.Max(0.2f, airTime);
         dashTimer = 0f;
         isBossDashJumping = true;
@@ -1952,7 +2077,7 @@ public class BossMalice : Boss
 
     private void TickDash(PlayerController player)
     {
-        dashTimer += Time.deltaTime;
+        dashTimer += BossDeltaTime;
 
         // Player-style dash-jump: short grounded dash, then Jump convert.
         if (pendingConvertToDashJump)
@@ -1981,9 +2106,9 @@ public class BossMalice : Boss
 
     private void TickDashJump(PlayerController player)
     {
-        dashTimer += Time.deltaTime;
+        dashTimer += BossDeltaTime;
         if (!isGrounded)
-            jumpPrepAirTime += Time.deltaTime;
+            jumpPrepAirTime += BossDeltaTime;
 
         bool enoughAir = jumpPrepAirTime >= minAirTimeBeforeAirAttack;
         bool peaked = rb != null && rb.linearVelocity.y <= 0.85f && enoughAir;
@@ -2093,7 +2218,7 @@ public class BossMalice : Boss
     private void TickAirHang(PlayerController player)
     {
         FaceToward(player != null ? player.transform : null);
-        stateTimer -= Time.deltaTime;
+        stateTimer -= BossDeltaTime;
         if (stateTimer > 0f)
             return;
 
@@ -2162,7 +2287,7 @@ public class BossMalice : Boss
     private void TickRecover(PlayerController player)
     {
         StopHorizontal();
-        stateTimer -= Time.deltaTime;
+        stateTimer -= BossDeltaTime;
         if (stateTimer > 0f)
             return;
 
@@ -2285,7 +2410,7 @@ public class BossMalice : Boss
             return;
         }
 
-        float step = Mathf.Min(slashSlideRemaining, groundSlashSlideSpeed * Time.fixedDeltaTime);
+        float step = Mathf.Min(slashSlideRemaining, groundSlashSlideSpeed * BossFixedDeltaTime);
         Vector2 p = rb.position;
         p.x += slashSlideDir * step;
         rb.MovePosition(p);
@@ -2354,7 +2479,7 @@ public class BossMalice : Boss
         }
         else
         {
-            float stepDist = Mathf.Max(0.1f, grapplePullSpeed) * Time.fixedDeltaTime;
+            float stepDist = Mathf.Max(0.1f, grapplePullSpeed) * BossFixedDeltaTime;
             desired = Vector2.MoveTowards(rb.position, target, stepDist);
         }
 
@@ -2449,6 +2574,7 @@ public class BossMalice : Boss
         pendingDamage = 0;
         pendingAirSlashAfterGrapple = false;
         slashSlideRemaining = 0f;
+        shotDefendActive = false;
         pendingConvertToDashJump = false;
         isBossDashJumping = false;
         SoundManager.Instance?.StopMaliceGrapple();
@@ -2572,7 +2698,7 @@ public class BossMalice : Boss
 
         Color purple = Color.Lerp(chargeAuraColor, chargeAuraStrongColor, charge01);
         float flickerSpeed = Mathf.Lerp(auraFlickerSpeed, Mathf.Min(auraFlickerSpeed * 1.75f, 2.4f), charge01);
-        auraFlickerPhase += Time.deltaTime * flickerSpeed;
+        auraFlickerPhase += BossDeltaTime * flickerSpeed;
         float shimmer = 0.5f + 0.5f * Mathf.Sin(auraFlickerPhase * Mathf.PI * 2f);
         float violetMix = shimmer * auraFlickerStrength * Mathf.Lerp(0.55f, 1f, charge01);
         Color auraColor = Color.Lerp(purple, chargeAuraFlickerColor, violetMix);
@@ -2656,7 +2782,7 @@ public class BossMalice : Boss
         enrageAuraRenderer.sortingOrder = CharacterEffectSorting.AuraOrderInGroup - 1;
 
         // Same footprint as charge aura; red palette / flicker distinct from purple charge.
-        enrageAuraFlickerPhase += Time.deltaTime * auraFlickerSpeed * 1.15f;
+        enrageAuraFlickerPhase += BossDeltaTime * auraFlickerSpeed * 1.15f;
         float shimmer = 0.5f + 0.5f * Mathf.Sin(enrageAuraFlickerPhase * Mathf.PI * 2f);
         Color red = Color.Lerp(enrageAuraColor, enrageAuraStrongColor, 0.55f + 0.45f * shimmer);
         Color auraColor = Color.Lerp(red, enrageAuraFlickerColor, shimmer * auraFlickerStrength);
@@ -2718,6 +2844,13 @@ public class BossMalice : Boss
     }
 
     // --- Dash afterimages (player parity) ---
+
+    public void SetCopyBotAfterimageStyle(float grayLevel)
+    {
+        grayLevel = Mathf.Clamp(grayLevel, 0.05f, 1f);
+        dashAfterimageColor = new Color(grayLevel, grayLevel, grayLevel, 1f);
+        slashAfterimageColor = new Color(grayLevel, grayLevel, grayLevel, 1f);
+    }
 
     private void SetupDashAfterimages()
     {
@@ -2996,6 +3129,7 @@ public class BossMalice : Boss
         jumpPrepTimeout = Mathf.Max(minAirTimeBeforeAirAttack + 0.2f, jumpPrepTimeout);
         midRange = Mathf.Max(closeRange, midRange);
         farRange = Mathf.Max(midRange, farRange);
+        slashProjectiles?.Validate();
         slash1Duration = Mathf.Max(0.05f, slash1Duration);
         slash2Duration = Mathf.Max(0.05f, slash2Duration);
         slash3Duration = Mathf.Max(0.05f, slash3Duration);
@@ -3017,6 +3151,11 @@ public class BossMalice : Boss
         dashJumpAssaultCloseMax = Mathf.Max(dashJumpAssaultCloseMin, dashJumpAssaultCloseMax);
         dashJumpMinTravel = Mathf.Max(0.25f, dashJumpMinTravel);
         dashJumpCatchUpCooldown = Mathf.Max(0.05f, dashJumpCatchUpCooldown);
+        shotDefendMinSmallShots = Mathf.Max(4, shotDefendMinSmallShots);
+        shotDefendMaxSeconds = Mathf.Clamp(shotDefendMaxSeconds, 0.8f, 2.5f);
+        shotDefendChance = Mathf.Clamp(shotDefendChance, 0.05f, 0.5f);
+        shotDefendCheckCooldown = Mathf.Max(4f, shotDefendCheckCooldown);
+        shotDefendAfterBurstCooldown = Mathf.Max(8f, shotDefendAfterBurstCooldown);
         groundSlashStep = Mathf.Max(0f, groundSlashStep);
         groundSlashSlideSpeed = Mathf.Max(0.5f, groundSlashSlideSpeed);
         dashEdgeEaseSeconds = Mathf.Max(0.02f, dashEdgeEaseSeconds);

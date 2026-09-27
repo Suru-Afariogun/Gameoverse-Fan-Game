@@ -41,6 +41,7 @@ public class BossLifeBar : MonoBehaviour
     private Boss boundBoss;
     private Coroutine hitFlickerRoutine;
     private bool isFlickering;
+    private bool introCountUpActive;
 
     private void Awake()
     {
@@ -88,7 +89,7 @@ public class BossLifeBar : MonoBehaviour
     /// </summary>
     private void SyncFromBoss(Boss boss)
     {
-        if (boss == null)
+        if (boss == null || introCountUpActive)
             return;
 
         if (boss.CurrentHealth == lastShownHealth)
@@ -128,18 +129,27 @@ public class BossLifeBar : MonoBehaviour
             boundBoss = null;
     }
 
+    public void SetBossOverride(Boss boss)
+    {
+        UnbindBoss(boundBoss);
+        bossOverride = boss;
+        autoFindActiveBoss = boss == null;
+        if (boss != null)
+            BindBoss(boss);
+    }
+
     private Boss GetTrackedBoss()
     {
-        if (bossOverride != null)
+        if (bossOverride != null && !bossOverride.IsDead)
             return bossOverride;
 
-        // Prefer a living boss; otherwise any boss in the scene.
+        // Prefer a living non-decoy boss; otherwise any boss in the scene.
         Boss[] bosses = FindObjectsByType<Boss>(FindObjectsSortMode.None);
         Boss fallback = null;
         for (int i = 0; i < bosses.Length; i++)
         {
             Boss boss = bosses[i];
-            if (boss == null)
+            if (boss == null || boss.IsCopyBotDecoy)
                 continue;
 
             fallback = boss;
@@ -217,7 +227,7 @@ public class BossLifeBar : MonoBehaviour
         if (currentSprite == null)
             return;
 
-        if (playHitFlicker && activeDamagedSprite != null && hitFlickerCycles > 0)
+        if (playHitFlicker && !introCountUpActive && activeDamagedSprite != null && hitFlickerCycles > 0)
         {
             StartHitFlicker(activeDamagedSprite, currentSprite);
             return;
@@ -227,20 +237,80 @@ public class BossLifeBar : MonoBehaviour
         lifeBarSpriteRenderer.sprite = currentSprite;
     }
 
+    /// <summary>
+    /// Mega Man-style boss intro: visually fill the bar from startDisplay to endDisplay.
+    /// Each sprite-band tick plays the UI confirm / button-press sound.
+    /// </summary>
+    public IEnumerator PlayIntroCountUp(Boss boss, int startDisplay, int endDisplay, float duration)
+    {
+        introCountUpActive = true;
+        StopHitFlicker();
+
+        if (boss != null)
+        {
+            UnbindBoss(boundBoss);
+            BindBoss(boss);
+            ApplyCharacterSprites(ResolveCharacterIdForBoss(boss));
+        }
+
+        int max = boss != null ? boss.MaxHealth : Mathf.Max(endDisplay, 1);
+        startDisplay = Mathf.Clamp(startDisplay, 0, max);
+        endDisplay = Mathf.Clamp(endDisplay, startDisplay, max);
+        duration = Mathf.Max(0.05f, duration);
+
+        int lastSpriteIndex = ResolveSpriteIndex(startDisplay, max);
+        SetDisplayedHealth(startDisplay, max, playHitFlicker: false);
+
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+            int display = Mathf.RoundToInt(Mathf.Lerp(startDisplay, endDisplay, t));
+            int spriteIndex = ResolveSpriteIndex(display, max);
+            if (spriteIndex > lastSpriteIndex)
+            {
+                for (int i = lastSpriteIndex + 1; i <= spriteIndex; i++)
+                    SoundManager.Instance?.PlayUiConfirm();
+                lastSpriteIndex = spriteIndex;
+            }
+
+            SetDisplayedHealth(display, max, playHitFlicker: false);
+            yield return null;
+        }
+
+        int endIndex = ResolveSpriteIndex(endDisplay, max);
+        if (endIndex > lastSpriteIndex)
+        {
+            for (int i = lastSpriteIndex + 1; i <= endIndex; i++)
+                SoundManager.Instance?.PlayUiConfirm();
+        }
+
+        SetDisplayedHealth(endDisplay, max, playHitFlicker: false);
+        introCountUpActive = false;
+
+        if (boss != null)
+            lastShownHealth = boss.CurrentHealth;
+    }
+
+    private int ResolveSpriteIndex(int currentHealth, int maxHealth)
+    {
+        if (activeSprites == null || activeSprites.Length == 0)
+            return 0;
+
+        int max = maxHealthOverride > 0 ? maxHealthOverride : Mathf.Max(1, maxHealth);
+        int clamped = Mathf.Clamp(currentHealth, 0, max);
+        float pct = clamped / (float)max;
+        int topIndex = activeSprites.Length - 1;
+        return Mathf.Clamp(Mathf.FloorToInt(pct * topIndex + 0.0001f), 0, topIndex);
+    }
+
     private Sprite ResolveHealthSprite(int currentHealth, int maxHealth)
     {
         if (activeSprites == null || activeSprites.Length == 0)
             return null;
 
-        int max = maxHealthOverride > 0 ? maxHealthOverride : Mathf.Max(1, maxHealth);
-        int clamped = Mathf.Clamp(currentHealth, 0, max);
-        float pct = clamped / (float)max;
-
-        // 11 sprites (0..10): equal percentage bands across MaxHealth.
-        // 100% → top index, 0% → index 0.
-        int topIndex = activeSprites.Length - 1;
-        int spriteIndex = Mathf.FloorToInt(pct * topIndex + 0.0001f);
-        spriteIndex = Mathf.Clamp(spriteIndex, 0, topIndex);
+        int spriteIndex = ResolveSpriteIndex(currentHealth, maxHealth);
         return activeSprites[spriteIndex];
     }
 

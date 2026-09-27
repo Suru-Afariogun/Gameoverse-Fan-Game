@@ -2,8 +2,9 @@ using System;
 using UnityEngine;
 
 /// <summary>
-/// Temporary Kit attack-style pick (Item Shop placeholders). Malice ignores this.
-/// Resets to Normal on first HomeTown load each session; Kaboodle picks persist until then.
+/// Session attack-style pick from the Item Shop.
+/// Kit: Spread Shot / Machine Gun. Malice: Life Steal / Cruel Claw (same slots).
+/// Resets to Normal on first HomeTown load each session.
 /// </summary>
 public enum AttackStyleId
 {
@@ -27,15 +28,47 @@ public static class PlayerAttackStyle
 
     public static string DisplayName(AttackStyleId style)
     {
+        if (IsHarlieSelected())
+        {
+            switch (style)
+            {
+                case AttackStyleId.SpreadShot:
+                    return "Speed Style";
+                case AttackStyleId.MachineGun:
+                    return "Heavy Style";
+                default:
+                    return "Normal";
+            }
+        }
+
+        bool malice = IsMaliceSelected();
         switch (style)
         {
             case AttackStyleId.SpreadShot:
-                return "Spread Shot";
+                return malice ? "Life Steal" : "Spread Shot";
             case AttackStyleId.MachineGun:
-                return "Machine Gun";
+                return malice ? "Cruel Claw" : "Machine Gun";
             default:
                 return "Normal";
         }
+    }
+
+    public static bool IsHarlieSelected()
+    {
+        if (PlayerController.Active != null &&
+            string.Equals(PlayerController.Active.CharacterId, "Harlie", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return string.Equals(PlayerSpawner.SelectedCharacterId, "Harlie", StringComparison.OrdinalIgnoreCase);
+    }
+
+    public static bool IsMaliceSelected()
+    {
+        if (PlayerController.Active != null &&
+            string.Equals(PlayerController.Active.CharacterId, "Malice", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return string.Equals(PlayerSpawner.SelectedCharacterId, "Malice", StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>Equip a style. Use Attack on the equipped shop button (Kaboodle) to clear back to Normal.</summary>

@@ -225,6 +225,7 @@ MonoBehaviour:
   firePointFlipCenterLocal: {x: 0, y: 0}
   moveSpeed: 6
   jumpForce: 16
+  coyoteTime: 0.4
   fallMultiplier: 2.5
   spriteFacesLeft: 1
   upAimThreshold: 0.35
@@ -248,12 +249,33 @@ MonoBehaviour:
   dashAfterimageAlphaStart: 0.55
   dashAfterimageAlphaEnd: 0.15
   dashAfterimageLifetimePadding: 0.15
+  platformSeparationDistance: 0.06
+  platformTopNormalThreshold: 0.55
+  wallSlideAcceleration: 20
+  wallSlideMaxFallSpeed: 11
+  wallProbeDistance: 0.55
+  wallProbeSize: {x: 0.12, y: 1.1}
+  wallJumpCoyoteTime: 0.12
+  wallBounceShallowDistance: 5
+  wallBounceSteepClimbHeight: 2.759
+  wallBounceSteepClimbSpeedMultiplier: 1.45
+  wallBounceSteepWallSeparation: 0.2
+  wallBounceShallowAngleDeg: 45
+  wallBounceCooldown: 0.2
+  wallBounceLaunchSpeedMultiplier: 1.32
+  wallBounceCommitVelocityRestore: 96
   hitStunDuration: 0.5
   hitInvincibilityDuration: 1.5
+  invincibilityFlickerAlphaHigh: 0.8
+  invincibilityFlickerAlphaLow: 0.75
+  invincibilityFlickerHalfPeriod: 0.08
+  hitKnockbackDistance: 3
+  hitKnockbackDuration: 0.6
   stunnedEffectPrefab: {fileID: 5972615910273634524, guid: e1f5bd233756cb441a4a41ad336d286b, type: 3}
   deathEnergyBallPrefab: {fileID: 1951241975811156007, guid: 7eed46c1c08f7fd4781b3fb7cfd83e9e, type: 3}
-  maxHealth: 10
-  currentHealth: 10
+  healedEffectPrefab: {fileID: 1455924060657617027, guid: ec3167a989d4308448e773e2f7a690b6, type: 3}
+  maxHealth: 20
+  currentHealth: 20
   attackHitbox: {fileID: 8248721780678758571}
   dashHitbox: {fileID: 8248721780678758571}
   maliceFirePoint: {fileID: 2584307467456860587}
@@ -267,6 +289,11 @@ MonoBehaviour:
   maliceDashJumpMomentumDuration: 0.55
   maliceDashJumpMomentumUntilLanded: 1
   dashContactDamage: 2
+  cruelClawAttackBonus: 5
+  cruelClawMoveSpeedPenalty: 0.8
+  lifeStealSlashHeal: 0.5
+  lifeStealGrappleHeal: 1
+  lifeStealRapidWindow: 0.4
   maliceEnableDashAfterimages: 1
   maliceAfterimageCount: 3
   maliceAfterimageSpacing: 0.1
@@ -287,13 +314,46 @@ MonoBehaviour:
   slashHitboxDelay: 0.06
   slashHitboxActiveTime: 0.14
   lockMoveDuringGroundSlash: 1
+  groundSlashStepDistance: 0.3
   airSlashDiveSpeed: 22
   airSlashDiveDownThreshold: 0.35
   airSlashDiveUntilLand: 1
+  maliceMaxAirJumps: 1
+  doubleJumpReferenceForce: 16
+  doubleJumpHeightFraction: 0.4
+  pogoBounceForce: 12
+  pogoRefreshesDoubleJump: 1
+  slashGuardEnabled: 1
+  slashGuardTolerance: 0.8
+  grappleGuardGrace: 1
+  slashProjectiles:
+    enabled: 1
+    smallPurplePrefab: {fileID: 4715001000000000005, guid: f37fec78e088488c8d3478fd625853f1, type: 3}
+    smallRedPrefab: {fileID: 4715002000000000005, guid: 922745e5d327413e99ae016f45e9e454, type: 3}
+    bigPurplePrefab: {fileID: 4715003000000000005, guid: fa0ffbb3ecd04ed183c51a8394543002, type: 3}
+    bigRedPrefab: {fileID: 4715004000000000005, guid: 5db0fa5ada644453afe52de13d4617dd, type: 3}
+    smallPurpleCount: 3
+    smallPurpleSpacing: 0.75
+    smallRedBehind: 0.1
+    smallTravelDistance: 1.5
+    bigRedBehind: 0.2
+    bigTravelDistance: 1
+    travelSeconds: 0.2
+    slash1FireClipTime: 0.1667
+    slash2FireClipTime: 0.125
+    slash3FireClipTime: 0.125
+    airSlashFireClipTime: 0.0833
+    smallPairFadeStagger: 0.08
+    eachWaveHitsSeparately: 0
+    knockbackDistance: 1
+    knockbackDuration: 0.12
   pressesPerSpeedTier: 6
-  attackSpeedPerTier: 1
-  maxAttackSpeedTier: 4
+  attackSpeedPerTier: 0.5
+  maxAttackSpeedTier: 1
   attackSpeedIdleResetSeconds: 0.7
+  dashCancelSlashSpeedMul: 1.5
+  dashCancelSlashWindow: 0.2
+  dashIFrameStartNormalized: 0.5
   mediumChargeSeconds: 1.5
   bigChargeSeconds: 3
   auraDelayAfterPress: 0.2
@@ -306,9 +366,6 @@ MonoBehaviour:
   grappleHitboxActiveTime: 0.35
   grapplePullSpeed: 18
   grapplePullArriveDistance: 0.03
-  grapplePullLatchLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
   grapplePullAnchorFrame: 8
   grappleAirPullAnchorFrame: 8
   grapplePullAnchorFrameRateFallback: 60

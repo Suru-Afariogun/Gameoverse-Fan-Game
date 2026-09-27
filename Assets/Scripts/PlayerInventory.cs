@@ -2,8 +2,8 @@ using System;
 using UnityEngine;
 
 /// <summary>
-/// Shared run inventory: Juice, Hotdogs, Lives.
-/// Persists across scenes via DontDestroyOnLoad.
+/// Shared run inventory: Juice, Hotdogs, Lives, Crystals.
+/// Persists across scenes via DontDestroyOnLoad; crystals are also saved across game sessions.
 /// </summary>
 public class PlayerInventory : MonoBehaviour
 {
@@ -12,11 +12,16 @@ public class PlayerInventory : MonoBehaviour
     const string PrefsJuice = "Gameoverse_Juice";
     const string PrefsHotdogs = "Gameoverse_Hotdogs";
     const string PrefsLives = "Gameoverse_Lives";
+    const string PrefsCrystals = "Gameoverse_Crystals";
+
+    public const int HotDogCrystalCost = 50;
+    public const int JuiceBoxCrystalCost = 20;
 
     [Header("Defaults")]
     [SerializeField] private int startingLives = 3;
     [SerializeField] private int startingJuice;
     [SerializeField] private int startingHotdogs;
+    [SerializeField] private int startingCrystals;
     [SerializeField] private bool persistBetweenSessions;
 
     [Header("Item Effects")]
@@ -26,10 +31,12 @@ public class PlayerInventory : MonoBehaviour
     private int juiceCount;
     private int hotdogCount;
     private int livesCount;
+    private int crystalCount;
 
     public int JuiceCount => juiceCount;
     public int HotdogCount => hotdogCount;
     public int LivesCount => livesCount;
+    public int CrystalCount => crystalCount;
     public int JuiceHealAmount => juiceHealAmount;
 
     public event Action OnInventoryChanged;
@@ -78,17 +85,23 @@ public class PlayerInventory : MonoBehaviour
             livesCount = Mathf.Max(0, startingLives);
         }
 
+        // Crystals are the upgrade-shop currency, so they are always saved permanently.
+        crystalCount = Mathf.Max(0, PlayerPrefs.GetInt(PrefsCrystals, startingCrystals));
+
         NotifyChanged();
     }
 
     private void Save()
     {
-        if (!persistBetweenSessions)
-            return;
+        PlayerPrefs.SetInt(PrefsCrystals, crystalCount);
 
-        PlayerPrefs.SetInt(PrefsJuice, juiceCount);
-        PlayerPrefs.SetInt(PrefsHotdogs, hotdogCount);
-        PlayerPrefs.SetInt(PrefsLives, livesCount);
+        if (persistBetweenSessions)
+        {
+            PlayerPrefs.SetInt(PrefsJuice, juiceCount);
+            PlayerPrefs.SetInt(PrefsHotdogs, hotdogCount);
+            PlayerPrefs.SetInt(PrefsLives, livesCount);
+        }
+
         PlayerPrefs.Save();
     }
 
@@ -120,6 +133,44 @@ public class PlayerInventory : MonoBehaviour
             return;
         livesCount += amount;
         NotifyChanged();
+    }
+
+    public void AddCrystals(int amount = 1)
+    {
+        if (amount <= 0)
+            return;
+        crystalCount += amount;
+        NotifyChanged();
+    }
+
+    public bool TrySpendCrystals(int amount)
+    {
+        if (amount <= 0 || crystalCount < amount)
+            return false;
+
+        crystalCount -= amount;
+        NotifyChanged();
+        return true;
+    }
+
+    /// <summary>Future shop hook: buy a Hot Dog for 50 crystals.</summary>
+    public bool TryBuyHotDogWithCrystals()
+    {
+        if (!TrySpendCrystals(HotDogCrystalCost))
+            return false;
+
+        AddHotdogs(1);
+        return true;
+    }
+
+    /// <summary>Future shop hook: buy a Juice Box for 20 crystals.</summary>
+    public bool TryBuyJuiceBoxWithCrystals()
+    {
+        if (!TrySpendCrystals(JuiceBoxCrystalCost))
+            return false;
+
+        AddJuice(1);
+        return true;
     }
 
     public void ResetLivesToStarting()
@@ -177,9 +228,6 @@ public class PlayerInventory : MonoBehaviour
 
     private static PlayerController GetActivePlayer()
     {
-        if (PlayerSpawner.Instance != null && PlayerSpawner.Instance.CurrentPlayer != null)
-            return PlayerSpawner.Instance.CurrentPlayer;
-
-        return FindFirstObjectByType<PlayerController>();
+        return PlayerController.ResolveActive();
     }
 }

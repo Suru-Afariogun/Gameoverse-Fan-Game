@@ -20,7 +20,7 @@ public class Background : MonoBehaviour
     [SerializeField] private float factorPerLayer = 0.08f;
     [SerializeField] private float minimumParallaxFactor = 0.05f;
     [SerializeField] private bool followX = true;
-    [SerializeField] private bool followY = false;
+    [SerializeField] private bool followY = true;
 
     private float parallaxFactor = 1f;
     private Vector3 startPosition;
@@ -37,7 +37,30 @@ public class Background : MonoBehaviour
     private void Start()
     {
         ResolveCamera();
+        EnsureStageBackdropFollowsY();
         CacheStartPositions();
+    }
+
+    /// <summary>
+    /// Factory / sky segments must scroll vertically with the camera or the view exposes clear color.
+    /// </summary>
+    private void EnsureStageBackdropFollowsY()
+    {
+        if (followY)
+            return;
+
+        Transform node = transform;
+        while (node != null)
+        {
+            if (string.Equals(node.name, "Sky Background", System.StringComparison.OrdinalIgnoreCase)
+                || node.name.StartsWith("Factory Background", System.StringComparison.Ordinal))
+            {
+                followY = true;
+                return;
+            }
+
+            node = node.parent;
+        }
     }
 
     private void LateUpdate()
