@@ -1,0 +1,1040 @@
+fileFormatVersion: 2
+guid: 8cb73829182f1294bb7bcc41ee0fab4f
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -8770174175713727021
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_0
+  - first:
+      213: 3961256883521910882
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_1
+  - first:
+      213: 405733518078250197
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_2
+  - first:
+      213: 5151829909453374644
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_3
+  - first:
+      213: 4308166495857518039
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_4
+  - first:
+      213: 4878311368431925498
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_5
+  - first:
+      213: 1234609272552915189
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_6
+  - first:
+      213: 1275413490357511168
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_7
+  - first:
+      213: 8567727466000680331
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_8
+  - first:
+      213: 8317029934861410764
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_9
+  - first:
+      213: -1250369951806715124
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_10
+  - first:
+      213: -3326767250920366430
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_11
+  - first:
+      213: -7276811175978043933
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_12
+  - first:
+      213: 2544254940862124185
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_13
+  - first:
+      213: -539370557986419436
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_14
+  - first:
+      213: 7822834201283140131
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_15
+  - first:
+      213: -7803215666910320271
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_16
+  - first:
+      213: -8933967705836621684
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_17
+  - first:
+      213: -1966666294550236378
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_18
+  - first:
+      213: -7379796119954497087
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_19
+  - first:
+      213: -7674864027337231342
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_20
+  - first:
+      213: -3897066502184543918
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_21
+  - first:
+      213: 4815077470843765072
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_22
+  - first:
+      213: 3148545931257523058
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_23
+  - first:
+      213: 5271297533661876478
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_24
+  - first:
+      213: -7613730498556596694
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_25
+  - first:
+      213: 4863739988268552885
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_26
+  - first:
+      213: 3883412184321816033
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_27
+  - first:
+      213: 2471241876827474363
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_28
+  - first:
+      213: 2669431166673600009
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_29
+  - first:
+      213: -5070760352030105458
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_30
+  - first:
+      213: 2043678778178202305
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_31
+  - first:
+      213: -5857356918575950163
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_32
+  - first:
+      213: 8225213398488814514
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_33
+  - first:
+      213: 4659333100602841374
+    second: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_34
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 2919
+        width: 1921
+        height: 1081
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3dd6746bd051a4680800000000000000
+      internalID: -8770174175713727021
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_1
+      rect:
+        serializedVersion: 2
+        x: 51
+        y: 1993
+        width: 318
+        height: 750
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 268f46ed52639f630800000000000000
+      internalID: 3961256883521910882
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_2
+      rect:
+        serializedVersion: 2
+        x: 670
+        y: 1819
+        width: 1262
+        height: 879
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5dc068a2c7471a500800000000000000
+      internalID: 405733518078250197
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_3
+      rect:
+        serializedVersion: 2
+        x: 90
+        y: 1800
+        width: 50
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4b48330d10afe7740800000000000000
+      internalID: 5151829909453374644
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_4
+      rect:
+        serializedVersion: 2
+        x: 184
+        y: 1763
+        width: 59
+        height: 99
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7d5a3d23a9ea9cb30800000000000000
+      internalID: 4308166495857518039
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_5
+      rect:
+        serializedVersion: 2
+        x: 257
+        y: 1769
+        width: 107
+        height: 49
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: af8722bd75e33b340800000000000000
+      internalID: 4878311368431925498
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_6
+      rect:
+        serializedVersion: 2
+        x: 361
+        y: 1763
+        width: 72
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5f08be69796322110800000000000000
+      internalID: 1234609272552915189
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_7
+      rect:
+        serializedVersion: 2
+        x: 466
+        y: 1806
+        width: 14
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0042082efcd23b110800000000000000
+      internalID: 1275413490357511168
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_8
+      rect:
+        serializedVersion: 2
+        x: 43
+        y: 1326
+        width: 1899
+        height: 429
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b85045f8cbea6e670800000000000000
+      internalID: 8567727466000680331
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_9
+      rect:
+        serializedVersion: 2
+        x: 465
+        y: 1750
+        width: 16
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cc164b509a60c6370800000000000000
+      internalID: 8317029934861410764
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_10
+      rect:
+        serializedVersion: 2
+        x: 61
+        y: 818
+        width: 343
+        height: 339
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c0b0db0572bc5aee0800000000000000
+      internalID: -1250369951806715124
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_11
+      rect:
+        serializedVersion: 2
+        x: 411
+        y: 816
+        width: 343
+        height: 343
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2ae1d7eafc2f4d1d0800000000000000
+      internalID: -3326767250920366430
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_12
+      rect:
+        serializedVersion: 2
+        x: 769
+        y: 810
+        width: 338
+        height: 339
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3e57c362ac2930b90800000000000000
+      internalID: -7276811175978043933
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_13
+      rect:
+        serializedVersion: 2
+        x: 1256
+        y: 785
+        width: 389
+        height: 394
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9909e1083620f4320800000000000000
+      internalID: 2544254940862124185
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_14
+      rect:
+        serializedVersion: 2
+        x: 1826
+        y: 1142
+        width: 126
+        height: 121
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 41d4ae0d555c388f0800000000000000
+      internalID: -539370557986419436
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_15
+      rect:
+        serializedVersion: 2
+        x: 1826
+        y: 986
+        width: 124
+        height: 113
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 32a1248424a409c60800000000000000
+      internalID: 7822834201283140131
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_16
+      rect:
+        serializedVersion: 2
+        x: 1832
+        y: 804
+        width: 126
+        height: 121
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1792c04b1b865b390800000000000000
+      internalID: -7803215666910320271
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_17
+      rect:
+        serializedVersion: 2
+        x: 98
+        y: 471
+        width: 266
+        height: 246
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c80fbcaa4bb240480800000000000000
+      internalID: -8933967705836621684
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_18
+      rect:
+        serializedVersion: 2
+        x: 451
+        y: 474
+        width: 257
+        height: 254
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6237999cc6ff4b4e0800000000000000
+      internalID: -1966666294550236378
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_19
+      rect:
+        serializedVersion: 2
+        x: 812
+        y: 465
+        width: 252
+        height: 249
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1c16e4b5782b59990800000000000000
+      internalID: -7379796119954497087
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_20
+      rect:
+        serializedVersion: 2
+        x: 1403
+        y: 594
+        width: 135
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 214f32f84d76d7590800000000000000
+      internalID: -7674864027337231342
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_21
+      rect:
+        serializedVersion: 2
+        x: 1828
+        y: 532
+        width: 161
+        height: 216
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 259573fe9a6dae9c0800000000000000
+      internalID: -3897066502184543918
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_22
+      rect:
+        serializedVersion: 2
+        x: 1879
+        y: 357
+        width: 68
+        height: 97
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 05101a7c27792d240800000000000000
+      internalID: 4815077470843765072
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_23
+      rect:
+        serializedVersion: 2
+        x: 27
+        y: 221
+        width: 152
+        height: 85
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 27b2b9fb7d1e1bb20800000000000000
+      internalID: 3148545931257523058
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_24
+      rect:
+        serializedVersion: 2
+        x: 224
+        y: 210
+        width: 140
+        height: 97
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ef01f47ad29672940800000000000000
+      internalID: 5271297533661876478
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_25
+      rect:
+        serializedVersion: 2
+        x: 438
+        y: 198
+        width: 106
+        height: 113
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a2ee9f96378965690800000000000000
+      internalID: -7613730498556596694
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_26
+      rect:
+        serializedVersion: 2
+        x: 602
+        y: 194
+        width: 106
+        height: 113
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5b21c9800c97f7340800000000000000
+      internalID: 4863739988268552885
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_27
+      rect:
+        serializedVersion: 2
+        x: 748
+        y: 191
+        width: 106
+        height: 113
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1e5fce27ec6a4e530800000000000000
+      internalID: 3883412184321816033
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_28
+      rect:
+        serializedVersion: 2
+        x: 913
+        y: 189
+        width: 105
+        height: 104
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bb90f5ec46d9b4220800000000000000
+      internalID: 2471241876827474363
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_29
+      rect:
+        serializedVersion: 2
+        x: 1083
+        y: 192
+        width: 114
+        height: 99
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 90ebfe9b089bb0520800000000000000
+      internalID: 2669431166673600009
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_30
+      rect:
+        serializedVersion: 2
+        x: 1246
+        y: 199
+        width: 119
+        height: 94
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e806c1c635a01a9b0800000000000000
+      internalID: -5070760352030105458
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_31
+      rect:
+        serializedVersion: 2
+        x: 1424
+        y: 197
+        width: 97
+        height: 111
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1cae058550b9c5c10800000000000000
+      internalID: 2043678778178202305
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_32
+      rect:
+        serializedVersion: 2
+        x: 1898
+        y: 172
+        width: 63
+        height: 95
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: da69a998aec76bea0800000000000000
+      internalID: -5857356918575950163
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_33
+      rect:
+        serializedVersion: 2
+        x: 1695
+        y: 27
+        width: 56
+        height: 102
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2b395b2c104d52270800000000000000
+      internalID: 8225213398488814514
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_34
+      rect:
+        serializedVersion: 2
+        x: 1738
+        y: 64
+        width: 65
+        height: 77
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e19d6afc4c649a040800000000000000
+      internalID: 4659333100602841374
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_0: -8770174175713727021
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_1: 3961256883521910882
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_10: -1250369951806715124
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_11: -3326767250920366430
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_12: -7276811175978043933
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_13: 2544254940862124185
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_14: -539370557986419436
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_15: 7822834201283140131
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_16: -7803215666910320271
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_17: -8933967705836621684
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_18: -1966666294550236378
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_19: -7379796119954497087
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_2: 405733518078250197
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_20: -7674864027337231342
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_21: -3897066502184543918
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_22: 4815077470843765072
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_23: 3148545931257523058
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_24: 5271297533661876478
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_25: -7613730498556596694
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_26: 4863739988268552885
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_27: 3883412184321816033
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_28: 2471241876827474363
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_29: 2669431166673600009
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_3: 5151829909453374644
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_30: -5070760352030105458
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_31: 2043678778178202305
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_32: -5857356918575950163
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_33: 8225213398488814514
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_34: 4659333100602841374
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_4: 4308166495857518039
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_5: 4878311368431925498
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_6: 1234609272552915189
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_7: 1275413490357511168
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_8: 8567727466000680331
+      Serious Suru RPG mode asset sprite sheet 1 for Juniper dev game Jam_9: 8317029934861410764
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

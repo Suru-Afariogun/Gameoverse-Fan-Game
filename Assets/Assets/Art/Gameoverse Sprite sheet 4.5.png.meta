@@ -1,0 +1,754 @@
+fileFormatVersion: 2
+guid: 679a25da2cc82d54bafe08b77aec3622
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -7917532794505386533
+    second: Gameoverse Sprite sheet 4.5_0
+  - first:
+      213: -6802625827040876867
+    second: Gameoverse Sprite sheet 4.5_1
+  - first:
+      213: 4765444529601883669
+    second: Gameoverse Sprite sheet 4.5_2
+  - first:
+      213: -5972580785648546763
+    second: Gameoverse Sprite sheet 4.5_3
+  - first:
+      213: -559634232553829176
+    second: Gameoverse Sprite sheet 4.5_4
+  - first:
+      213: -4551960241120198807
+    second: Gameoverse Sprite sheet 4.5_5
+  - first:
+      213: -5666786931710719245
+    second: Gameoverse Sprite sheet 4.5_6
+  - first:
+      213: 8403863488268860135
+    second: Gameoverse Sprite sheet 4.5_7
+  - first:
+      213: 254668067829483621
+    second: Gameoverse Sprite sheet 4.5_8
+  - first:
+      213: 1116922310497845859
+    second: Gameoverse Sprite sheet 4.5_9
+  - first:
+      213: 3843342680493743061
+    second: Gameoverse Sprite sheet 4.5_10
+  - first:
+      213: 4199035124154299897
+    second: Gameoverse Sprite sheet 4.5_11
+  - first:
+      213: 2365490471641704655
+    second: Gameoverse Sprite sheet 4.5_12
+  - first:
+      213: -801640371703733327
+    second: Gameoverse Sprite sheet 4.5_13
+  - first:
+      213: 6530951067227077619
+    second: Gameoverse Sprite sheet 4.5_14
+  - first:
+      213: 2833244037157005733
+    second: Gameoverse Sprite sheet 4.5_15
+  - first:
+      213: -6519940110047520555
+    second: Gameoverse Sprite sheet 4.5_16
+  - first:
+      213: -9013249477649806091
+    second: Gameoverse Sprite sheet 4.5_17
+  - first:
+      213: 3117217472508653787
+    second: Gameoverse Sprite sheet 4.5_18
+  - first:
+      213: 2467925631002149238
+    second: Gameoverse Sprite sheet 4.5_19
+  - first:
+      213: 4321523436028364271
+    second: Gameoverse Sprite sheet 4.5_20
+  - first:
+      213: -5024950192774654095
+    second: Gameoverse Sprite sheet 4.5_21
+  - first:
+      213: 3606259389994235674
+    second: Gameoverse Sprite sheet 4.5_22
+  - first:
+      213: -1686581697631060765
+    second: Gameoverse Sprite sheet 4.5_23
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Gameoverse Sprite sheet 4.5_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 3160
+        width: 388
+        height: 840
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bd5200e4fd54f1290800000000000000
+      internalID: -7917532794505386533
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Sprite sheet 4.5_1
+      rect:
+        serializedVersion: 2
+        x: 1621
+        y: 3517
+        width: 342
+        height: 385
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: db6a4572ad73891a0800000000000000
+      internalID: -6802625827040876867
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Sprite sheet 4.5_2
+      rect:
+        serializedVersion: 2
+        x: 2966
+        y: 3567
+        width: 97
+        height: 261
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 51eafbf1d82422240800000000000000
+      internalID: 4765444529601883669
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Sprite sheet 4.5_3
+      rect:
+        serializedVersion: 2
+        x: 3207
+        y: 3785
+        width: 85
+        height: 97
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 53c48176b612d1da0800000000000000
+      internalID: -5972580785648546763
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Sprite sheet 4.5_4
+      rect:
+        serializedVersion: 2
+        x: 426
+        y: 3369
+        width: 212
+        height: 263
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8cc0b7c61a7cb38f0800000000000000
+      internalID: -559634232553829176
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Sprite sheet 4.5_5
+      rect:
+        serializedVersion: 2
+        x: 715
+        y: 3366
+        width: 157
+        height: 135
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 96f345c274034d0c0800000000000000
+      internalID: -4551960241120198807
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Sprite sheet 4.5_6
+      rect:
+        serializedVersion: 2
+        x: 1055
+        y: 3365
+        width: 206
+        height: 185
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3fa8e8d3f478b51b0800000000000000
+      internalID: -5666786931710719245
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Sprite sheet 4.5_7
+      rect:
+        serializedVersion: 2
+        x: 1481
+        y: 3432
+        width: 72
+        height: 68
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7eaf327215580a470800000000000000
+      internalID: 8403863488268860135
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Sprite sheet 4.5_8
+      rect:
+        serializedVersion: 2
+        x: 2106
+        y: 3032
+        width: 531
+        height: 593
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5688c962243c88300800000000000000
+      internalID: 254668067829483621
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Sprite sheet 4.5_9
+      rect:
+        serializedVersion: 2
+        x: 3342
+        y: 3392
+        width: 301
+        height: 304
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 362cee67cea108f00800000000000000
+      internalID: 1116922310497845859
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Sprite sheet 4.5_10
+      rect:
+        serializedVersion: 2
+        x: 1045
+        y: 3138
+        width: 250
+        height: 192
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5db5de41ecb465530800000000000000
+      internalID: 3843342680493743061
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Sprite sheet 4.5_11
+      rect:
+        serializedVersion: 2
+        x: 1413
+        y: 3216
+        width: 131
+        height: 127
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9f5fa9ea238f54a30800000000000000
+      internalID: 4199035124154299897
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Sprite sheet 4.5_12
+      rect:
+        serializedVersion: 2
+        x: 1663
+        y: 3129
+        width: 278
+        height: 290
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fc866c11d09e3d020800000000000000
+      internalID: 2365490471641704655
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Sprite sheet 4.5_13
+      rect:
+        serializedVersion: 2
+        x: 3131
+        y: 3217
+        width: 764
+        height: 98
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1b3acf6445000e4f0800000000000000
+      internalID: -801640371703733327
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Sprite sheet 4.5_14
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 2761
+        width: 3785
+        height: 209
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3fb3787a46992aa50800000000000000
+      internalID: 6530951067227077619
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Sprite sheet 4.5_15
+      rect:
+        serializedVersion: 2
+        x: 43
+        y: 2009
+        width: 2324
+        height: 687
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5a9acbcc074b15720800000000000000
+      internalID: 2833244037157005733
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Sprite sheet 4.5_16
+      rect:
+        serializedVersion: 2
+        x: 3121
+        y: 100
+        width: 689
+        height: 2324
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5d8dbc793058485a0800000000000000
+      internalID: -6519940110047520555
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Sprite sheet 4.5_17
+      rect:
+        serializedVersion: 2
+        x: 57
+        y: 632
+        width: 2934
+        height: 869
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5fc45b4ba518ae280800000000000000
+      internalID: -9013249477649806091
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Sprite sheet 4.5_18
+      rect:
+        serializedVersion: 2
+        x: 160
+        y: 177
+        width: 652
+        height: 217
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bd0f48886c4924b20800000000000000
+      internalID: 3117217472508653787
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Sprite sheet 4.5_19
+      rect:
+        serializedVersion: 2
+        x: 1552
+        y: 378
+        width: 121
+        height: 129
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 67107f72945df3220800000000000000
+      internalID: 2467925631002149238
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Sprite sheet 4.5_20
+      rect:
+        serializedVersion: 2
+        x: 1935
+        y: 8
+        width: 998
+        height: 575
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fe50ffc2ba229fb30800000000000000
+      internalID: 4321523436028364271
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Sprite sheet 4.5_21
+      rect:
+        serializedVersion: 2
+        x: 1389
+        y: 146
+        width: 129
+        height: 121
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 177d2a94c6ac34ab0800000000000000
+      internalID: -5024950192774654095
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Sprite sheet 4.5_22
+      rect:
+        serializedVersion: 2
+        x: 1698
+        y: 145
+        width: 129
+        height: 121
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a17f584fec10c0230800000000000000
+      internalID: 3606259389994235674
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Sprite sheet 4.5_23
+      rect:
+        serializedVersion: 2
+        x: 1545
+        y: 5
+        width: 121
+        height: 129
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3ec7604c1ee0898e0800000000000000
+      internalID: -1686581697631060765
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Gameoverse Sprite sheet 4.5_0: -7917532794505386533
+      Gameoverse Sprite sheet 4.5_1: -6802625827040876867
+      Gameoverse Sprite sheet 4.5_10: 3843342680493743061
+      Gameoverse Sprite sheet 4.5_11: 4199035124154299897
+      Gameoverse Sprite sheet 4.5_12: 2365490471641704655
+      Gameoverse Sprite sheet 4.5_13: -801640371703733327
+      Gameoverse Sprite sheet 4.5_14: 6530951067227077619
+      Gameoverse Sprite sheet 4.5_15: 2833244037157005733
+      Gameoverse Sprite sheet 4.5_16: -6519940110047520555
+      Gameoverse Sprite sheet 4.5_17: -9013249477649806091
+      Gameoverse Sprite sheet 4.5_18: 3117217472508653787
+      Gameoverse Sprite sheet 4.5_19: 2467925631002149238
+      Gameoverse Sprite sheet 4.5_2: 4765444529601883669
+      Gameoverse Sprite sheet 4.5_20: 4321523436028364271
+      Gameoverse Sprite sheet 4.5_21: -5024950192774654095
+      Gameoverse Sprite sheet 4.5_22: 3606259389994235674
+      Gameoverse Sprite sheet 4.5_23: -1686581697631060765
+      Gameoverse Sprite sheet 4.5_3: -5972580785648546763
+      Gameoverse Sprite sheet 4.5_4: -559634232553829176
+      Gameoverse Sprite sheet 4.5_5: -4551960241120198807
+      Gameoverse Sprite sheet 4.5_6: -5666786931710719245
+      Gameoverse Sprite sheet 4.5_7: 8403863488268860135
+      Gameoverse Sprite sheet 4.5_8: 254668067829483621
+      Gameoverse Sprite sheet 4.5_9: 1116922310497845859
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

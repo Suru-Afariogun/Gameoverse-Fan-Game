@@ -1,0 +1,1586 @@
+fileFormatVersion: 2
+guid: 026744f2e7a698a46a77be7c65af186c
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -4493125489152724668
+    second: Gameoverse Fan game sprite sheet 6.7_0
+  - first:
+      213: -8114738502690724527
+    second: Gameoverse Fan game sprite sheet 6.7_1
+  - first:
+      213: -558142720318325909
+    second: Gameoverse Fan game sprite sheet 6.7_2
+  - first:
+      213: 1594559726754220787
+    second: Gameoverse Fan game sprite sheet 6.7_3
+  - first:
+      213: -167039713657266185
+    second: Gameoverse Fan game sprite sheet 6.7_4
+  - first:
+      213: -4315339937436315401
+    second: Gameoverse Fan game sprite sheet 6.7_5
+  - first:
+      213: 8549626588172009510
+    second: Gameoverse Fan game sprite sheet 6.7_6
+  - first:
+      213: 1573583224576764485
+    second: Gameoverse Fan game sprite sheet 6.7_7
+  - first:
+      213: -3875999168272077518
+    second: Gameoverse Fan game sprite sheet 6.7_8
+  - first:
+      213: -2352729282784401452
+    second: Gameoverse Fan game sprite sheet 6.7_9
+  - first:
+      213: 1800091703533504889
+    second: Gameoverse Fan game sprite sheet 6.7_10
+  - first:
+      213: 8893459938988342339
+    second: Gameoverse Fan game sprite sheet 6.7_11
+  - first:
+      213: 7834029213272302013
+    second: Gameoverse Fan game sprite sheet 6.7_12
+  - first:
+      213: -3943361039216225338
+    second: Gameoverse Fan game sprite sheet 6.7_13
+  - first:
+      213: 5338568333722681770
+    second: Gameoverse Fan game sprite sheet 6.7_14
+  - first:
+      213: 1823431029335479233
+    second: Gameoverse Fan game sprite sheet 6.7_15
+  - first:
+      213: 8854071445156761647
+    second: Gameoverse Fan game sprite sheet 6.7_16
+  - first:
+      213: 6519422980531216457
+    second: Gameoverse Fan game sprite sheet 6.7_17
+  - first:
+      213: -6438953937009275973
+    second: Gameoverse Fan game sprite sheet 6.7_18
+  - first:
+      213: -3698734774860398764
+    second: Gameoverse Fan game sprite sheet 6.7_19
+  - first:
+      213: 7086640139866698224
+    second: Gameoverse Fan game sprite sheet 6.7_20
+  - first:
+      213: -5015342887177009658
+    second: Gameoverse Fan game sprite sheet 6.7_21
+  - first:
+      213: -8464054911250157332
+    second: Gameoverse Fan game sprite sheet 6.7_22
+  - first:
+      213: -2216718240537347760
+    second: Gameoverse Fan game sprite sheet 6.7_23
+  - first:
+      213: 4990672266192801099
+    second: Gameoverse Fan game sprite sheet 6.7_24
+  - first:
+      213: 4090866094914287575
+    second: Gameoverse Fan game sprite sheet 6.7_25
+  - first:
+      213: 4168358201266656057
+    second: Gameoverse Fan game sprite sheet 6.7_26
+  - first:
+      213: 4161318307932020704
+    second: Gameoverse Fan game sprite sheet 6.7_27
+  - first:
+      213: 6435763095759810244
+    second: Gameoverse Fan game sprite sheet 6.7_28
+  - first:
+      213: 3715594399784480655
+    second: Gameoverse Fan game sprite sheet 6.7_29
+  - first:
+      213: 2881483193130890628
+    second: Gameoverse Fan game sprite sheet 6.7_30
+  - first:
+      213: 9074846797773976468
+    second: Gameoverse Fan game sprite sheet 6.7_31
+  - first:
+      213: 4965760526836193454
+    second: Gameoverse Fan game sprite sheet 6.7_32
+  - first:
+      213: 7642420070876506667
+    second: Gameoverse Fan game sprite sheet 6.7_33
+  - first:
+      213: -5141729503774213649
+    second: Gameoverse Fan game sprite sheet 6.7_34
+  - first:
+      213: 7535418380314193460
+    second: Gameoverse Fan game sprite sheet 6.7_35
+  - first:
+      213: 4831646931041777115
+    second: Gameoverse Fan game sprite sheet 6.7_36
+  - first:
+      213: 1986775252877089472
+    second: Gameoverse Fan game sprite sheet 6.7_37
+  - first:
+      213: 4808399119720597407
+    second: Gameoverse Fan game sprite sheet 6.7_38
+  - first:
+      213: 2482140500516773067
+    second: Gameoverse Fan game sprite sheet 6.7_39
+  - first:
+      213: -7435024351708700175
+    second: Gameoverse Fan game sprite sheet 6.7_40
+  - first:
+      213: 1772013004443769255
+    second: Gameoverse Fan game sprite sheet 6.7_41
+  - first:
+      213: 1051645714476777322
+    second: Gameoverse Fan game sprite sheet 6.7_42
+  - first:
+      213: 737255535030677768
+    second: Gameoverse Fan game sprite sheet 6.7_43
+  - first:
+      213: 851631196371509004
+    second: Gameoverse Fan game sprite sheet 6.7_44
+  - first:
+      213: 6327921500513817733
+    second: Gameoverse Fan game sprite sheet 6.7_45
+  - first:
+      213: 8521811471463957720
+    second: Gameoverse Fan game sprite sheet 6.7_46
+  - first:
+      213: 5746916555347055720
+    second: Gameoverse Fan game sprite sheet 6.7_47
+  - first:
+      213: 328122627492863847
+    second: Gameoverse Fan game sprite sheet 6.7_48
+  - first:
+      213: -6432281669025864678
+    second: Gameoverse Fan game sprite sheet 6.7_49
+  - first:
+      213: 5639067863275115637
+    second: Gameoverse Fan game sprite sheet 6.7_50
+  - first:
+      213: -8104914497007292971
+    second: Gameoverse Fan game sprite sheet 6.7_51
+  - first:
+      213: 5260674603909518428
+    second: Gameoverse Fan game sprite sheet 6.7_52
+  - first:
+      213: 5525776873510370832
+    second: Gameoverse Fan game sprite sheet 6.7_53
+  - first:
+      213: -2824977695921029866
+    second: Gameoverse Fan game sprite sheet 6.7_54
+  - first:
+      213: -5102150048956752165
+    second: Gameoverse Fan game sprite sheet 6.7_55
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_0
+      rect:
+        serializedVersion: 2
+        x: 52
+        y: 3201
+        width: 652
+        height: 1758
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4417cc75c2635a1c0800000000000000
+      internalID: -4493125489152724668
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_1
+      rect:
+        serializedVersion: 2
+        x: 850
+        y: 2980
+        width: 2987
+        height: 1968
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1552fe55358a26f80800000000000000
+      internalID: -8114738502690724527
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_2
+      rect:
+        serializedVersion: 2
+        x: 827
+        y: 2393
+        width: 566
+        height: 407
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b6bb47d27241148f0800000000000000
+      internalID: -558142720318325909
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_3
+      rect:
+        serializedVersion: 2
+        x: 1730
+        y: 2462
+        width: 232
+        height: 306
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3fa44568f93012610800000000000000
+      internalID: 1594559726754220787
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_4
+      rect:
+        serializedVersion: 2
+        x: 2133
+        y: 2412
+        width: 232
+        height: 349
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7ff5314f34e8eadf0800000000000000
+      internalID: -167039713657266185
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_5
+      rect:
+        serializedVersion: 2
+        x: 2530
+        y: 2406
+        width: 232
+        height: 354
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7f05d08c035dc14c0800000000000000
+      internalID: -4315339937436315401
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_6
+      rect:
+        serializedVersion: 2
+        x: 2977
+        y: 2404
+        width: 232
+        height: 357
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6204a36851066a670800000000000000
+      internalID: 8549626588172009510
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_7
+      rect:
+        serializedVersion: 2
+        x: 409
+        y: 2023
+        width: 75
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 54a69650b9d76d510800000000000000
+      internalID: 1573583224576764485
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_8
+      rect:
+        serializedVersion: 2
+        x: 522
+        y: 2100
+        width: 75
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 23dee69da4fa53ac0800000000000000
+      internalID: -3875999168272077518
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_9
+      rect:
+        serializedVersion: 2
+        x: 634
+        y: 2020
+        width: 75
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4d7e9febe2d695fd0800000000000000
+      internalID: -2352729282784401452
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_10
+      rect:
+        serializedVersion: 2
+        x: 1644
+        y: 2050
+        width: 230
+        height: 306
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9790e38fdd53bf810800000000000000
+      internalID: 1800091703533504889
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_11
+      rect:
+        serializedVersion: 2
+        x: 1965
+        y: 1996
+        width: 230
+        height: 358
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 34c3197e1baeb6b70800000000000000
+      internalID: 8893459938988342339
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_12
+      rect:
+        serializedVersion: 2
+        x: 2334
+        y: 1989
+        width: 230
+        height: 355
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: db1e021201018bc60800000000000000
+      internalID: 7834029213272302013
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_13
+      rect:
+        serializedVersion: 2
+        x: 2743
+        y: 1992
+        width: 230
+        height: 352
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6c3d664170e5649c0800000000000000
+      internalID: -3943361039216225338
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_14
+      rect:
+        serializedVersion: 2
+        x: 3247
+        y: 1764
+        width: 280
+        height: 437
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aa180b45d97661a40800000000000000
+      internalID: 5338568333722681770
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_15
+      rect:
+        serializedVersion: 2
+        x: 3805
+        y: 2040
+        width: 134
+        height: 258
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1c357f73cd02e4910800000000000000
+      internalID: 1823431029335479233
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_16
+      rect:
+        serializedVersion: 2
+        x: 521
+        y: 1930
+        width: 75
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f209f78811bffda70800000000000000
+      internalID: 8854071445156761647
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_17
+      rect:
+        serializedVersion: 2
+        x: 3589
+        y: 1676
+        width: 176
+        height: 254
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 940e41fc8a4a97a50800000000000000
+      internalID: 6519422980531216457
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_18
+      rect:
+        serializedVersion: 2
+        x: 4024
+        y: 1657
+        width: 318
+        height: 298
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bbb8573628d34a6a0800000000000000
+      internalID: -6438953937009275973
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_19
+      rect:
+        serializedVersion: 2
+        x: 4613
+        y: 1825
+        width: 338
+        height: 273
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 45fbf0aa1547bacc0800000000000000
+      internalID: -3698734774860398764
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_20
+      rect:
+        serializedVersion: 2
+        x: 173
+        y: 1740
+        width: 75
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0f177cb19adc85260800000000000000
+      internalID: 7086640139866698224
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_21
+      rect:
+        serializedVersion: 2
+        x: 964
+        y: 1790
+        width: 75
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 606480f673ce56ab0800000000000000
+      internalID: -5015342887177009658
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_22
+      rect:
+        serializedVersion: 2
+        x: 1235
+        y: 1784
+        width: 75
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ce0b88717e2a98a80800000000000000
+      internalID: -8464054911250157332
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_23
+      rect:
+        serializedVersion: 2
+        x: 1723
+        y: 1588
+        width: 221
+        height: 263
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 05974a14182ac31e0800000000000000
+      internalID: -2216718240537347760
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_24
+      rect:
+        serializedVersion: 2
+        x: 2301
+        y: 1589
+        width: 289
+        height: 259
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b4dc0d00cfd624540800000000000000
+      internalID: 4990672266192801099
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_25
+      rect:
+        serializedVersion: 2
+        x: 3804
+        y: 1670
+        width: 134
+        height: 257
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7d73e0bf90da5c830800000000000000
+      internalID: 4090866094914287575
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_26
+      rect:
+        serializedVersion: 2
+        x: 60
+        y: 1663
+        width: 75
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 933d51bf2bbf8d930800000000000000
+      internalID: 4168358201266656057
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_27
+      rect:
+        serializedVersion: 2
+        x: 285
+        y: 1660
+        width: 75
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0ef1e9514f8ffb930800000000000000
+      internalID: 4161318307932020704
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_28
+      rect:
+        serializedVersion: 2
+        x: 668
+        y: 1587
+        width: 75
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4cee45dff6c605950800000000000000
+      internalID: 6435763095759810244
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_29
+      rect:
+        serializedVersion: 2
+        x: 172
+        y: 1570
+        width: 75
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f8fa598ab61709330800000000000000
+      internalID: 3715594399784480655
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_30
+      rect:
+        serializedVersion: 2
+        x: 555
+        y: 1510
+        width: 75
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 48533d882b51df720800000000000000
+      internalID: 2881483193130890628
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_31
+      rect:
+        serializedVersion: 2
+        x: 780
+        y: 1507
+        width: 75
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 493b86cf41550fd70800000000000000
+      internalID: 9074846797773976468
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_32
+      rect:
+        serializedVersion: 2
+        x: 1080
+        y: 1497
+        width: 75
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ea85ab1b3ece9e440800000000000000
+      internalID: 4965760526836193454
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_33
+      rect:
+        serializedVersion: 2
+        x: 1193
+        y: 1574
+        width: 75
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b2ae8ec20945f0a60800000000000000
+      internalID: 7642420070876506667
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_34
+      rect:
+        serializedVersion: 2
+        x: 1305
+        y: 1494
+        width: 75
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fe974642248e4a8b0800000000000000
+      internalID: -5141729503774213649
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_35
+      rect:
+        serializedVersion: 2
+        x: 3195
+        y: 1140
+        width: 279
+        height: 439
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 43ea390b71f239860800000000000000
+      internalID: 7535418380314193460
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_36
+      rect:
+        serializedVersion: 2
+        x: 667
+        y: 1417
+        width: 75
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bd5f9dcd8457d0340800000000000000
+      internalID: 4831646931041777115
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_37
+      rect:
+        serializedVersion: 2
+        x: 1192
+        y: 1404
+        width: 75
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0ca964ce091729b10800000000000000
+      internalID: 1986775252877089472
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_38
+      rect:
+        serializedVersion: 2
+        x: 1741
+        y: 1105
+        width: 243
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f974f3df58ddab240800000000000000
+      internalID: 4808399119720597407
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_39
+      rect:
+        serializedVersion: 2
+        x: 2149
+        y: 1109
+        width: 243
+        height: 352
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bcc99ef52a5527220800000000000000
+      internalID: 2482140500516773067
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_40
+      rect:
+        serializedVersion: 2
+        x: 3569
+        y: 1270
+        width: 176
+        height: 254
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1f1260c9ebc71d890800000000000000
+      internalID: -7435024351708700175
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_41
+      rect:
+        serializedVersion: 2
+        x: 3784
+        y: 1264
+        width: 134
+        height: 257
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7a95e336074779810800000000000000
+      internalID: 1772013004443769255
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_42
+      rect:
+        serializedVersion: 2
+        x: 4004
+        y: 1251
+        width: 318
+        height: 298
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a6f33f89432389e00800000000000000
+      internalID: 1051645714476777322
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_43
+      rect:
+        serializedVersion: 2
+        x: 4609
+        y: 1207
+        width: 369
+        height: 304
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 801b132c0024b3a00800000000000000
+      internalID: 737255535030677768
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_44
+      rect:
+        serializedVersion: 2
+        x: 224
+        y: 1258
+        width: 113
+        height: 101
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c0f5d5b9f0a91db00800000000000000
+      internalID: 851631196371509004
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_45
+      rect:
+        serializedVersion: 2
+        x: 517
+        y: 1085
+        width: 75
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 584dea4f31b41d750800000000000000
+      internalID: 6327921500513817733
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_46
+      rect:
+        serializedVersion: 2
+        x: 630
+        y: 1162
+        width: 75
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8d4457ff16e834670800000000000000
+      internalID: 8521811471463957720
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_47
+      rect:
+        serializedVersion: 2
+        x: 742
+        y: 1082
+        width: 75
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 864d54b982621cf40800000000000000
+      internalID: 5746916555347055720
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_48
+      rect:
+        serializedVersion: 2
+        x: 1072
+        y: 1080
+        width: 75
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 76fda7e8ac9bd8400800000000000000
+      internalID: 328122627492863847
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_49
+      rect:
+        serializedVersion: 2
+        x: 1185
+        y: 1157
+        width: 75
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a14e476d6e1fbb6a0800000000000000
+      internalID: -6432281669025864678
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_50
+      rect:
+        serializedVersion: 2
+        x: 179
+        y: 1095
+        width: 93
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 57495d6385ef14e40800000000000000
+      internalID: 5639067863275115637
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_51
+      rect:
+        serializedVersion: 2
+        x: 1297
+        y: 1077
+        width: 75
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5dd67f6e43f858f80800000000000000
+      internalID: -8104914497007292971
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_52
+      rect:
+        serializedVersion: 2
+        x: 629
+        y: 992
+        width: 75
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c5412f41eaba10940800000000000000
+      internalID: 5260674603909518428
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_53
+      rect:
+        serializedVersion: 2
+        x: 1184
+        y: 987
+        width: 75
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 01e77a52ac08fac40800000000000000
+      internalID: 5525776873510370832
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_54
+      rect:
+        serializedVersion: 2
+        x: 369
+        y: 795
+        width: 195
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 61db930c0c9abc8d0800000000000000
+      internalID: -2824977695921029866
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan game sprite sheet 6.7_55
+      rect:
+        serializedVersion: 2
+        x: 1756
+        y: 617
+        width: 243
+        height: 347
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bded03510958139b0800000000000000
+      internalID: -5102150048956752165
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Gameoverse Fan game sprite sheet 6.7_0: -4493125489152724668
+      Gameoverse Fan game sprite sheet 6.7_1: -8114738502690724527
+      Gameoverse Fan game sprite sheet 6.7_10: 1800091703533504889
+      Gameoverse Fan game sprite sheet 6.7_11: 8893459938988342339
+      Gameoverse Fan game sprite sheet 6.7_12: 7834029213272302013
+      Gameoverse Fan game sprite sheet 6.7_13: -3943361039216225338
+      Gameoverse Fan game sprite sheet 6.7_14: 5338568333722681770
+      Gameoverse Fan game sprite sheet 6.7_15: 1823431029335479233
+      Gameoverse Fan game sprite sheet 6.7_16: 8854071445156761647
+      Gameoverse Fan game sprite sheet 6.7_17: 6519422980531216457
+      Gameoverse Fan game sprite sheet 6.7_18: -6438953937009275973
+      Gameoverse Fan game sprite sheet 6.7_19: -3698734774860398764
+      Gameoverse Fan game sprite sheet 6.7_2: -558142720318325909
+      Gameoverse Fan game sprite sheet 6.7_20: 7086640139866698224
+      Gameoverse Fan game sprite sheet 6.7_21: -5015342887177009658
+      Gameoverse Fan game sprite sheet 6.7_22: -8464054911250157332
+      Gameoverse Fan game sprite sheet 6.7_23: -2216718240537347760
+      Gameoverse Fan game sprite sheet 6.7_24: 4990672266192801099
+      Gameoverse Fan game sprite sheet 6.7_25: 4090866094914287575
+      Gameoverse Fan game sprite sheet 6.7_26: 4168358201266656057
+      Gameoverse Fan game sprite sheet 6.7_27: 4161318307932020704
+      Gameoverse Fan game sprite sheet 6.7_28: 6435763095759810244
+      Gameoverse Fan game sprite sheet 6.7_29: 3715594399784480655
+      Gameoverse Fan game sprite sheet 6.7_3: 1594559726754220787
+      Gameoverse Fan game sprite sheet 6.7_30: 2881483193130890628
+      Gameoverse Fan game sprite sheet 6.7_31: 9074846797773976468
+      Gameoverse Fan game sprite sheet 6.7_32: 4965760526836193454
+      Gameoverse Fan game sprite sheet 6.7_33: 7642420070876506667
+      Gameoverse Fan game sprite sheet 6.7_34: -5141729503774213649
+      Gameoverse Fan game sprite sheet 6.7_35: 7535418380314193460
+      Gameoverse Fan game sprite sheet 6.7_36: 4831646931041777115
+      Gameoverse Fan game sprite sheet 6.7_37: 1986775252877089472
+      Gameoverse Fan game sprite sheet 6.7_38: 4808399119720597407
+      Gameoverse Fan game sprite sheet 6.7_39: 2482140500516773067
+      Gameoverse Fan game sprite sheet 6.7_4: -167039713657266185
+      Gameoverse Fan game sprite sheet 6.7_40: -7435024351708700175
+      Gameoverse Fan game sprite sheet 6.7_41: 1772013004443769255
+      Gameoverse Fan game sprite sheet 6.7_42: 1051645714476777322
+      Gameoverse Fan game sprite sheet 6.7_43: 737255535030677768
+      Gameoverse Fan game sprite sheet 6.7_44: 851631196371509004
+      Gameoverse Fan game sprite sheet 6.7_45: 6327921500513817733
+      Gameoverse Fan game sprite sheet 6.7_46: 8521811471463957720
+      Gameoverse Fan game sprite sheet 6.7_47: 5746916555347055720
+      Gameoverse Fan game sprite sheet 6.7_48: 328122627492863847
+      Gameoverse Fan game sprite sheet 6.7_49: -6432281669025864678
+      Gameoverse Fan game sprite sheet 6.7_5: -4315339937436315401
+      Gameoverse Fan game sprite sheet 6.7_50: 5639067863275115637
+      Gameoverse Fan game sprite sheet 6.7_51: -8104914497007292971
+      Gameoverse Fan game sprite sheet 6.7_52: 5260674603909518428
+      Gameoverse Fan game sprite sheet 6.7_53: 5525776873510370832
+      Gameoverse Fan game sprite sheet 6.7_54: -2824977695921029866
+      Gameoverse Fan game sprite sheet 6.7_55: -5102150048956752165
+      Gameoverse Fan game sprite sheet 6.7_6: 8549626588172009510
+      Gameoverse Fan game sprite sheet 6.7_7: 1573583224576764485
+      Gameoverse Fan game sprite sheet 6.7_8: -3875999168272077518
+      Gameoverse Fan game sprite sheet 6.7_9: -2352729282784401452
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

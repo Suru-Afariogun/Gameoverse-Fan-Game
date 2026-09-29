@@ -1,0 +1,650 @@
+fileFormatVersion: 2
+guid: c92e5467cca65ef4e8f4794be0002e12
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -7433245251117553478
+    second: OC mayhem sprite concepts no background_0
+  - first:
+      213: -71581551693343245
+    second: OC mayhem sprite concepts no background_1
+  - first:
+      213: 6613483362926973249
+    second: OC mayhem sprite concepts no background_2
+  - first:
+      213: 852488945432720288
+    second: OC mayhem sprite concepts no background_3
+  - first:
+      213: -105168062034705642
+    second: OC mayhem sprite concepts no background_4
+  - first:
+      213: -552903890943134310
+    second: OC mayhem sprite concepts no background_5
+  - first:
+      213: -847986614682544358
+    second: OC mayhem sprite concepts no background_6
+  - first:
+      213: -442639294676309650
+    second: OC mayhem sprite concepts no background_7
+  - first:
+      213: -300249527718636748
+    second: OC mayhem sprite concepts no background_8
+  - first:
+      213: 99716908730984913
+    second: OC mayhem sprite concepts no background_9
+  - first:
+      213: 7104736531909109477
+    second: OC mayhem sprite concepts no background_10
+  - first:
+      213: -4645357044527640537
+    second: OC mayhem sprite concepts no background_11
+  - first:
+      213: 6134114505109242054
+    second: OC mayhem sprite concepts no background_12
+  - first:
+      213: 161446106744535657
+    second: OC mayhem sprite concepts no background_13
+  - first:
+      213: 6158361059750334915
+    second: OC mayhem sprite concepts no background_14
+  - first:
+      213: 1787223419382403286
+    second: OC mayhem sprite concepts no background_15
+  - first:
+      213: 7732390821759882301
+    second: OC mayhem sprite concepts no background_16
+  - first:
+      213: -5467622788344108071
+    second: OC mayhem sprite concepts no background_17
+  - first:
+      213: 5897283494184628542
+    second: OC mayhem sprite concepts no background_18
+  - first:
+      213: 6907960138378853366
+    second: OC mayhem sprite concepts no background_19
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: OC mayhem sprite concepts no background_0
+      rect:
+        serializedVersion: 2
+        x: 474
+        y: 3414
+        width: 173
+        height: 395
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ab867ceb3dec7d890800000000000000
+      internalID: -7433245251117553478
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OC mayhem sprite concepts no background_1
+      rect:
+        serializedVersion: 2
+        x: 2049
+        y: 3462
+        width: 220
+        height: 266
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3f5d8de35f0b10ff0800000000000000
+      internalID: -71581551693343245
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OC mayhem sprite concepts no background_2
+      rect:
+        serializedVersion: 2
+        x: 2350
+        y: 3458
+        width: 156
+        height: 214
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 141d73f2410d7cb50800000000000000
+      internalID: 6613483362926973249
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OC mayhem sprite concepts no background_3
+      rect:
+        serializedVersion: 2
+        x: 2663
+        y: 3449
+        width: 227
+        height: 411
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0a3f67fdd26a4db00800000000000000
+      internalID: 852488945432720288
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OC mayhem sprite concepts no background_4
+      rect:
+        serializedVersion: 2
+        x: 2965
+        y: 3450
+        width: 187
+        height: 395
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 61384bc643e5a8ef0800000000000000
+      internalID: -105168062034705642
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OC mayhem sprite concepts no background_5
+      rect:
+        serializedVersion: 2
+        x: 3417
+        y: 3342
+        width: 561
+        height: 616
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a95376137d0b358f0800000000000000
+      internalID: -552903890943134310
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OC mayhem sprite concepts no background_6
+      rect:
+        serializedVersion: 2
+        x: 583
+        y: 2599
+        width: 306
+        height: 411
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a179f81baa85b34f0800000000000000
+      internalID: -847986614682544358
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OC mayhem sprite concepts no background_7
+      rect:
+        serializedVersion: 2
+        x: 1775
+        y: 2611
+        width: 203
+        height: 352
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e69603d18ed6bd9f0800000000000000
+      internalID: -442639294676309650
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OC mayhem sprite concepts no background_8
+      rect:
+        serializedVersion: 2
+        x: 1412
+        y: 2151
+        width: 201
+        height: 322
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4331a5435ac45dbf0800000000000000
+      internalID: -300249527718636748
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OC mayhem sprite concepts no background_9
+      rect:
+        serializedVersion: 2
+        x: 2750
+        y: 2247
+        width: 146
+        height: 160
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1d9a20b0004426100800000000000000
+      internalID: 99716908730984913
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OC mayhem sprite concepts no background_10
+      rect:
+        serializedVersion: 2
+        x: 420
+        y: 1654
+        width: 156
+        height: 214
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5e6ee27bb38199260800000000000000
+      internalID: 7104736531909109477
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OC mayhem sprite concepts no background_11
+      rect:
+        serializedVersion: 2
+        x: 1365
+        y: 1731
+        width: 168
+        height: 321
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 72052125160688fb0800000000000000
+      internalID: -4645357044527640537
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OC mayhem sprite concepts no background_12
+      rect:
+        serializedVersion: 2
+        x: 464
+        y: 833
+        width: 220
+        height: 266
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6c08b9874a0c02550800000000000000
+      internalID: 6134114505109242054
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OC mayhem sprite concepts no background_13
+      rect:
+        serializedVersion: 2
+        x: 1439
+        y: 801
+        width: 144
+        height: 155
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 96ab0e2f0629d3200800000000000000
+      internalID: 161446106744535657
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OC mayhem sprite concepts no background_14
+      rect:
+        serializedVersion: 2
+        x: 1658
+        y: 800
+        width: 144
+        height: 155
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3c1540561c4e67550800000000000000
+      internalID: 6158361059750334915
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OC mayhem sprite concepts no background_15
+      rect:
+        serializedVersion: 2
+        x: 2948
+        y: 743
+        width: 299
+        height: 234
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6d01c861b3e7dc810800000000000000
+      internalID: 1787223419382403286
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OC mayhem sprite concepts no background_16
+      rect:
+        serializedVersion: 2
+        x: 597
+        y: 252
+        width: 126
+        height: 134
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d341d730c78fe4b60800000000000000
+      internalID: 7732390821759882301
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OC mayhem sprite concepts no background_17
+      rect:
+        serializedVersion: 2
+        x: 726
+        y: 150
+        width: 199
+        height: 249
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9db2beeea0a1f14b0800000000000000
+      internalID: -5467622788344108071
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OC mayhem sprite concepts no background_18
+      rect:
+        serializedVersion: 2
+        x: 903
+        y: 306
+        width: 84
+        height: 154
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e3136a2c71c57d150800000000000000
+      internalID: 5897283494184628542
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OC mayhem sprite concepts no background_19
+      rect:
+        serializedVersion: 2
+        x: 3026
+        y: 244
+        width: 529
+        height: 416
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6fb31aa55210edf50800000000000000
+      internalID: 6907960138378853366
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      OC mayhem sprite concepts no background_0: -7433245251117553478
+      OC mayhem sprite concepts no background_1: -71581551693343245
+      OC mayhem sprite concepts no background_10: 7104736531909109477
+      OC mayhem sprite concepts no background_11: -4645357044527640537
+      OC mayhem sprite concepts no background_12: 6134114505109242054
+      OC mayhem sprite concepts no background_13: 161446106744535657
+      OC mayhem sprite concepts no background_14: 6158361059750334915
+      OC mayhem sprite concepts no background_15: 1787223419382403286
+      OC mayhem sprite concepts no background_16: 7732390821759882301
+      OC mayhem sprite concepts no background_17: -5467622788344108071
+      OC mayhem sprite concepts no background_18: 5897283494184628542
+      OC mayhem sprite concepts no background_19: 6907960138378853366
+      OC mayhem sprite concepts no background_2: 6613483362926973249
+      OC mayhem sprite concepts no background_3: 852488945432720288
+      OC mayhem sprite concepts no background_4: -105168062034705642
+      OC mayhem sprite concepts no background_5: -552903890943134310
+      OC mayhem sprite concepts no background_6: -847986614682544358
+      OC mayhem sprite concepts no background_7: -442639294676309650
+      OC mayhem sprite concepts no background_8: -300249527718636748
+      OC mayhem sprite concepts no background_9: 99716908730984913
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

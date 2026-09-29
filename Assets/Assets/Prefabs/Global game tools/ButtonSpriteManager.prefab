@@ -1,0 +1,193 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1749718138412498697
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3123405889881800837}
+  - component: {fileID: 7110651244532136649}
+  m_Layer: 0
+  m_Name: ButtonSpriteManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3123405889881800837
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1749718138412498697}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7110651244532136649
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1749718138412498697}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a7d3e91c4f8b42a6b5e0c1d9f2a84763, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonSpriteManager
+  actions:
+  - actionName: Jump
+    playStation: {fileID: -8924790388127443894, guid: 53648e0d7fe713944941b497fa5b9095, type: 3}
+    xbox: {fileID: -5581493462606921049, guid: 53648e0d7fe713944941b497fa5b9095, type: 3}
+    switchController: {fileID: -4319185928411339615, guid: 53648e0d7fe713944941b497fa5b9095, type: 3}
+    keyboard: {fileID: -594583332511133583, guid: d18e0710e360bfa4ea221d23f7456736, type: 3}
+    defaultSprite: {fileID: -594583332511133583, guid: d18e0710e360bfa4ea221d23f7456736, type: 3}
+    playStationLabel: 
+    xboxLabel: 
+    switchLabel: 
+    keyboardLabel: Space
+    defaultLabel: 
+  - actionName: Attack
+    playStation: {fileID: 1633258215198994986, guid: 53648e0d7fe713944941b497fa5b9095, type: 3}
+    xbox: {fileID: -826106692849935533, guid: 53648e0d7fe713944941b497fa5b9095, type: 3}
+    switchController: {fileID: -8040415455311722407, guid: 53648e0d7fe713944941b497fa5b9095, type: 3}
+    keyboard: {fileID: -8871952068328777779, guid: d18e0710e360bfa4ea221d23f7456736, type: 3}
+    defaultSprite: {fileID: -8871952068328777779, guid: d18e0710e360bfa4ea221d23f7456736, type: 3}
+    playStationLabel: 
+    xboxLabel: 
+    switchLabel: 
+    keyboardLabel: M
+    defaultLabel: 
+  - actionName: Dash
+    playStation: {fileID: -5654287350464503061, guid: 53648e0d7fe713944941b497fa5b9095, type: 3}
+    xbox: {fileID: -4319185928411339615, guid: 53648e0d7fe713944941b497fa5b9095, type: 3}
+    switchController: {fileID: -5581493462606921049, guid: 53648e0d7fe713944941b497fa5b9095, type: 3}
+    keyboard: {fileID: -8871952068328777779, guid: d18e0710e360bfa4ea221d23f7456736, type: 3}
+    defaultSprite: {fileID: -8871952068328777779, guid: d18e0710e360bfa4ea221d23f7456736, type: 3}
+    playStationLabel: 
+    xboxLabel: 
+    switchLabel: 
+    keyboardLabel: N
+    defaultLabel: 
+  - actionName: Confirm
+    playStation: {fileID: -5654287350464503061, guid: 53648e0d7fe713944941b497fa5b9095, type: 3}
+    xbox: {fileID: -4319185928411339615, guid: 53648e0d7fe713944941b497fa5b9095, type: 3}
+    switchController: {fileID: -5581493462606921049, guid: 53648e0d7fe713944941b497fa5b9095, type: 3}
+    keyboard: {fileID: -8871952068328777779, guid: d18e0710e360bfa4ea221d23f7456736, type: 3}
+    defaultSprite: {fileID: -8871952068328777779, guid: d18e0710e360bfa4ea221d23f7456736, type: 3}
+    playStationLabel: 
+    xboxLabel: 
+    switchLabel: 
+    keyboardLabel: M
+    defaultLabel: 
+  - actionName: Quit/Back
+    playStation: {fileID: -8924790388127443894, guid: 53648e0d7fe713944941b497fa5b9095, type: 3}
+    xbox: {fileID: -5581493462606921049, guid: 53648e0d7fe713944941b497fa5b9095, type: 3}
+    switchController: {fileID: -4319185928411339615, guid: 53648e0d7fe713944941b497fa5b9095, type: 3}
+    keyboard: {fileID: -8871952068328777779, guid: d18e0710e360bfa4ea221d23f7456736, type: 3}
+    defaultSprite: {fileID: -8871952068328777779, guid: d18e0710e360bfa4ea221d23f7456736, type: 3}
+    playStationLabel: 
+    xboxLabel: 
+    switchLabel: 
+    keyboardLabel: B
+    defaultLabel: 
+  - actionName: Pause
+    playStation: {fileID: 0}
+    xbox: {fileID: 0}
+    switchController: {fileID: 0}
+    keyboard: {fileID: -8871952068328777779, guid: d18e0710e360bfa4ea221d23f7456736, type: 3}
+    defaultSprite: {fileID: -8871952068328777779, guid: d18e0710e360bfa4ea221d23f7456736, type: 3}
+    playStationLabel: 
+    xboxLabel: 
+    switchLabel: 
+    keyboardLabel: ESC
+    defaultLabel: 
+  - actionName: Start
+    playStation: {fileID: 0}
+    xbox: {fileID: 0}
+    switchController: {fileID: 0}
+    keyboard: {fileID: -8871952068328777779, guid: d18e0710e360bfa4ea221d23f7456736, type: 3}
+    defaultSprite: {fileID: -8871952068328777779, guid: d18e0710e360bfa4ea221d23f7456736, type: 3}
+    playStationLabel: 
+    xboxLabel: 
+    switchLabel: 
+    keyboardLabel: Ent
+    defaultLabel: 
+  - actionName: Select
+    playStation: {fileID: 0}
+    xbox: {fileID: 0}
+    switchController: {fileID: 0}
+    keyboard: {fileID: -8871952068328777779, guid: d18e0710e360bfa4ea221d23f7456736, type: 3}
+    defaultSprite: {fileID: -8871952068328777779, guid: d18e0710e360bfa4ea221d23f7456736, type: 3}
+    playStationLabel: 
+    xboxLabel: 
+    switchLabel: 
+    keyboardLabel: Tab
+    defaultLabel: 
+  - actionName: Up
+    playStation: {fileID: 0}
+    xbox: {fileID: 0}
+    switchController: {fileID: 0}
+    keyboard: {fileID: -8871952068328777779, guid: d18e0710e360bfa4ea221d23f7456736, type: 3}
+    defaultSprite: {fileID: -8871952068328777779, guid: d18e0710e360bfa4ea221d23f7456736, type: 3}
+    playStationLabel: 
+    xboxLabel: 
+    switchLabel: 
+    keyboardLabel: ^
+    defaultLabel: 
+  - actionName: Down
+    playStation: {fileID: 0}
+    xbox: {fileID: 0}
+    switchController: {fileID: 0}
+    keyboard: {fileID: -8871952068328777779, guid: d18e0710e360bfa4ea221d23f7456736, type: 3}
+    defaultSprite: {fileID: -8871952068328777779, guid: d18e0710e360bfa4ea221d23f7456736, type: 3}
+    playStationLabel: 
+    xboxLabel: 
+    switchLabel: 
+    keyboardLabel: v
+    defaultLabel: 
+  - actionName: Left
+    playStation: {fileID: 0}
+    xbox: {fileID: 0}
+    switchController: {fileID: 0}
+    keyboard: {fileID: -8871952068328777779, guid: d18e0710e360bfa4ea221d23f7456736, type: 3}
+    defaultSprite: {fileID: -8871952068328777779, guid: d18e0710e360bfa4ea221d23f7456736, type: 3}
+    playStationLabel: 
+    xboxLabel: 
+    switchLabel: 
+    keyboardLabel: <
+    defaultLabel: 
+  - actionName: Right
+    playStation: {fileID: 0}
+    xbox: {fileID: 0}
+    switchController: {fileID: 0}
+    keyboard: {fileID: -8871952068328777779, guid: d18e0710e360bfa4ea221d23f7456736, type: 3}
+    defaultSprite: {fileID: -8871952068328777779, guid: d18e0710e360bfa4ea221d23f7456736, type: 3}
+    playStationLabel: 
+    xboxLabel: 
+    switchLabel: 
+    keyboardLabel: '>'
+    defaultLabel: 
+  - actionName: Movement
+    playStation: {fileID: 0}
+    xbox: {fileID: 0}
+    switchController: {fileID: 0}
+    keyboard: {fileID: 0}
+    defaultSprite: {fileID: -594583332511133583, guid: d18e0710e360bfa4ea221d23f7456736, type: 3}
+    playStationLabel: 
+    xboxLabel: 
+    switchLabel: 
+    keyboardLabel: 
+    defaultLabel: Use Joystick
+  kitButtonColor: {r: 1, g: 0.835, b: 0.29, a: 1}
+  maliceButtonColor: {r: 0.702, g: 0.533, b: 1, a: 1}
+  fallbackDevice: 0
