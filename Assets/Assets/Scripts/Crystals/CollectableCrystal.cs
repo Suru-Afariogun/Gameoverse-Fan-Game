@@ -37,6 +37,6 @@ public class CollectableCrystal : CollectablePickupBase
     protected override void ApplyPickup(PlayerController player)
     {
         if (PlayerInventory.Instance != null)
-            PlayerInventory.Instance.AddCrystals(1);
+            PlayerInventory.Instance.AddCrystals(PlayerGear.CrystalMultiplier(player));
     }
 }

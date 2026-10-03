@@ -53,13 +53,19 @@ public static class PlayerAttackStyle
         }
     }
 
+    /// <summary>Harlie or Hex (Hex shares Harlie's Speed / Heavy Style).</summary>
     public static bool IsHarlieSelected()
     {
-        if (PlayerController.Active != null &&
-            string.Equals(PlayerController.Active.CharacterId, "Harlie", StringComparison.OrdinalIgnoreCase))
+        if (PlayerController.Active != null && IsHarlieStyleCharacter(PlayerController.Active.CharacterId))
             return true;
 
-        return string.Equals(PlayerSpawner.SelectedCharacterId, "Harlie", StringComparison.OrdinalIgnoreCase);
+        return IsHarlieStyleCharacter(PlayerSpawner.SelectedCharacterId);
+    }
+
+    private static bool IsHarlieStyleCharacter(string characterId)
+    {
+        return string.Equals(characterId, "Harlie", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(characterId, "Hex", StringComparison.OrdinalIgnoreCase);
     }
 
     public static bool IsMaliceSelected()

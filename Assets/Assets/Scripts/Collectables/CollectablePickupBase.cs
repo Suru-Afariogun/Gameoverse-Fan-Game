@@ -10,7 +10,8 @@ public abstract class CollectablePickupBase : MonoBehaviour
     {
         Rising,
         Descending,
-        Hover
+        Hover,
+        Held
     }
 
     [Header("Burst")]
@@ -33,7 +34,15 @@ public abstract class CollectablePickupBase : MonoBehaviour
     private float burstOriginY;
     private float hoverY;
     private float activeMaxBurstRiseHeight;
+    private float collectableAfterTime;
     private BurstPhase burstPhase = BurstPhase.Rising;
+    private bool magnetized;
+
+    /// <summary>False for pickups that stay in the world after collection (held items).</summary>
+    protected virtual bool DestroyOnCollect => true;
+
+    /// <summary>Magnet Gear pulls this pickup in. Off for usable items so the held item isn't swapped by accident.</summary>
+    protected virtual bool MagnetPullable => true;
 
     protected virtual void Awake()
     {
@@ -44,6 +53,15 @@ public abstract class CollectablePickupBase : MonoBehaviour
         {
             collectCollider.isTrigger = true;
             collectCollider.enabled = false;
+        }
+
+        // Motion is driven by this script; a dynamic body would fall / get shoved.
+        Rigidbody2D body = GetComponent<Rigidbody2D>();
+        if (body != null)
+        {
+            body.bodyType = RigidbodyType2D.Kinematic;
+            body.linearVelocity = Vector2.zero;
+            body.angularVelocity = 0f;
         }
 
         if (groundLayers.value == 0)
@@ -63,6 +81,13 @@ public abstract class CollectablePickupBase : MonoBehaviour
         hoverY = transform.position.y;
         velocity = Vector2.zero;
         EnableCollection();
+    }
+
+    /// <summary>Burst out, but ignore touches for <paramref name="collectDelay"/> seconds (dropped by a swap).</summary>
+    public void LaunchBurst(Vector2 direction, float collectDelay)
+    {
+        LaunchBurst(direction);
+        collectableAfterTime = Time.time + Mathf.Max(0f, collectDelay);
     }
 
     public void LaunchBurst(Vector2 direction)
@@ -115,16 +140,65 @@ public abstract class CollectablePickupBase : MonoBehaviour
     private void EnableCollection()
     {
         readyToCollect = true;
+        collectableAfterTime = 0f;
         if (collectCollider != null)
             collectCollider.enabled = true;
     }
 
+    /// <summary>Stops all pickup motion and touch collection; the owner moves it from now on.</summary>
+    protected void BeginHeld()
+    {
+        launchedFromSpawn = true;
+        burstActive = false;
+        burstPhase = BurstPhase.Held;
+        velocity = Vector2.zero;
+        readyToCollect = false;
+        if (collectCollider != null)
+            collectCollider.enabled = false;
+    }
+
     private void Update()
     {
+        if (TickMagnet(Time.deltaTime))
+            return;
+
         if (burstActive)
             TickBurst(Time.deltaTime);
         else if (burstPhase == BurstPhase.Hover)
             MaintainHover();
+    }
+
+    /// <summary>Magnet Gear: once the player is in range, fly straight to them until collected.</summary>
+    private bool TickMagnet(float dt)
+    {
+        if (!MagnetPullable || !readyToCollect || burstPhase == BurstPhase.Held || Time.time < collectableAfterTime)
+            return false;
+
+        PlayerController player = PlayerController.Active;
+        if (player == null || player.IsDead)
+        {
+            magnetized = false;
+            return false;
+        }
+
+        Vector3 target = player.BodyCollider != null && player.BodyCollider.enabled
+            ? player.BodyCollider.bounds.center
+            : player.transform.position;
+        target.z = transform.position.z;
+
+        if (!magnetized)
+        {
+            float radius = PlayerGear.MagnetRadius(player);
+            if (radius <= 0f || (target - transform.position).sqrMagnitude > radius * radius)
+                return false;
+
+            magnetized = true;
+            burstActive = false;
+            velocity = Vector2.zero;
+        }
+
+        transform.position = Vector3.MoveTowards(transform.position, target, PlayerGear.MagnetPullSpeed * dt);
+        return true;
     }
 
     private void TickBurst(float dt)
@@ -197,7 +271,18 @@ public abstract class CollectablePickupBase : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (!readyToCollect)
+        TryCollect(other);
+    }
+
+    // Covers a player still overlapping when a collect delay runs out.
+    private void OnTriggerStay2D(Collider2D other)
+    {
+        TryCollect(other);
+    }
+
+    private void TryCollect(Collider2D other)
+    {
+        if (!readyToCollect || Time.time < collectableAfterTime)
             return;
 
         PlayerController player = other.GetComponent<PlayerController>();
@@ -207,9 +292,11 @@ public abstract class CollectablePickupBase : MonoBehaviour
         if (player == null || player.IsDead)
             return;
 
+        readyToCollect = false;
         SoundManager.Instance?.PlayCollectItem();
         ApplyPickup(player);
-        Destroy(gameObject);
+        if (DestroyOnCollect)
+            Destroy(gameObject);
     }
 
     protected abstract void ApplyPickup(PlayerController player);

@@ -6,7 +6,7 @@ using UnityEngine;
 /// </summary>
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(Collider2D))]
-public class CrankyClanky : MonoBehaviour, ICommonEnemy, IEnemyCrystalBoostable
+public class CrankyClanky : MonoBehaviour, ICommonEnemy, IEnemyCrystalBoostable, IForceKillable
 {
     private static readonly int IdleStateHash = Animator.StringToHash("Idle");
     private static readonly int ChaseStateHash = Animator.StringToHash("Chase");
@@ -171,6 +171,18 @@ public class CrankyClanky : MonoBehaviour, ICommonEnemy, IEnemyCrystalBoostable
     public void TakeDamage(int amount)
     {
         ApplyIncomingDamage(amount, stunFromProjectile: false);
+    }
+
+    public void ForceKill()
+    {
+        if (IsDead)
+            return;
+
+        lastDamageFrame = Time.frameCount;
+        currentHealth = 0;
+        PlayHitVisual();
+        SoundManager.Instance?.PlayCrankyClankyHit();
+        Die();
     }
 
     public void TakeDamage(int amount, ProjectileShotType shotType)

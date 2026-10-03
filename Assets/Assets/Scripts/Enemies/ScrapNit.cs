@@ -8,7 +8,7 @@ using UnityEngine;
 /// </summary>
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(Collider2D))]
-public sealed class ScrapNit : MonoBehaviour, ICommonEnemy, IKnockbackReceiver
+public sealed class ScrapNit : MonoBehaviour, ICommonEnemy, IKnockbackReceiver, IForceKillable
 {
     private enum AiState
     {
@@ -201,6 +201,18 @@ public sealed class ScrapNit : MonoBehaviour, ICommonEnemy, IKnockbackReceiver
     public void TakeDamage(int amount)
     {
         ApplyIncomingDamage(amount, stunFromProjectile: false);
+    }
+
+    public void ForceKill()
+    {
+        if (IsDead)
+            return;
+
+        lastDamageFrame = Time.frameCount;
+        currentHealth = 0;
+        PlayHitSpark();
+        SoundManager.Instance?.PlayScrapNitHit();
+        Die();
     }
 
     public void TakeDamage(int amount, ProjectileShotType shotType)

@@ -404,6 +404,9 @@ public class Boss : MonoBehaviour, IDamageable
         return Mathf.Max(1, baseDamage + Mathf.Max(0, crystalAttackBonus));
     }
 
+    /// <summary>Copy Bot HP for this character (0 = use the encounter's default).</summary>
+    public virtual int CopyBotMaxHealthOverride => 0;
+
     /// <summary>
     /// Level-one copy bot: set HP and mark identity without changing prefab type.
     /// </summary>

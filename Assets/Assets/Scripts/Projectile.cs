@@ -91,6 +91,7 @@ public class Projectile : MonoBehaviour
     private bool hasResolvedCombatHit;
     private float maxTravelDistance;
     private float traveledDistance;
+    private bool pierceCommonKills;
 
     [Header("Lifetime End")]
     [Tooltip("When lifetime / max travel ends, scale down over this many seconds instead of popping.")]
@@ -177,6 +178,7 @@ public class Projectile : MonoBehaviour
         countChargedHit = false;
         environmentGraceTimer = Mathf.Max(0f, environmentSpawnGraceSeconds);
         traveledDistance = 0f;
+        ApplyWeaponGear();
         // Expire by distance so Tanker volts (and others) shrink after real travel, not a clock mismatch.
         maxTravelDistance = Mathf.Max(0.05f, speed) * lifetime;
 
@@ -194,6 +196,22 @@ public class Projectile : MonoBehaviour
         lifetimeRoutine = StartCoroutine(CoLifetime());
     }
 
+    /// <summary>Blacksmith Weapon Gear on Kit / Count shots: more damage, faster and farther, kill shots fly on at max.</summary>
+    private void ApplyWeaponGear()
+    {
+        pierceCommonKills = false;
+        if (owner == null)
+            return;
+
+        PlayerController shooter = owner.GetComponentInParent<PlayerController>();
+        if (shooter == null || !shooter.WeaponGearBoostsShots)
+            return;
+
+        damage += PlayerGear.WeaponDamageBonus(shooter);
+        speed *= PlayerGear.WeaponShotSpeedMultiplier(shooter);
+        pierceCommonKills = PlayerGear.WeaponFinisher(shooter);
+    }
+
     /// <summary>
     /// Skip wall/ground despawn briefly so large shots can clear their muzzle without dying in place.
     /// </summary>
@@ -201,6 +219,22 @@ public class Projectile : MonoBehaviour
     {
         environmentGraceTimer = Mathf.Max(environmentGraceTimer, Mathf.Max(0f, seconds));
     }
+
+    /// <summary>Steer a launched shot (Boss Count's boomerang hands). Speed and travel limit are unchanged.</summary>
+    public void SetDirection(Vector2 dir)
+    {
+        if (dir.sqrMagnitude < 0.0001f)
+            return;
+
+        direction = dir.normalized;
+        if (rotateToDirection)
+        {
+            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+            transform.rotation = Quaternion.Euler(0f, 0f, angle);
+        }
+    }
+
+    public Vector2 Direction => direction;
 
     /// <summary>Force shot type (e.g. Medium so Tanker volts stop on walls).</summary>
     public void SetShotType(ProjectileShotType type)
@@ -476,6 +510,10 @@ public class Projectile : MonoBehaviour
         if (damageable.IsDead)
             return;
 
+        // Count's Time Clones fight on the player's side.
+        if (damageable is CountTimeClone && IsPlayerOwned(owner))
+            return;
+
         // Boss-owned shots pass through the crystal (no damage, no despawn).
         if (damageable is Crystal &&
             owner != null &&
@@ -511,6 +549,15 @@ public class Projectile : MonoBehaviour
         TrySpawnCountHealthClock(other);
 
         SoundManager.Instance?.PlayProjectileHit(shotType);
+
+        if (pierceCommonKills && damageable is ICommonEnemy && damageable.IsDead)
+        {
+            hasResolvedCombatHit = false;
+            launched = true;
+            if (hitCollider != null)
+                hitCollider.enabled = true;
+            return;
+        }
 
         if (destroyOnHit)
             Despawn(playHitAnimation: true);
@@ -1056,6 +1103,7 @@ public class Projectile : MonoBehaviour
         }
 
         owner = newOwner;
+        pierceCommonKills = false;
         direction = newDir.sqrMagnitude > 0.0001f ? newDir.normalized : Vector2.left;
 
         if (rotateToDirection)

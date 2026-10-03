@@ -54,6 +54,8 @@ MonoBehaviour:
     prefab: {fileID: 1425409008181505920, guid: 21d75f6d1bcba9e4490944ea837997e1, type: 3}
   - characterId: Count
     prefab: {fileID: 3672412826225818953, guid: d4e5f6478990abcdef1234567890ab10, type: 3}
+  - characterId: Hex
+    prefab: {fileID: 1425409008181505920, guid: fa4d2f5486ad49789863b7658260dadf, type: 3}
   defaultCharacterId: Kit
   spawnPoint: {fileID: 3327100007589403974}
   spawnOnStart: 1

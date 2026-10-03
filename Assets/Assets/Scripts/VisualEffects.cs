@@ -535,14 +535,34 @@ public static class VisualEffects
         if (particlePrefabs == null || particlePrefabs.Length == 0)
             return;
 
+        GameObject[] templates = new GameObject[particlePrefabs.Length];
+        for (int i = 0; i < particlePrefabs.Length; i++)
+            templates[i] = particlePrefabs[i] != null ? particlePrefabs[i].gameObject : null;
+
+        SpawnBlockerSmokeDeath(templates, center, copiesPerPrefab, scatterRadius, riseDistance, riseSpeed, sortReference);
+    }
+
+    /// <summary>Same rising smoke burst as the Blocker Bot death, from any sprite templates (e.g. Item Box pieces).</summary>
+    public static void SpawnBlockerSmokeDeath(
+        GameObject[] particleTemplates,
+        Vector3 center,
+        int copiesPerPrefab,
+        float scatterRadius,
+        float riseDistance,
+        float riseSpeed,
+        SpriteRenderer sortReference)
+    {
+        if (particleTemplates == null || particleTemplates.Length == 0)
+            return;
+
         int sortLayerId = sortReference != null ? sortReference.sortingLayerID : 0;
         int sortOrder = sortReference != null ? sortReference.sortingOrder + 2 : 2;
         int copies = Mathf.Max(1, copiesPerPrefab);
 
-        for (int p = 0; p < particlePrefabs.Length; p++)
+        for (int p = 0; p < particleTemplates.Length; p++)
         {
-            GameVisualEffect prefab = particlePrefabs[p];
-            if (prefab == null)
+            GameObject template = particleTemplates[p];
+            if (template == null)
                 continue;
 
             for (int c = 0; c < copies; c++)
@@ -552,7 +572,7 @@ public static class VisualEffects
                 offset.y = Mathf.Abs(offset.y) * 0.65f + Random.Range(0f, scatterRadius * 0.45f);
                 Vector3 spawnPos = center + (Vector3)offset;
 
-                GameObject go = Object.Instantiate(prefab.gameObject, spawnPos, Quaternion.identity);
+                GameObject go = Object.Instantiate(template, spawnPos, Quaternion.identity);
                 go.SetActive(true);
 
                 SpriteRenderer sr = go.GetComponent<SpriteRenderer>();

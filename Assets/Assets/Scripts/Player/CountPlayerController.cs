@@ -113,6 +113,66 @@ public class CountPlayerController : PlayerController
     [SerializeField] [Range(0f, 1f)] private float countAfterimageAlphaStart = 0.55f;
     [SerializeField] [Range(0f, 1f)] private float countAfterimageAlphaEnd = 0.15f;
 
+    [Header("Count - Ariel Action Float (hold Jump in the air)")]
+    [Tooltip("Ariel Action level that unlocks the float.")]
+    [SerializeField] private int floatMinAerialLevel = 2;
+    [Tooltip("Max fall speed while floating (world units per second).")]
+    [SerializeField] private float floatFallSpeed = 1.6f;
+
+    [Header("Count - Hyper Ability (full health)")]
+    [Tooltip("Extra Hyper Speed seconds per Hyper Ability level.")]
+    [SerializeField] private float hyperSpeedSecondsPerLevel = 1f;
+    [Tooltip("Extra damage on every shot per Hyper Ability level.")]
+    [SerializeField] private int hyperDamagePerLevel = 1;
+
+    [Header("Count - Rewind (Hyper Ability, hold Dash without Up/Down; works at any HP)")]
+    [SerializeField] private int rewindMinHyperLevel = 2;
+    [SerializeField] private float rewindHoldSeconds = 0.8f;
+    [Tooltip("Seconds rewound at the unlock level.")]
+    [SerializeField] private float rewindBaseSeconds = 2f;
+    [Tooltip("Extra seconds rewound per level above the unlock level.")]
+    [SerializeField] private float rewindSecondsPerLevel = 1f;
+    [SerializeField] private float rewindCooldownSeconds = 8f;
+    [SerializeField] private float rewindFlashSeconds = 0.35f;
+    [SerializeField] [Range(0f, 1f)] private float rewindRedTint = 0.4f;
+    [SerializeField] private int rewindGhostCount = 6;
+
+    [Header("Count - Time Clones (Attack Style, Spread / Machine Gun only)")]
+    [Tooltip("Attack Style level where dashing leaves a Time Clone (the last afterimage).")]
+    [SerializeField] private int timeCloneMinStyleLevel = 2;
+    [Tooltip("Max live clones at the unlock level; +1 per level after. At the cap the oldest clone vanishes.")]
+    [SerializeField] private int timeCloneBaseCap = 3;
+    [SerializeField] private int timeCloneHealth = 10;
+    [SerializeField] private float timeCloneShootInterval = 0.6f;
+    [SerializeField] private float timeCloneSearchRadius = 14f;
+    [Tooltip("Machine Gun clones fire this many pellets per volley.")]
+    [SerializeField] private int timeCloneMachineGunPellets = 3;
+    [SerializeField] private float timeCloneMachineGunGap = 0.1f;
+    [SerializeField] private Color timeCloneColor = new Color(1f, 0.45f, 0.45f, 0.8f);
+    [Tooltip("Attack Style level where Count takes over his newest clone instead of dying.")]
+    [SerializeField] private int lastCloneStyleLevel = 5;
+    [SerializeField] private int lastCloneHealth = 10;
+    [SerializeField] private Color lastCloneBodyColor = new Color(1f, 0.62f, 0.62f, 1f);
+
+    private struct RewindSample
+    {
+        public float Time;
+        public Vector3 Position;
+        public int Health;
+        public Sprite Sprite;
+        public bool FlipX;
+    }
+
+    private readonly List<RewindSample> rewindHistory = new List<RewindSample>(512);
+    private float rewindHoldTimer;
+    private float rewindReadyAt;
+    private float rewindTintReleaseAt = -1f;
+    private readonly List<CountTimeClone> timeClones = new List<CountTimeClone>(8);
+    private bool playingAsLastClone;
+    private bool floating;
+    private bool floatTrailUntilLanded;
+    private float lastHyperPool;
+
     private bool isCharging;
     private float chargeTimer;
     private float shootCooldownTimer;
@@ -160,6 +220,23 @@ public class CountPlayerController : PlayerController
     public bool IsHyperSpeedActive => hyperSpeedActive && hyperSpeedRemaining > 0f;
     public bool HyperSpeedCountMovesNormal => IsHyperSpeedActive && hyperSpeedCountMovesNormal;
     public bool IsHyperSpeedOnCooldown => hyperSpeedCooldownRemaining > 0f;
+    public bool IsFloating => floating;
+    public bool IsPlayingAsLastClone => playingAsLastClone;
+
+    public override bool WeaponGearBoostsShots => true;
+
+    private int AerialLevel => PlayerUpgrades.GetActiveLevel(this, UpgradeType.AerialAction);
+    private int HyperLevel => PlayerUpgrades.GetActiveLevel(this, UpgradeType.HyperAbility);
+    private int StyleLevel => PlayerUpgrades.GetActiveLevel(this, UpgradeType.AttackStyle);
+    private int HyperBonusLevel => PlayerUpgrades.IsHyperActive(this) ? HyperLevel : 0;
+    private float HyperSpeedPoolSeconds =>
+        hyperSpeedMaxSeconds + HyperBonusLevel * Mathf.Max(0f, hyperSpeedSecondsPerLevel);
+    private bool RewindUnlocked => HyperLevel >= Mathf.Max(1, rewindMinHyperLevel);
+    private float RewindSeconds =>
+        rewindBaseSeconds + Mathf.Max(0, HyperLevel - rewindMinHyperLevel) * Mathf.Max(0f, rewindSecondsPerLevel);
+    private bool TimeClonesUnlocked =>
+        StyleLevel >= Mathf.Max(1, timeCloneMinStyleLevel) && (UsesSpreadShotStyle() || UsesMachineGunStyle());
+    private int TimeCloneCap => Mathf.Max(1, timeCloneBaseCap + Mathf.Max(0, StyleLevel - timeCloneMinStyleLevel));
 
     protected override void Awake()
     {
@@ -197,12 +274,14 @@ public class CountPlayerController : PlayerController
         SetupDashAfterimages();
         SetupChargeHue();
 
-        hyperSpeedRemaining = hyperSpeedMaxSeconds;
-        hyperSpeedDuration = hyperSpeedMaxSeconds;
+        lastHyperPool = HyperSpeedPoolSeconds;
+        hyperSpeedRemaining = lastHyperPool;
+        hyperSpeedDuration = lastHyperPool;
     }
 
     protected override void OnDestroy()
     {
+        VanishAllTimeClones();
         hyperSpeedWorldTint?.Release();
         EndHyperSpeed(force: true);
         if (chargeHueObject != null)
@@ -215,6 +294,18 @@ public class CountPlayerController : PlayerController
     protected override void OnDisable()
     {
         base.OnDisable();
+        ClearCountExtras();
+    }
+
+    protected override void ClearForVehicleRide()
+    {
+        isCharging = false;
+        ClearCountExtras();
+        base.ClearForVehicleRide();
+    }
+
+    private void ClearCountExtras()
+    {
         machineGunHolding = false;
         machineGunFirstShotQueued = false;
         spreadHolding = false;
@@ -224,6 +315,15 @@ public class CountPlayerController : PlayerController
         CancelPendingShot();
         EndHyperSpeed(force: true);
         SetChargeAuraVisible(false, instant: true);
+        VanishAllTimeClones();
+        rewindHistory.Clear();
+        rewindHoldTimer = 0f;
+        floating = false;
+        if (rewindTintReleaseAt > 0f)
+        {
+            rewindTintReleaseAt = -1f;
+            hyperSpeedWorldTint?.Release();
+        }
     }
 
     protected override void HandleCharacterUpdate()
@@ -233,6 +333,11 @@ public class CountPlayerController : PlayerController
         if (shootCooldownTimer > 0f)
             shootCooldownTimer -= gameplayDt;
 
+        TickFloat();
+        RecordRewindHistory();
+        TickRewindHold();
+        TickRewindTint();
+        SyncHyperSpeedPool();
         TickHyperSpeed(Time.unscaledDeltaTime);
         TickHyperSpeedCooldown(Time.unscaledDeltaTime);
         TickHyperSpeedHold();
@@ -341,6 +446,311 @@ public class CountPlayerController : PlayerController
     /// <summary>Hyper Ability (full health): every press fires a full charge shot, unless Hyper Speed's cooldown weakness is on.</summary>
     private bool HyperMaxChargeReady => PlayerUpgrades.IsHyperActive(this) && !IsHyperSpeedOnCooldown;
 
+    protected override void OnLanded()
+    {
+        base.OnLanded();
+        floatTrailUntilLanded = false;
+    }
+
+    protected override void OnDashEnded()
+    {
+        base.OnDashEnded();
+        TrySpawnTimeClone();
+    }
+
+    protected override void OnTimeFrozenChanged(bool frozen)
+    {
+        if (!frozen)
+            return;
+
+        // Someone else stopped time: Hyper Speed ends (two red washes would restore colors in the wrong order).
+        if (hyperSpeedActive)
+            EndHyperSpeed(force: true);
+        if (rewindTintReleaseAt >= 0f)
+        {
+            rewindTintReleaseAt = -1f;
+            hyperSpeedWorldTint?.Release();
+        }
+        rewindHoldTimer = 0f;
+        floating = false;
+    }
+
+    public override void TakeDamage(int amount, Transform hitSource, bool applyKnockback)
+    {
+        if (TryAutoUseItemAgainstHit(amount))
+            return;
+
+        if (amount > 0 && amount >= currentHealth && currentHealth > 0 && !IsInvincible && !IsRidingVehicle &&
+            !IsScriptedInvulnerable && !IsStarPowered && TryBecomeLastClone())
+            return;
+
+        base.TakeDamage(amount, hitSource, applyKnockback);
+    }
+
+    public override void SetHealth(int value)
+    {
+        if (value <= 0 && currentHealth > 0 && TryBecomeLastClone())
+            return;
+
+        base.SetHealth(value);
+    }
+
+    // ---------- Ariel Action: Float ----------
+
+    /// <summary>Hold Jump in the air to drift down slowly; afterimages trail until he lands.</summary>
+    private void TickFloat()
+    {
+        bool wants = AerialLevel >= Mathf.Max(1, floatMinAerialLevel) &&
+                     !isGrounded && !isDashing && !isStunned && !inputLocked && !IsRidingVehicle && !IsDead &&
+                     controls != null && controls.PlayerControls.Jump.IsPressed();
+
+        if (wants && !floating)
+        {
+            floatTrailUntilLanded = true;
+            BeginDashAfterimageTrail(GetMaxAfterimageDelay());
+        }
+
+        floating = wants;
+        if (floatTrailUntilLanded && !isGrounded)
+            afterimagesVisibleUntil = Mathf.Max(afterimagesVisibleUntil,
+                Time.time + GetMaxAfterimageDelay() + dashAfterimageLifetimePadding);
+    }
+
+    // ---------- Hyper Ability: Rewind ----------
+
+    private void RecordRewindHistory()
+    {
+        if (!RewindUnlocked || IsDead || spriteRenderer == null)
+        {
+            if (rewindHistory.Count > 0)
+                rewindHistory.Clear();
+            return;
+        }
+
+        rewindHistory.Add(new RewindSample
+        {
+            Time = Time.time,
+            Position = transform.position,
+            Health = currentHealth,
+            Sprite = spriteRenderer.sprite,
+            FlipX = spriteRenderer.flipX
+        });
+
+        float cutoff = Time.time - (RewindSeconds + 0.25f);
+        int expired = 0;
+        while (expired < rewindHistory.Count && rewindHistory[expired].Time < cutoff)
+            expired++;
+        if (expired > 0)
+            rewindHistory.RemoveRange(0, expired);
+    }
+
+    private void TickRewindHold()
+    {
+        if (!RewindUnlocked || IsDead || inputLocked || isStunned || IsRidingVehicle || Time.time < rewindReadyAt)
+        {
+            rewindHoldTimer = 0f;
+            return;
+        }
+
+        bool directionHeld = moveInput.y >= upAimThreshold || moveInput.y <= -upAimThreshold;
+        if (!IsDashHeld() || directionHeld)
+        {
+            rewindHoldTimer = 0f;
+            return;
+        }
+
+        rewindHoldTimer += Time.unscaledDeltaTime;
+        if (rewindHoldTimer < rewindHoldSeconds)
+            return;
+
+        rewindHoldTimer = 0f;
+        PerformRewind();
+    }
+
+    /// <summary>Jumps back to where he stood <see cref="RewindSeconds"/> ago and takes back HP lost since then.</summary>
+    private void PerformRewind()
+    {
+        if (rewindHistory.Count == 0)
+            return;
+
+        float targetTime = Time.time - RewindSeconds;
+        int index = 0;
+        for (int i = rewindHistory.Count - 1; i >= 0; i--)
+        {
+            if (rewindHistory[i].Time <= targetTime)
+            {
+                index = i;
+                break;
+            }
+        }
+
+        RewindSample sample = rewindHistory[index];
+        SpawnRewindGhosts(index);
+
+        CancelAllDashState();
+        CancelPendingShot();
+        TeleportTo(sample.Position);
+
+        if (sample.Health > currentHealth)
+            SetHealth(sample.Health);
+
+        rewindHistory.Clear();
+        rewindReadyAt = Time.time + Mathf.Max(0f, rewindCooldownSeconds);
+        FlashTimeTint();
+        SoundManager.Instance?.PlayClockworkTic();
+    }
+
+    private void SpawnRewindGhosts(int oldestIndex)
+    {
+        int newest = rewindHistory.Count - 1;
+        int count = Mathf.Max(0, rewindGhostCount);
+        if (count == 0 || newest <= oldestIndex)
+            return;
+
+        Color ghostColor = countAfterimageColor;
+        ghostColor.a = 0.6f;
+        for (int i = 0; i < count; i++)
+        {
+            float t = count == 1 ? 0f : i / (float)(count - 1);
+            RewindSample s = rewindHistory[Mathf.RoundToInt(Mathf.Lerp(newest, oldestIndex, t))];
+            CountTimeGhost.Spawn(s.Position, s.Sprite, s.FlipX, ghostColor, spriteRenderer, EffectSortingGroup,
+                i * 0.035f, 0.35f);
+        }
+    }
+
+    private void TeleportTo(Vector3 position)
+    {
+        transform.position = position;
+        if (rb == null)
+            return;
+
+        rb.position = position;
+        rb.linearVelocity = Vector2.zero;
+    }
+
+    private void FlashTimeTint()
+    {
+        if (hyperSpeedActive || hyperSpeedWorldTint == null)
+            return;
+
+        hyperSpeedWorldTint.Apply(transform, rewindRedTint);
+        rewindTintReleaseAt = Time.time + Mathf.Max(0.05f, rewindFlashSeconds);
+    }
+
+    private void TickRewindTint()
+    {
+        if (rewindTintReleaseAt < 0f || Time.time < rewindTintReleaseAt)
+            return;
+
+        rewindTintReleaseAt = -1f;
+        if (!hyperSpeedActive)
+            hyperSpeedWorldTint?.Release();
+    }
+
+    // ---------- Attack Style: Time Clones ----------
+
+    /// <summary>The last afterimage of a dash stays behind as a Time Clone.</summary>
+    private void TrySpawnTimeClone()
+    {
+        if (!TimeClonesUnlocked || IsDead || shortHandProjectilePrefab == null || spriteRenderer == null)
+            return;
+
+        if (!TrySamplePose(GetMaxAfterimageDelay(), out PoseSample sample))
+            return;
+
+        PruneTimeClones();
+        while (timeClones.Count >= TimeCloneCap)
+        {
+            CountTimeClone oldest = timeClones[0];
+            timeClones.RemoveAt(0);
+            if (oldest != null)
+                oldest.Vanish();
+        }
+
+        CountTimeClone clone = CountTimeClone.Spawn(
+            this,
+            sample.position,
+            sample.sprite != null ? sample.sprite : spriteRenderer.sprite,
+            sample.flipX,
+            timeCloneColor,
+            shortHandProjectilePrefab,
+            timeCloneHealth,
+            timeCloneShootInterval,
+            timeCloneSearchRadius,
+            spreadShotAngleDegrees,
+            timeCloneMachineGunPellets,
+            timeCloneMachineGunGap);
+
+        if (clone != null)
+            timeClones.Add(clone);
+    }
+
+    private void PruneTimeClones()
+    {
+        for (int i = timeClones.Count - 1; i >= 0; i--)
+        {
+            if (timeClones[i] == null || timeClones[i].IsDead)
+                timeClones.RemoveAt(i);
+        }
+    }
+
+    private void VanishAllTimeClones()
+    {
+        for (int i = 0; i < timeClones.Count; i++)
+        {
+            if (timeClones[i] != null)
+                timeClones[i].Vanish();
+        }
+
+        timeClones.Clear();
+    }
+
+    /// <summary>
+    /// Attack Style max level: a lethal hit moves Count into his newest clone instead. The other clones vanish and he
+    /// keeps fighting with base abilities only (no upgrades) until he goes down again.
+    /// </summary>
+    private bool TryBecomeLastClone()
+    {
+        if (playingAsLastClone || StyleLevel < Mathf.Max(1, lastCloneStyleLevel))
+            return false;
+
+        PruneTimeClones();
+        if (timeClones.Count == 0)
+            return false;
+
+        Vector3 position = timeClones[timeClones.Count - 1].transform.position;
+        VanishAllTimeClones();
+
+        // Before CancelAllDashState: ending a dash would otherwise leave a fresh clone behind.
+        playingAsLastClone = true;
+        UpgradesSuppressed = true;
+
+        EndHyperSpeed(force: true);
+        CancelAllDashState();
+        CancelPendingShot();
+        isCharging = false;
+        chargeTimer = 0f;
+        machineGunHolding = false;
+        spreadHolding = false;
+        SoundManager.Instance?.StopChargeLoop();
+        SetChargeAuraVisible(false, instant: true);
+        TeleportTo(position);
+
+        rewindHistory.Clear();
+        floating = false;
+        floatTrailUntilLanded = false;
+        airDashesRemaining = Mathf.Min(airDashesRemaining, MaxAirDashesWithUpgrades);
+
+        base.SetHealth(Mathf.Max(1, Mathf.Min(lastCloneHealth, maxHealth)));
+        invincibilityTimer = Mathf.Max(invincibilityTimer, hitInvincibilityDuration);
+        if (spriteRenderer != null)
+            spriteRenderer.color = lastCloneBodyColor;
+
+        FlashTimeTint();
+        SoundManager.Instance?.PlayClockworkToc();
+        return true;
+    }
+
     protected override void PerformDashJump()
     {
         jumpRequested = false;
@@ -366,6 +776,14 @@ public class CountPlayerController : PlayerController
     {
         if (rb == null || isGrounded || rb.linearVelocity.y >= 0f)
             return;
+
+        if (floating)
+        {
+            float cap = -Mathf.Max(0.1f, floatFallSpeed);
+            if (rb.linearVelocity.y < cap)
+                rb.linearVelocity = new Vector2(rb.linearVelocity.x, cap);
+            return;
+        }
 
         float mult = fallMultiplier;
         if (CountSlowsWithHyperWorld())
@@ -794,6 +1212,12 @@ public class CountPlayerController : PlayerController
         SpawnShotBurst(aim, longHand, trackMachineGun: false);
         spawningRunShot = false;
 
+        ReportTutorialAction(TutorialAction.Attack);
+        if (aim.y > 0.2f)
+            ReportTutorialAction(TutorialAction.AimShot);
+        if (longHand)
+            ReportTutorialAction(TutorialAction.ChargeAttack);
+
         if (runShoot)
         {
             isShooting = true;
@@ -865,7 +1289,8 @@ public class CountPlayerController : PlayerController
 
         bool chargedHit = longHand || IsFullyChargedForHealthDrop();
         shot.SetCountChargedHit(chargedHit);
-        shot.Launch(dir, prefab.Speed, prefab.Damage, transform);
+        int damage = prefab.Damage + HyperBonusLevel * Mathf.Max(0, hyperDamagePerLevel);
+        shot.Launch(dir, prefab.Speed, damage, transform);
         shot.BeginSpawnBehindOwnerUntilClear(spriteRenderer, EffectSortingGroup, bodyCollider, firePoint, facingSign);
 
         GameVisualEffect blastPrefab = VisualEffects.ResolveBusterBlastPrefab(
@@ -969,9 +1394,29 @@ public class CountPlayerController : PlayerController
         if (hyperSpeedCooldownRemaining <= 0f && hyperSpeedPoolExhaustedForCooldown)
         {
             hyperSpeedPoolExhaustedForCooldown = false;
-            hyperSpeedRemaining = hyperSpeedMaxSeconds;
-            hyperSpeedDuration = hyperSpeedMaxSeconds;
+            lastHyperPool = HyperSpeedPoolSeconds;
+            hyperSpeedRemaining = lastHyperPool;
+            hyperSpeedDuration = lastHyperPool;
         }
+    }
+
+    /// <summary>
+    /// The Hyper Ability bonus seconds come and go with full health. A full, idle pool follows the bonus;
+    /// a partly used pool is only clamped down.
+    /// </summary>
+    private void SyncHyperSpeedPool()
+    {
+        if (hyperSpeedActive || hyperSpeedPoolExhaustedForCooldown)
+            return;
+
+        float pool = HyperSpeedPoolSeconds;
+        if (Mathf.Abs(pool - lastHyperPool) < 0.001f)
+            return;
+
+        hyperSpeedRemaining = hyperSpeedRemaining >= lastHyperPool - 0.01f
+            ? pool
+            : Mathf.Min(hyperSpeedRemaining, pool);
+        lastHyperPool = pool;
     }
 
     private bool CanActivateHyperSpeed()
@@ -1050,9 +1495,9 @@ public class CountPlayerController : PlayerController
             return;
 
         if (hyperSpeedRemaining <= 0.05f)
-            hyperSpeedRemaining = hyperSpeedMaxSeconds;
+            hyperSpeedRemaining = HyperSpeedPoolSeconds;
 
-        hyperSpeedDuration = hyperSpeedMaxSeconds;
+        hyperSpeedDuration = Mathf.Max(HyperSpeedPoolSeconds, hyperSpeedRemaining);
         bool pressingUp = moveInput.y >= upAimThreshold;
         hyperSpeedCountMovesNormal = pressingDown;
         hyperSpeedActive = true;
@@ -1515,6 +1960,26 @@ public class CountPlayerController : PlayerController
         countDashDistance = Mathf.Max(0.1f, countDashDistance);
         countDashSpeed = Mathf.Max(0.1f, countDashSpeed);
         countMaxAirDashes = Mathf.Max(0, countMaxAirDashes);
+        floatMinAerialLevel = Mathf.Max(1, floatMinAerialLevel);
+        floatFallSpeed = Mathf.Max(0.1f, floatFallSpeed);
+        hyperSpeedSecondsPerLevel = Mathf.Max(0f, hyperSpeedSecondsPerLevel);
+        hyperDamagePerLevel = Mathf.Max(0, hyperDamagePerLevel);
+        rewindMinHyperLevel = Mathf.Max(1, rewindMinHyperLevel);
+        rewindHoldSeconds = Mathf.Max(0.1f, rewindHoldSeconds);
+        rewindBaseSeconds = Mathf.Max(0.1f, rewindBaseSeconds);
+        rewindSecondsPerLevel = Mathf.Max(0f, rewindSecondsPerLevel);
+        rewindCooldownSeconds = Mathf.Max(0f, rewindCooldownSeconds);
+        rewindFlashSeconds = Mathf.Max(0.05f, rewindFlashSeconds);
+        rewindGhostCount = Mathf.Max(0, rewindGhostCount);
+        timeCloneMinStyleLevel = Mathf.Max(1, timeCloneMinStyleLevel);
+        timeCloneBaseCap = Mathf.Max(1, timeCloneBaseCap);
+        timeCloneHealth = Mathf.Max(1, timeCloneHealth);
+        timeCloneShootInterval = Mathf.Max(0.1f, timeCloneShootInterval);
+        timeCloneSearchRadius = Mathf.Max(1f, timeCloneSearchRadius);
+        timeCloneMachineGunPellets = Mathf.Max(1, timeCloneMachineGunPellets);
+        timeCloneMachineGunGap = Mathf.Max(0f, timeCloneMachineGunGap);
+        lastCloneStyleLevel = Mathf.Max(1, lastCloneStyleLevel);
+        lastCloneHealth = Mathf.Max(1, lastCloneHealth);
     }
 #endif
 }

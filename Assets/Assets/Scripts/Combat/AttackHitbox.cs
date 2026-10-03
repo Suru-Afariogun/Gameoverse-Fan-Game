@@ -24,6 +24,8 @@ public class AttackHitbox : MonoBehaviour
     private readonly HashSet<int> hitInstanceIds = new HashSet<int>();
 
     public bool IsActive => active;
+    /// <summary>Damage this activation deals (0 for non-damaging boxes).</summary>
+    public int Damage => dealDamage ? damage : 0;
     public PlayerController Owner => ownerPlayer;
     public Boss OwnerBoss => ownerBoss;
     public ICommonEnemy OwnerCommonEnemy => ownerCommonEnemy;

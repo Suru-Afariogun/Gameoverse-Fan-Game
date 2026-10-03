@@ -208,6 +208,15 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Use Item"",
+                    ""type"": ""Button"",
+                    ""id"": ""9cad4138-bcb2-4145-8b26-d4d3cf9e259c"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -529,6 +538,28 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
                     ""action"": ""Quit/Back"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""ee167732-6ee9-4ce2-8489-5503b39615d6"",
+                    ""path"": ""<Keyboard>/v"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Use Item"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""b4313e4d-fe6b-4a9b-9dd2-6fa830653f2b"",
+                    ""path"": ""<Gamepad>/buttonNorth"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Use Item"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -550,6 +581,7 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
         m_PlayerControls_Select = m_PlayerControls.FindAction("Select", throwIfNotFound: true);
         m_PlayerControls_Confirm = m_PlayerControls.FindAction("Confirm", throwIfNotFound: true);
         m_PlayerControls_QuitBack = m_PlayerControls.FindAction("Quit/Back", throwIfNotFound: true);
+        m_PlayerControls_UseItem = m_PlayerControls.FindAction("Use Item", throwIfNotFound: true);
     }
 
     ~@InputActions()
@@ -643,6 +675,7 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
     private readonly InputAction m_PlayerControls_Select;
     private readonly InputAction m_PlayerControls_Confirm;
     private readonly InputAction m_PlayerControls_QuitBack;
+    private readonly InputAction m_PlayerControls_UseItem;
     /// <summary>
     /// Provides access to input actions defined in input action map "PlayerControls".
     /// </summary>
@@ -706,6 +739,10 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "PlayerControls/QuitBack".
         /// </summary>
         public InputAction @QuitBack => m_Wrapper.m_PlayerControls_QuitBack;
+        /// <summary>
+        /// Provides access to the underlying input action "PlayerControls/UseItem".
+        /// </summary>
+        public InputAction @UseItem => m_Wrapper.m_PlayerControls_UseItem;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -771,6 +808,9 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
             @QuitBack.started += instance.OnQuitBack;
             @QuitBack.performed += instance.OnQuitBack;
             @QuitBack.canceled += instance.OnQuitBack;
+            @UseItem.started += instance.OnUseItem;
+            @UseItem.performed += instance.OnUseItem;
+            @UseItem.canceled += instance.OnUseItem;
         }
 
         /// <summary>
@@ -821,6 +861,9 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
             @QuitBack.started -= instance.OnQuitBack;
             @QuitBack.performed -= instance.OnQuitBack;
             @QuitBack.canceled -= instance.OnQuitBack;
+            @UseItem.started -= instance.OnUseItem;
+            @UseItem.performed -= instance.OnUseItem;
+            @UseItem.canceled -= instance.OnUseItem;
         }
 
         /// <summary>
@@ -952,5 +995,12 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnQuitBack(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Use Item" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnUseItem(InputAction.CallbackContext context);
     }
 }

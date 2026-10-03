@@ -28,9 +28,18 @@ public static class PlayerUpgrades
         new Dictionary<(string, UpgradeType), int>();
     private static readonly Dictionary<(string, UpgradeType), bool> EquippedCache =
         new Dictionary<(string, UpgradeType), bool>();
+    // Scouter item: temporary max level, keyed to the Time.time it wears off.
+    private static readonly Dictionary<(string, UpgradeType), float> MaxBoostUntil =
+        new Dictionary<(string, UpgradeType), float>();
 
     public static event Action<string, UpgradeType, int> OnChanged;
     public static event Action<string, UpgradeType, bool> OnEquippedChanged;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        MaxBoostUntil.Clear();
+    }
 
     /// <summary>Bought level, whether or not it is equipped (shop display / pricing).</summary>
     public static int GetLevel(string characterId, UpgradeType type)
@@ -45,13 +54,35 @@ public static class PlayerUpgrades
         return level;
     }
 
-    /// <summary>Level that applies in gameplay: the bought level while equipped, otherwise 0.</summary>
+    /// <summary>
+    /// Level that applies in gameplay: the bought level while equipped, otherwise 0.
+    /// A Scouter boost counts as max level for its duration.
+    /// </summary>
     public static int GetActiveLevel(PlayerController player, UpgradeType type)
     {
-        if (player == null || !IsEquipped(player.CharacterId, type))
+        if (player == null || player.UpgradesSuppressed)
+            return 0;
+
+        if (IsMaxBoosted(player.CharacterId, type))
+            return MaxLevel;
+
+        if (!IsEquipped(player.CharacterId, type))
             return 0;
 
         return GetLevel(player.CharacterId, type);
+    }
+
+    /// <summary>Scouter: <paramref name="type"/> acts as max level for <paramref name="seconds"/>.</summary>
+    public static void BoostToMax(string characterId, UpgradeType type, float seconds)
+    {
+        MaxBoostUntil[(NormalizeId(characterId), type)] = Time.time + Mathf.Max(0f, seconds);
+    }
+
+    public static bool IsMaxBoosted(string characterId, UpgradeType type)
+    {
+        return MaxBoostUntil.Count > 0 &&
+               MaxBoostUntil.TryGetValue((NormalizeId(characterId), type), out float until) &&
+               Time.time < until;
     }
 
     /// <summary>Upgrades start equipped (including ones bought before equipping existed).</summary>
@@ -96,13 +127,14 @@ public static class PlayerUpgrades
         return (Mathf.Clamp(currentLevel, 0, MaxLevel - 1) + 1) * PricePerLevel;
     }
 
-    /// <summary>Only Kit and Malice have Attack Style upgrades for now.</summary>
+    /// <summary>Kit, Malice, Harlie, Hex (Harlie's styles) and Count have Attack Style upgrades.</summary>
     public static bool IsAvailable(string characterId, UpgradeType type)
     {
         if (type != UpgradeType.AttackStyle)
             return true;
 
-        return Is(characterId, "Kit") || Is(characterId, "Malice");
+        return Is(characterId, "Kit") || Is(characterId, "Malice") || Is(characterId, "Harlie") || Is(characterId, "Hex") ||
+               Is(characterId, "Count");
     }
 
     public static bool CanBuy(string characterId, UpgradeType type)

@@ -4900,6 +4900,18 @@ MonoBehaviour:
     - {fileID: 1696717760, guid: c193b6668123c304ba1df0db8f0322a9, type: 3}
     damagedLifeBarSprite: {fileID: 1332609407, guid: c193b6668123c304ba1df0db8f0322a9, type: 3}
     positionOffsetDownSpaces: 0
+    sizeMultiplier: 3
+  - characterId: Hex
+    lifeBarSprites:
+    - {fileID: 1332609407, guid: c193b6668123c304ba1df0db8f0322a9, type: 3}
+    - {fileID: 440639605, guid: c193b6668123c304ba1df0db8f0322a9, type: 3}
+    - {fileID: 389522576, guid: c193b6668123c304ba1df0db8f0322a9, type: 3}
+    - {fileID: -609583556, guid: c193b6668123c304ba1df0db8f0322a9, type: 3}
+    - {fileID: -1395861514, guid: c193b6668123c304ba1df0db8f0322a9, type: 3}
+    - {fileID: 1696717760, guid: c193b6668123c304ba1df0db8f0322a9, type: 3}
+    damagedLifeBarSprite: {fileID: 1332609407, guid: c193b6668123c304ba1df0db8f0322a9, type: 3}
+    positionOffsetDownSpaces: 0
+    sizeMultiplier: 3
   lifeBarSpriteRenderer: {fileID: 1899999652}
   autoFindActivePlayer: 1
   playerOverride: {fileID: 0}
@@ -4945,6 +4957,8 @@ MonoBehaviour:
     prefab: {fileID: 1425409008181505920, guid: 21d75f6d1bcba9e4490944ea837997e1, type: 3}
   - characterId: Count
     prefab: {fileID: 3672412826225818953, guid: d4e5f6478990abcdef1234567890ab10, type: 3}
+  - characterId: Hex
+    prefab: {fileID: 1425409008181505920, guid: fa4d2f5486ad49789863b7658260dadf, type: 3}
   defaultCharacterId: Kit
   spawnPoint: {fileID: 1924613348}
   spawnOnStart: 1

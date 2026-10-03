@@ -42,19 +42,35 @@ public class BossLifeBar : MonoBehaviour
     private Coroutine hitFlickerRoutine;
     private bool isFlickering;
     private bool introCountUpActive;
+    private Vector3 defaultLocalScale;
 
     private void Awake()
     {
         if (lifeBarSpriteRenderer == null)
             lifeBarSpriteRenderer = GetComponent<SpriteRenderer>();
 
+        if (defaultLocalScale == Vector3.zero)
+            defaultLocalScale = transform.localScale;
         EnsureSpriteArraySizes();
         ApplyCharacterSprites(ResolveInitialCharacterId());
+        RefreshRendererVisibility();
     }
 
     private void OnEnable()
     {
         BindBoss(GetTrackedBoss());
+        RefreshRendererVisibility();
+    }
+
+    /// <summary>Hidden until a boss has spawned in.</summary>
+    private void RefreshRendererVisibility()
+    {
+        if (lifeBarSpriteRenderer == null)
+            return;
+
+        bool show = boundBoss != null || GetTrackedBoss() != null;
+        if (lifeBarSpriteRenderer.enabled != show)
+            lifeBarSpriteRenderer.enabled = show;
     }
 
     private void OnDisable()
@@ -65,6 +81,8 @@ public class BossLifeBar : MonoBehaviour
 
     private void Update()
     {
+        RefreshRendererVisibility();
+
         if (!autoFindActiveBoss)
         {
             if (boundBoss != null)
@@ -371,10 +389,15 @@ public class BossLifeBar : MonoBehaviour
         activeCharacterId = characterId ?? "";
         LifeBar.CharacterLifeBarSet set = FindSetForCharacter(activeCharacterId);
         if (set == null)
+            set = LifeBar.FindSetInScene(activeCharacterId);
+        if (set == null)
             set = FindSetForCharacter(fallbackCharacterId);
 
         activeSprites = set != null ? set.lifeBarSprites : null;
         activeDamagedSprite = set != null ? set.damagedLifeBarSprite : null;
+        if (defaultLocalScale == Vector3.zero)
+            defaultLocalScale = transform.localScale;
+        transform.localScale = defaultLocalScale * (set != null ? set.ResolvedSizeMultiplier : 1f);
 
         Boss boss = GetTrackedBoss();
         if (boss != null)

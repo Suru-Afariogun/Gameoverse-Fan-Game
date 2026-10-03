@@ -25,7 +25,7 @@ public class MaliceSlashProjectile : MonoBehaviour
     [SerializeField] private Vector2 hitboxScale = new Vector2(0.7f, 0.8f);
     [SerializeField] private float fadeDuration = 0.12f;
     [SerializeField] private LayerMask hitLayers = ~0;
-    [Tooltip("Playable Malice only: enemy projectiles of this power or weaker are dissipated on contact (the wave keeps going).")]
+    [Tooltip("Playable Malice / Harlie only: enemy projectiles of this power or weaker are dissipated on contact (the wave keeps going).")]
     [SerializeField] private ProjectileShotType power = ProjectileShotType.Small;
 
     private static readonly List<Collider2D> OverlapResults = new List<Collider2D>(24);
@@ -37,8 +37,12 @@ public class MaliceSlashProjectile : MonoBehaviour
     private bool ownerIsPlayer;
     private int damage;
     private float directionSign = 1f;
+    private Vector2 travelDirection = Vector2.right;
     private float speed;
     private float remainingDistance;
+    private float launchDistance;
+    private float growEndMultiplier = 1f;
+    private Vector3 growBaseScale = Vector3.one;
     private bool launched;
     private bool holding;
     private float holdTimer;
@@ -48,11 +52,43 @@ public class MaliceSlashProjectile : MonoBehaviour
     private float knockbackDistance;
     private float knockbackDuration;
 
+    private static readonly List<MaliceSlashProjectile> LiveWaves = new List<MaliceSlashProjectile>(16);
+    private const float PlayerToolRehitSeconds = 0.3f;
+    private const float HitFlashSeconds = 0.08f;
+    private int durability;
+    private float hitFlashTimer;
+    private readonly Dictionary<int, float> playerToolHitTimes = new Dictionary<int, float>();
+    private readonly HashSet<int> absorbedHitIds = new HashSet<int>();
+
+    /// <summary>Set before Launch: a pushed enemy that runs into another moving enemy destroys both.</summary>
+    public bool ChainKillOnPush { get; set; }
+
     private void Awake()
     {
         if (spriteRenderer == null)
             spriteRenderer = GetComponentInChildren<SpriteRenderer>();
     }
+
+    private void OnEnable()
+    {
+        LiveWaves.Add(this);
+    }
+
+    private void OnDisable()
+    {
+        LiveWaves.Remove(this);
+    }
+
+    /// <summary>
+    /// Boss-owned waves only: HP the player's shots, slashes and waves must chew through to destroy it.
+    /// 0 = can't be destroyed.
+    /// </summary>
+    public void SetDurability(int hitPoints)
+    {
+        durability = Mathf.Max(0, hitPoints);
+    }
+
+    private bool IsDestructibleBossWave => !ownerIsPlayer && durability > 0 && !fading;
 
     public void Launch(
         float dirSign,
@@ -68,14 +104,29 @@ public class MaliceSlashProjectile : MonoBehaviour
         float pushDuration)
     {
         directionSign = dirSign >= 0f ? 1f : -1f;
-        remainingDistance = Mathf.Max(0f, travelDistance);
-        speed = remainingDistance / Mathf.Max(0.01f, travelSeconds);
-        damage = Mathf.Max(0, hitDamage);
+        travelDirection = new Vector2(directionSign, 0f);
+        transform.rotation = Quaternion.identity;
         owner = shotOwner;
         ownerPlayer = shotOwner != null ? shotOwner.GetComponentInParent<PlayerController>() : null;
         ownerIsPlayer = ownerPlayer != null;
+
+        // Weapon Gear: player waves reach farther in the same time; max level also makes them bigger.
+        if (ownerIsPlayer)
+        {
+            travelDistance *= PlayerGear.WeaponWaveRangeMultiplier(ownerPlayer);
+            if (PlayerGear.WeaponFinisher(ownerPlayer))
+                transform.localScale *= PlayerGear.WeaponFinisherWaveScale;
+        }
+
+        remainingDistance = Mathf.Max(0f, travelDistance);
+        launchDistance = remainingDistance;
+        growEndMultiplier = 1f;
+        speed = remainingDistance / Mathf.Max(0.01f, travelSeconds);
+        damage = Mathf.Max(0, hitDamage);
         volley = sharedVolley;
         ownHits.Clear();
+        playerToolHitTimes.Clear();
+        absorbedHitIds.Clear();
         launched = true;
         holding = false;
         holdTimer = Mathf.Max(0f, fadeDelaySeconds);
@@ -94,6 +145,45 @@ public class MaliceSlashProjectile : MonoBehaviour
         DetectHits();
         if (remainingDistance <= 0.0001f)
             FinishTravel();
+    }
+
+    /// <summary>
+    /// Call right after Launch to send the wave along any direction (Hex's 45° / fan waves).
+    /// The art is rotated so its leading edge follows the travel direction.
+    /// </summary>
+    public void SetTravelDirection(Vector2 worldDirection)
+    {
+        if (worldDirection.sqrMagnitude < 0.0001f)
+            return;
+
+        travelDirection = worldDirection.normalized;
+        if (Mathf.Abs(travelDirection.x) > 0.01f)
+            directionSign = travelDirection.x > 0f ? 1f : -1f;
+
+        if (spriteRenderer != null)
+            spriteRenderer.flipX = artFacesLeft ? directionSign > 0f : directionSign < 0f;
+
+        float angle = Vector2.SignedAngle(new Vector2(directionSign, 0f), travelDirection);
+        transform.rotation = Quaternion.Euler(0f, 0f, angle);
+    }
+
+    /// <summary>
+    /// Call right after Launch: the wave grows as it travels, reaching <paramref name="endMultiplier"/>×
+    /// its launch size at max distance (Hex's upgraded dive-slam waves).
+    /// </summary>
+    public void SetGrowOverTravel(float endMultiplier)
+    {
+        growEndMultiplier = Mathf.Max(1f, endMultiplier);
+        growBaseScale = transform.localScale;
+    }
+
+    private void ApplyGrowth()
+    {
+        if (growEndMultiplier <= 1.0001f || launchDistance <= 0.0001f)
+            return;
+
+        float traveled = Mathf.Clamp01(1f - remainingDistance / launchDistance);
+        transform.localScale = growBaseScale * Mathf.Lerp(1f, growEndMultiplier, traveled);
     }
 
     private void ApplySorting(SpriteRenderer ownerRenderer, int sortingOffset)
@@ -121,6 +211,8 @@ public class MaliceSlashProjectile : MonoBehaviour
             return;
         }
 
+        TickHitFlash();
+
         if (holding)
         {
             holdTimer -= Time.deltaTime * GetTimeScale();
@@ -134,8 +226,9 @@ public class MaliceSlashProjectile : MonoBehaviour
 
         float dt = Time.deltaTime * GetTimeScale();
         float step = Mathf.Min(remainingDistance, speed * dt);
-        transform.position += new Vector3(directionSign * step, 0f, 0f);
+        transform.position += (Vector3)(travelDirection * step);
         remainingDistance -= step;
+        ApplyGrowth();
 
         DetectHits();
 
@@ -207,6 +300,9 @@ public class MaliceSlashProjectile : MonoBehaviour
         Physics2D.OverlapBox(b.center, size, 0f, filter, OverlapResults);
         for (int i = 0; i < OverlapResults.Count; i++)
             TryHit(OverlapResults[i]);
+
+        if (IsDestructibleBossWave)
+            TryAbsorbPlayerWaves(new Bounds(b.center, new Vector3(size.x, size.y, b.size.z)));
     }
 
     private void TryHit(Collider2D other)
@@ -221,13 +317,18 @@ public class MaliceSlashProjectile : MonoBehaviour
             return;
 
         // Melee boxes are tools, not bodies.
-        if (other.GetComponent<AttackHitbox>() != null)
+        AttackHitbox tool = other.GetComponent<AttackHitbox>();
+        if (tool != null)
+        {
+            TryAbsorbPlayerMelee(tool);
             return;
+        }
 
         Projectile shot = other.GetComponentInParent<Projectile>();
         if (shot != null)
         {
-            TryDissipateProjectile(shot);
+            if (!TryAbsorbPlayerShot(shot))
+                TryDissipateProjectile(shot);
             return;
         }
 
@@ -278,7 +379,7 @@ public class MaliceSlashProjectile : MonoBehaviour
             enemy.TakeDamage(damage);
             NotifyOwnerDamageDealt(before - enemy.CurrentHealth);
             if (!enemy.IsDead && enemyComponent != null && !IsStationaryEnemy(enemy))
-                GentleKnockback.Apply(enemyComponent, directionSign, knockbackDistance, knockbackDuration);
+                GentleKnockback.Apply(enemyComponent, directionSign, knockbackDistance, knockbackDuration, ChainKillOnPush);
             return;
         }
 
@@ -294,14 +395,14 @@ public class MaliceSlashProjectile : MonoBehaviour
     }
 
     /// <summary>Enemies that hold their spot (and Blocker Bot walls) are never pushed.</summary>
-    private static bool IsStationaryEnemy(ICommonEnemy enemy)
+    public static bool IsStationaryEnemy(ICommonEnemy enemy)
     {
         return enemy is BlockerBot || enemy is LaserBot || enemy is ChaoticTanker;
     }
 
     private void TryDissipateProjectile(Projectile shot)
     {
-        if (!ownerIsPlayer || !(ownerPlayer is MalicePlayerController))
+        if (!ownerIsPlayer || !(ownerPlayer is MalicePlayerController || ownerPlayer is HarliePlayerController))
             return;
 
         if (!shot.IsLaunched || shot.IsResolvingHit || shot.HasResolvedCombatHit)
@@ -315,6 +416,90 @@ public class MaliceSlashProjectile : MonoBehaviour
 
         SoundManager.Instance?.PlayProjectileHit(shot.ShotType);
         shot.ClashAndDespawn();
+    }
+
+    private bool TryAbsorbPlayerShot(Projectile shot)
+    {
+        if (!IsDestructibleBossWave)
+            return false;
+
+        if (shot.Owner == null || shot.Owner.GetComponentInParent<PlayerController>() == null)
+            return false;
+
+        if (!shot.IsLaunched || shot.IsResolvingHit || shot.HasResolvedCombatHit)
+            return true;
+
+        if (!absorbedHitIds.Add(shot.GetInstanceID()))
+            return true;
+
+        SoundManager.Instance?.PlayProjectileHit(shot.ShotType);
+        shot.ClashAndDespawn();
+        TakeWaveDamage(shot.Damage);
+        return true;
+    }
+
+    private void TryAbsorbPlayerMelee(AttackHitbox tool)
+    {
+        if (!IsDestructibleBossWave || !tool.IsActive || tool.Owner == null || tool.Damage <= 0)
+            return;
+
+        int id = tool.GetInstanceID();
+        if (playerToolHitTimes.TryGetValue(id, out float lastHit) && Time.time - lastHit < PlayerToolRehitSeconds)
+            return;
+
+        playerToolHitTimes[id] = Time.time;
+        SoundManager.Instance?.PlayHarlieBigSwordClash();
+        TakeWaveDamage(tool.Damage);
+    }
+
+    private void TryAbsorbPlayerWaves(Bounds myHitArea)
+    {
+        for (int i = LiveWaves.Count - 1; i >= 0 && IsDestructibleBossWave; i--)
+        {
+            MaliceSlashProjectile wave = LiveWaves[i];
+            if (wave == null || wave == this || !wave.ownerIsPlayer || wave.fading || wave.damage <= 0 ||
+                wave.spriteRenderer == null)
+                continue;
+
+            Bounds wb = wave.spriteRenderer.bounds;
+            Vector3 waveSize = new Vector3(wb.size.x * wave.hitboxScale.x, wb.size.y * wave.hitboxScale.y, myHitArea.size.z);
+            if (!myHitArea.Intersects(new Bounds(wb.center, waveSize)))
+                continue;
+
+            if (!absorbedHitIds.Add(wave.GetInstanceID()))
+                continue;
+
+            TakeWaveDamage(wave.damage);
+        }
+    }
+
+    private void TakeWaveDamage(int amount)
+    {
+        if (amount <= 0 || !IsDestructibleBossWave)
+            return;
+
+        durability = Mathf.Max(0, durability - amount);
+        hitFlashTimer = HitFlashSeconds;
+        if (durability > 0)
+            return;
+
+        damage = 0;
+        hitFlashTimer = 0f;
+        if (spriteRenderer != null)
+            spriteRenderer.color = baseColor;
+        BeginFade();
+    }
+
+    private void TickHitFlash()
+    {
+        if (hitFlashTimer <= 0f || spriteRenderer == null)
+            return;
+
+        hitFlashTimer -= Time.deltaTime;
+        Color c = baseColor;
+        if (hitFlashTimer > 0f)
+            c.a = baseColor.a * 0.4f;
+        spriteRenderer.color = c;
     }
 
     private static int GetPowerRank(ProjectileShotType type)

@@ -29,6 +29,9 @@ public sealed class NPC : MonoBehaviour
     [Tooltip("Shown when talking to Harlie. Leave empty to fall back to Kit/default.")]
     [TextArea(2, 6)]
     [SerializeField] private string[] dialoguePagesHarlie;
+    [Tooltip("Shown when talking to Hex. Leave empty to fall back to Harlie, then Kit/default.")]
+    [TextArea(2, 6)]
+    [SerializeField] private string[] dialoguePagesHex;
 
     [Header("Interact")]
     [SerializeField] private Transform interactRadius;
@@ -529,8 +532,13 @@ public sealed class NPC : MonoBehaviour
             dialoguePagesCount != null && dialoguePagesCount.Length > 0)
             return dialoguePagesCount;
 
-        if (string.Equals(id, "Harlie", System.StringComparison.OrdinalIgnoreCase) &&
-            dialoguePagesHarlie != null && dialoguePagesHarlie.Length > 0)
+        if (string.Equals(id, "Hex", System.StringComparison.OrdinalIgnoreCase) &&
+            dialoguePagesHex != null && dialoguePagesHex.Length > 0)
+            return dialoguePagesHex;
+
+        bool harlieStyle = string.Equals(id, "Harlie", System.StringComparison.OrdinalIgnoreCase) ||
+                           string.Equals(id, "Hex", System.StringComparison.OrdinalIgnoreCase);
+        if (harlieStyle && dialoguePagesHarlie != null && dialoguePagesHarlie.Length > 0)
             return dialoguePagesHarlie;
 
         // Kit and any unknown / unset character use the default pages.

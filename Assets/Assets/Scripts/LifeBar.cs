@@ -26,6 +26,11 @@ public class LifeBar : MonoBehaviour
 
         [Tooltip("Moves this character's life bar down by this many in-game spaces (0 = default HUD position).")]
         public float positionOffsetDownSpaces;
+
+        [Tooltip("Scales this character's life bar (player HUD and boss bar). 1 = normal size, 3 = three times bigger.")]
+        public float sizeMultiplier = 1f;
+
+        public float ResolvedSizeMultiplier => sizeMultiplier > 0f ? sizeMultiplier : 1f;
     }
 
     [Header("Per-Character Sprites")]
@@ -60,20 +65,25 @@ public class LifeBar : MonoBehaviour
     private Coroutine hitFlickerRoutine;
     private bool isFlickering;
     private Vector3 defaultLocalPosition;
+    private Vector3 defaultLocalScale;
+    private bool defaultTransformCaptured;
+    private bool hiddenByRequest;
 
     private void Awake()
     {
         if (lifeBarSpriteRenderer == null)
             lifeBarSpriteRenderer = GetComponent<SpriteRenderer>();
 
-        defaultLocalPosition = transform.localPosition;
+        CaptureDefaultTransform();
         EnsureSpriteArraySizes();
         ApplyCharacterSprites(fallbackCharacterId);
+        RefreshRendererVisibility();
     }
 
     private void OnEnable()
     {
         BindPlayer(GetTrackedPlayer());
+        RefreshRendererVisibility();
     }
 
     private void OnDisable()
@@ -84,6 +94,8 @@ public class LifeBar : MonoBehaviour
 
     private void Update()
     {
+        RefreshRendererVisibility();
+
         if (!autoFindActivePlayer)
             return;
 
@@ -277,16 +289,42 @@ public class LifeBar : MonoBehaviour
         return null;
     }
 
+    /// <summary>Sprite set for a character from any player LifeBar in the loaded scenes (null if none).</summary>
+    public static CharacterLifeBarSet FindSetInScene(string characterId)
+    {
+        LifeBar[] bars = FindObjectsByType<LifeBar>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        for (int i = 0; i < bars.Length; i++)
+        {
+            CharacterLifeBarSet set = bars[i] != null ? bars[i].FindSetForCharacter(characterId) : null;
+            if (set != null && set.lifeBarSprites != null && set.lifeBarSprites.Length > 0)
+                return set;
+        }
+
+        return null;
+    }
+
+    private void CaptureDefaultTransform()
+    {
+        if (defaultTransformCaptured)
+            return;
+
+        defaultTransformCaptured = true;
+        defaultLocalPosition = transform.localPosition;
+        defaultLocalScale = transform.localScale;
+    }
+
     private void ApplyCharacterPositionOffset(CharacterLifeBarSet set)
     {
+        CaptureDefaultTransform();
         float downSpaces = set != null ? Mathf.Max(0f, set.positionOffsetDownSpaces) : 0f;
         float localYOffset = -downSpaces * GetLifeBarSpaceUnit();
         transform.localPosition = defaultLocalPosition + new Vector3(0f, localYOffset, 0f);
+        transform.localScale = defaultLocalScale * (set != null ? set.ResolvedSizeMultiplier : 1f);
     }
 
     private float GetLifeBarSpaceUnit()
     {
-        return Mathf.Max(0.01f, Mathf.Abs(transform.localScale.y));
+        return Mathf.Max(0.01f, Mathf.Abs(defaultLocalScale.y));
     }
 
     private void EnsureSpriteArraySizes()
@@ -307,11 +345,19 @@ public class LifeBar : MonoBehaviour
     /// <summary>Hide/show this life bar without destroying bind state (e.g. while Kaboodle is open).</summary>
     public void SetVisible(bool visible)
     {
+        hiddenByRequest = !visible;
+        RefreshRendererVisibility();
+    }
+
+    /// <summary>Shown only once a player has spawned in, and not while hidden by <see cref="SetVisible"/>.</summary>
+    private void RefreshRendererVisibility()
+    {
         if (lifeBarSpriteRenderer == null)
             lifeBarSpriteRenderer = GetComponent<SpriteRenderer>();
 
-        if (lifeBarSpriteRenderer != null)
-            lifeBarSpriteRenderer.enabled = visible;
+        bool show = !hiddenByRequest && GetTrackedPlayer() != null;
+        if (lifeBarSpriteRenderer != null && lifeBarSpriteRenderer.enabled != show)
+            lifeBarSpriteRenderer.enabled = show;
     }
 
     /// <summary>Hide or show every player LifeBar in the loaded scenes.</summary>
@@ -336,8 +382,11 @@ public class LifeBar : MonoBehaviour
         EnsureSpriteArraySizes();
         for (int i = 0; i < characterLifeBars.Length; i++)
         {
-            if (characterLifeBars[i] != null)
-                characterLifeBars[i].positionOffsetDownSpaces = Mathf.Max(0f, characterLifeBars[i].positionOffsetDownSpaces);
+            if (characterLifeBars[i] == null)
+                continue;
+
+            characterLifeBars[i].positionOffsetDownSpaces = Mathf.Max(0f, characterLifeBars[i].positionOffsetDownSpaces);
+            characterLifeBars[i].sizeMultiplier = characterLifeBars[i].ResolvedSizeMultiplier;
         }
     }
 #endif

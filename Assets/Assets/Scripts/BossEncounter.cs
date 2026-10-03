@@ -9,9 +9,12 @@ public static class BossEncounter
 {
     public const string BossIdKit = "Kit";
     public const string BossIdMalice = "Malice";
+    public const string BossIdHarlie = "Harlie";
+    public const string BossIdHex = "Hex";
+    public const string BossIdCount = "Count";
 
     /// <summary>Boss ids that currently have a fight ready in the project.</summary>
-    static readonly string[] ReadyBossIds = { BossIdMalice, BossIdKit };
+    static readonly string[] ReadyBossIds = { BossIdMalice, BossIdKit, BossIdHarlie, BossIdHex, BossIdCount };
 
     public static string SelectedBossId { get; private set; } = BossIdMalice;
 

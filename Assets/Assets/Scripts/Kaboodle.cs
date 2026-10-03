@@ -70,6 +70,7 @@ public class Kaboodle : MonoBehaviour
     [SerializeField] private Button maliceCharacterButton;
     [SerializeField] private Button harlieCharacterButton;
     [SerializeField] private Button countCharacterButton;
+    [SerializeField] private Button hexCharacterButton;
     [Tooltip("How many character buttons per row (usually 2: Kit | Malice).")]
     [SerializeField] private int characterSelectColumns = 2;
     [Tooltip("Solid blue character-shaped highlight behind the portrait when hovered/selected.")]
@@ -80,9 +81,16 @@ public class Kaboodle : MonoBehaviour
     [SerializeField] private bool closeBoxAfterCharacterSwitch = true;
 
     [Header("UI - Boss Fight Select")]
-    [Tooltip("Same layout as Character Select. Parent Kit/Malice buttons under Boss Fight Page.")]
+    [Tooltip("Same layout as Character Select. Parent Kit/Malice/Harlie buttons under Boss Fight Page. " +
+             "Each button picks a boss id; the Boss Spawner maps that id to the boss prefab.")]
     [SerializeField] private Button kitBossButton;
     [SerializeField] private Button maliceBossButton;
+    [Tooltip("Spawns Boss Harlie (BossHarlie prefab via the Boss Spawner's \"Harlie\" entry).")]
+    [SerializeField] private Button harlieBossButton;
+    [Tooltip("Spawns Boss Hex (BossHex prefab via the Boss Spawner's \"Hex\" entry).")]
+    [SerializeField] private Button hexBossButton;
+    [Tooltip("Spawns Boss Count (BossCount prefab via the Boss Spawner's \"Count\" entry).")]
+    [SerializeField] private Button countBossButton;
     [SerializeField] private int bossSelectColumns = 2;
 
     [Header("UI - Item Shop")]
@@ -282,14 +290,17 @@ public class Kaboodle : MonoBehaviour
             harlieCharacterButton = FindNamedButtonUnder(characterSelectPage, "Harlie");
         if (countCharacterButton == null)
             countCharacterButton = FindNamedButtonUnder(characterSelectPage, "Count");
+        if (hexCharacterButton == null)
+            hexCharacterButton = FindNamedButtonUnder(characterSelectPage, "Hex");
 
         AddCharacterButton(kitCharacterButton, "Kit");
         AddCharacterButton(maliceCharacterButton, "Malice");
         AddCharacterButton(harlieCharacterButton, "Harlie");
         AddCharacterButton(countCharacterButton, "Count");
+        AddCharacterButton(hexCharacterButton, "Hex");
 
         if (validCharacterButtons.Count == 0)
-            Debug.LogWarning("[Kaboodle] Character Select has no Kit/Malice/Harlie/Count buttons assigned.");
+            Debug.LogWarning("[Kaboodle] Character Select has no Kit/Malice/Harlie/Count/Hex buttons assigned.");
     }
 
     private void CacheBossButtons()
@@ -301,14 +312,23 @@ public class Kaboodle : MonoBehaviour
             kitBossButton = FindNamedButtonUnder(bossFightPage, "Kit");
         if (maliceBossButton == null)
             maliceBossButton = FindNamedButtonUnder(bossFightPage, "Malice");
+        if (harlieBossButton == null)
+            harlieBossButton = FindNamedButtonUnder(bossFightPage, "Harlie");
+        if (hexBossButton == null)
+            hexBossButton = FindNamedButtonUnder(bossFightPage, "Hex");
+        if (countBossButton == null)
+            countBossButton = FindNamedButtonUnder(bossFightPage, "Count");
 
         AddBossButton(kitBossButton, BossEncounter.BossIdKit);
         AddBossButton(maliceBossButton, BossEncounter.BossIdMalice);
+        AddBossButton(harlieBossButton, BossEncounter.BossIdHarlie);
+        AddBossButton(hexBossButton, BossEncounter.BossIdHex);
+        AddBossButton(countBossButton, BossEncounter.BossIdCount);
 
         if (validBossButtons.Count == 0)
             Debug.LogWarning(
-                "[Kaboodle] Boss Fight page has no Kit/Malice buttons. " +
-                "Parent the same buttons under Boss Fight Page (or assign Kit/Malice Boss Button refs).");
+                "[Kaboodle] Boss Fight page has no Kit/Malice/Harlie/Hex buttons. " +
+                "Parent the same buttons under Boss Fight Page (or assign the Boss Button refs).");
     }
 
     private void CacheShopButtons()
@@ -987,6 +1007,9 @@ public class Kaboodle : MonoBehaviour
         CacheBossButtons();
         BindClick(kitBossButton, OnKitBossButtonClicked, bind);
         BindClick(maliceBossButton, OnMaliceBossButtonClicked, bind);
+        BindClick(harlieBossButton, OnHarlieBossButtonClicked, bind);
+        BindClick(hexBossButton, OnHexBossButtonClicked, bind);
+        BindClick(countBossButton, OnCountBossButtonClicked, bind);
     }
 
     private void WireShopButtonClicks(bool bind)
@@ -1009,6 +1032,27 @@ public class Kaboodle : MonoBehaviour
     public void OnMaliceBossButtonClicked()
     {
         SelectBossIndexById(BossEncounter.BossIdMalice);
+        ConfirmBossSelection();
+    }
+
+    /// <summary>Inspector / UI OnClick → pick Harlie boss and load Boss Fight Mode.</summary>
+    public void OnHarlieBossButtonClicked()
+    {
+        SelectBossIndexById(BossEncounter.BossIdHarlie);
+        ConfirmBossSelection();
+    }
+
+    /// <summary>Inspector / UI OnClick → pick Hex boss and load Boss Fight Mode.</summary>
+    public void OnHexBossButtonClicked()
+    {
+        SelectBossIndexById(BossEncounter.BossIdHex);
+        ConfirmBossSelection();
+    }
+
+    /// <summary>Inspector / UI OnClick → pick Count boss and load Boss Fight Mode.</summary>
+    public void OnCountBossButtonClicked()
+    {
+        SelectBossIndexById(BossEncounter.BossIdCount);
         ConfirmBossSelection();
     }
 

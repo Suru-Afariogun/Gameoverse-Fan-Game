@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -7,6 +6,8 @@ using UnityEngine.InputSystem;
 /// Harlie — melee fighter ported in feel from Little Program Harlie.
 /// Ground combo: Kick → Slash 1 → Slash 2 → Slash 3 (cycles).
 /// Air: air slash. Uses this game's PlayerController + AttackHitbox systems.
+/// Hyper Ability Lv3+ at full health: 8 Silver Swords float beside her. Up + Attack: their base attack;
+/// Down + Attack: Grandmother Silk needles.
 /// </summary>
 public class HarliePlayerController : PlayerController
 {
@@ -31,14 +32,92 @@ public class HarliePlayerController : PlayerController
     [SerializeField] private AttackHitbox attackHitbox;
 
     [Header("Harlie - Dash")]
-    [SerializeField] private float harlieDashDistance = 5f;
-    [SerializeField] private float harlieDashSpeed = 24f;
-    [SerializeField] private float harlieDashSmoothStop = 0.24f;
-    [SerializeField] private float harlieDashEaseInFraction = 0.12f;
+    [Tooltip("Longer than Malice's 5.9.")]
+    [SerializeField] private float harlieDashDistance = 7f;
+    [SerializeField] private float harlieDashSpeed = 19f;
+    [SerializeField] private float harlieDashSmoothStop = 0.12f;
+    [Tooltip("Air dashes at Ariel Action level 0.")]
     [SerializeField] private int harlieMaxAirDashes = 3;
+    [Tooltip("Can't be hurt for the whole dash.")]
+    [SerializeField] private bool dashInvincible = true;
     [SerializeField] private bool harlieAllowDashJump = true;
-    [SerializeField] private float harlieDashJumpMomentumDuration = 0.22f;
+    [SerializeField] private float harlieDashJumpMomentumDuration = 0.55f;
     [SerializeField] private bool harlieDashJumpMomentumUntilLanded = true;
+
+    [Header("Harlie - Double Jump")]
+    [SerializeField] private int harlieMaxAirJumps = 1;
+    [Tooltip("Kit's double-jump launch speed; Harlie's height is measured against it.")]
+    [SerializeField] private float doubleJumpReferenceForce = 16f;
+    [Tooltip("Fraction of Kit's max double-jump height Harlie reaches (1 = as high as Kit).")]
+    [SerializeField] [Range(0.05f, 1f)] private float doubleJumpHeightFraction = 1f;
+    [SerializeField] private bool pogoRefreshesDoubleJump = true;
+    [Tooltip("Seconds she can't be hurt after each pogo bounce.")]
+    [SerializeField] private float pogoGuardSeconds = 0.3f;
+
+    [Header("Harlie - Rapid Attack Speed (same as Malice)")]
+    [Tooltip("Every N attack presses (within the idle window) increases attack speed by Attack Speed Per Tier.")]
+    [SerializeField] private int pressesPerSpeedTier = 6;
+    [SerializeField] private float attackSpeedPerTier = 0.5f;
+    [SerializeField] private int maxAttackSpeedTier = 1;
+    [Tooltip("If no attack press for this long, speed returns to normal.")]
+    [SerializeField] private float attackSpeedIdleResetSeconds = 0.7f;
+
+    [Header("Harlie - Dash Cancel Slash (same as Malice)")]
+    [Tooltip("Attack speed multiplier when Attack is pressed mid-dash or right after a dash.")]
+    [SerializeField] private float dashCancelSlashSpeedMul = 1.5f;
+    [Tooltip("How long after a dash ends that an attack still gets the dash-cancel speed boost.")]
+    [SerializeField] private float dashCancelSlashWindow = 0.2f;
+
+    [Header("Harlie - Slash Guard (same as Malice)")]
+    [Tooltip("While the attack box is active, enemy contact that only touches the part of her body inside the attack box deals no damage.")]
+    [SerializeField] private bool slashGuardEnabled = true;
+    [Tooltip("Extra world-unit margin around the attack box when deciding a contact is covered.")]
+    [SerializeField] private float slashGuardTolerance = 0.8f;
+
+    [Header("Harlie - Projectile Slash (one yellow wave)")]
+    [SerializeField] private HarlieSlashWaveSettings slashWave = new HarlieSlashWaveSettings();
+    [Tooltip("Charge slash slide and charged air slash fire three waves: straight, angled up and angled down (Hex).")]
+    [SerializeField] private bool tripleWaveOnChargedSlash = false;
+    [SerializeField] [Range(5f, 85f)] private float tripleWaveAngle = 45f;
+
+    [Header("Harlie - Damage")]
+    [Tooltip("Multiplies every melee hit and wave after upgrades (Hex = 1.5).")]
+    [SerializeField] private float outgoingDamageMultiplier = 1f;
+
+    [Header("Harlie - Upgrades: Ariel Action")]
+    [Tooltip("Air dashes added per level (each level also adds one air jump).")]
+    [SerializeField] private int aerialAirDashesPerLevel = 2;
+
+    [Header("Harlie - Upgrades: Hyper Ability (attack / speed / wave only at full health)")]
+    [SerializeField] private int hyperDamagePerLevel = 2;
+    [Tooltip("Max HP added per level. Always on while equipped.")]
+    [SerializeField] private int hyperMaxHealthPerLevel = 2;
+    [SerializeField] private float hyperMoveSpeedPerLevel = 0.8f;
+    [Tooltip("Wave size added per level (0.4 = +40%).")]
+    [SerializeField] private float hyperWaveSizePerLevel = 0.4f;
+    [SerializeField] private float hyperWaveDistancePerLevel = 2f;
+
+    [Header("Harlie - Upgrades: Speed Style")]
+    [SerializeField] private int speedStyleDamagePerLevel = 1;
+    [SerializeField] private float speedStyleWaveDistancePerLevel = 2f;
+    [SerializeField] private float speedStyleWaveSpeedPerLevel = 2f;
+    [SerializeField] private float speedStyleDashDistancePerLevel = 1f;
+    [SerializeField] private float speedStyleDashSpeedPerLevel = 1f;
+
+    [Header("Harlie - Upgrades: Heavy Style")]
+    [Tooltip("Wave size added per level (0.2 = +20%).")]
+    [SerializeField] private float heavyWaveSizePerLevel = 0.2f;
+    [SerializeField] private int heavyWaveDamagePerLevel = 1;
+    [SerializeField] private int heavyMaxHealthPerLevel = 2;
+    [SerializeField] private float heavyFallMultiplierPerLevel = 1f;
+    [Tooltip("Extra slash push (spaces) per level, melee and wave.")]
+    [SerializeField] private float heavyKnockbackPerLevel = 1f;
+    [Tooltip("From this level, an enemy pushed into another moving enemy destroys both.")]
+    [SerializeField] private int heavyChainKillMinLevel = 1;
+    [Tooltip("Dash push on moving common enemies (spaces) per level.")]
+    [SerializeField] private float heavyDashPushPerLevel = 1f;
+    [SerializeField] private int heavyDashPushDamage = 1;
+    [SerializeField] private float heavyDashPushDuration = 0.12f;
 
     [Header("Harlie - Afterimages")]
     [SerializeField] private bool harlieEnableDashAfterimages = true;
@@ -66,7 +145,7 @@ public class HarliePlayerController : PlayerController
 
     [Header("Harlie - Combo")]
     [Tooltip("Window to continue Kick → Slash1 → Slash2 → Slash3.")]
-    [SerializeField] private float comboInputWindow = 0.5f;
+    [SerializeField] private float comboInputWindow = 0.8f;
     [SerializeField] private float kickDuration = 0.38f;
     [SerializeField] private float slash1Duration = 0.38f;
     [SerializeField] private float slash2Duration = 0.38f;
@@ -75,11 +154,11 @@ public class HarliePlayerController : PlayerController
     [SerializeField] private bool syncAttackDurationToAnimation = true;
     [SerializeField] private float attackDurationPadding = 0.02f;
     [SerializeField] private float timeBetweenAttacks = 0.05f;
-    [SerializeField] private int kickDamage = 3;
-    [SerializeField] private int slash1Damage = 3;
-    [SerializeField] private int slash2Damage = 3;
+    [SerializeField] private int kickDamage = 2;
+    [SerializeField] private int slash1Damage = 2;
+    [SerializeField] private int slash2Damage = 2;
     [SerializeField] private int slash3Damage = 3;
-    [SerializeField] private int airSlashDamage = 3;
+    [SerializeField] private int airSlashDamage = 2;
     [SerializeField] private float hitboxDelay = 0.05f;
     [SerializeField] private float hitboxActiveTime = 0.22f;
     [SerializeField] private bool lockMoveDuringGroundAttack = true;
@@ -88,17 +167,14 @@ public class HarliePlayerController : PlayerController
 
     [Header("Harlie - Jump Attack / Pogo")]
     [Tooltip("Automatic falling attack while airborne (Little Program Harlie jump attack).")]
-    [SerializeField] private int jumpAttackDamage = 3;
+    [SerializeField] private int jumpAttackDamage = 2;
     [Tooltip("Upward speed applied when bounce-hitting a target while falling.")]
     [SerializeField] private float aerialBounceForce = 12f;
 
-    [Header("Harlie - Attack Knockback")]
-    [Tooltip("How far targets are pushed on a successful kick or slash hit (spaces). Original Harlie used 4.")]
-    [SerializeField] private float attackKnockbackSpaces = 5f;
-    [Tooltip("World units per space.")]
-    [SerializeField] private float knockbackSpaceSize = 1f;
-    [Tooltip("How long the knockback slide takes (higher = smoother).")]
-    [SerializeField] private float attackKnockbackDuration = 0.34f;
+    [Header("Harlie - Attack Knockback (same rule as Malice's slashes)")]
+    [Tooltip("Gentle push on hit moving enemies (world units). Bosses and stationary enemies (Laser Bot, Chaotic Tanker, Blocker Bot) are never pushed.")]
+    [SerializeField] private float attackKnockbackDistance = 2f;
+    [SerializeField] private float attackKnockbackDuration = 0.12f;
 
     [Header("Harlie - Attack Lunge (world units)")]
     [SerializeField] private float kickLungeDistance = 1f;
@@ -118,7 +194,7 @@ public class HarliePlayerController : PlayerController
     [Tooltip("Heavy Style: added to every hit (kick, slashes, air slash, charge kick).")]
     [SerializeField] private int heavyStyleDamageBonus = 3;
 
-    [Header("Harlie - Charge Attack (ground only)")]
+    [Header("Harlie - Charge Attack (ground and air)")]
     [Tooltip("Hold Attack this long for maximum travel.")]
     [SerializeField] private float chargeKickMaxSeconds = 2f;
     [Tooltip("Max charged travel in spaces (× space size).")]
@@ -128,11 +204,28 @@ public class HarliePlayerController : PlayerController
     [Tooltip("World units per space.")]
     [SerializeField] private float chargeKickSpaceSize = 1f;
     [SerializeField] private float chargeKickMinHoldSeconds = 0.08f;
-    [SerializeField] private int chargeKickDamage = 5;
+    [Tooltip("Short hold (half charge or less).")]
+    [SerializeField] private int chargeSlashDamage = 2;
+    [Tooltip("Long hold.")]
+    [SerializeField] private int chargeKickDamage = 4;
+    [Tooltip("Air release at or above this fraction of full charge = charged air slash; below it = normal air slash.")]
+    [SerializeField] [Range(0f, 1f)] private float chargedAirSlashMinRatio = 0.5f;
+    [Tooltip("Charged air slash: sword and wave damage × this.")]
+    [SerializeField] private int chargedAirSlashDamageMultiplier = 3;
+    [Tooltip("Charged air slash: wave base travel distance × this.")]
+    [SerializeField] private float chargedAirSlashDistanceMultiplier = 3f;
     [Tooltip("Charge slide speed = dash speed × this (slightly faster than dash).")]
     [SerializeField] private float chargeAttackSpeedVsDash = 1.12f;
     [Tooltip("Brief pose hold after the slide ends.")]
     [SerializeField] private float chargeKickHoldAfterSlide = 0.3f;
+
+    [Header("Harlie - Silver Swords (Hyper Ability, full health)")]
+    [Tooltip("Swords float beside her from this Hyper Ability level while she's at full health. " +
+             "Up + Attack: base attack. Down + Attack: Grandmother Silk needles. Usable again once they're back in place.")]
+    [SerializeField] private int silverSwordMinHyperLevel = 3;
+    [SerializeField] private SilverSwordSettings silverSwords = new SilverSwordSettings();
+    [Tooltip("Grandmother Silk aims at the closest enemy within this many spaces (otherwise ahead of her).")]
+    [SerializeField] private float silverSwordTargetRadius = 18f;
 
     private MeleeState meleeState = MeleeState.Idle;
     private float meleeTimer;
@@ -152,6 +245,7 @@ public class HarliePlayerController : PlayerController
     private bool isJumpAttackActive;
     private bool isChargingKick;
     private float chargeKickTimer;
+    private SilverSwordSquad silverSwordSquad;
     private bool isChargeSlideActive;
     private bool chargeSlideUsesKick;
     private float chargeSlideTimer;
@@ -165,7 +259,32 @@ public class HarliePlayerController : PlayerController
     private Material chargeAuraMaterial;
     private float auraFlickerPhase;
 
-    private readonly Dictionary<int, Coroutine> activeKnockbacks = new Dictionary<int, Coroutine>();
+    private int airJumpsRemaining;
+
+    private int rapidAttackPressCount;
+    private float lastAttackPressTime = -999f;
+    private int attackSpeedTier;
+    private float currentMeleeSpeed = 1f;
+    private float dashEndedAt = -999f;
+    private bool dashCancelSlashQueued;
+
+    private bool slashWaveFired;
+    private bool chargeSlideFiresWave;
+
+    private Transform slashGuardedSource;
+    private float slashGuardedAt = -999f;
+    private const float SlashGuardContactSkin = 0.03f;
+    private static readonly List<Collider2D> SlashGuardSourceColliders = new List<Collider2D>();
+
+    private float pogoInvincibleUntil = -999f;
+    private bool pogoInvincibleUntilLanded;
+    private bool currentChargedAirSlash;
+    private int currentDamageMultiplier = 1;
+
+    private int baseMaxHealth;
+    private float baseFallMultiplier;
+    private readonly HashSet<int> dashPushedIds = new HashSet<int>();
+    private static readonly List<Collider2D> DashPushOverlaps = new List<Collider2D>(16);
 
     private bool isAttackLunging;
     private float attackLungeTimer;
@@ -181,6 +300,16 @@ public class HarliePlayerController : PlayerController
 
     public bool IsMeleeAttacking => meleeState != MeleeState.Idle;
     public bool IsChargingKick => isChargingKick;
+
+    /// <summary>Character id set on Awake (upgrades / HUD are keyed by it).</summary>
+    protected virtual string HarlieCharacterId => "Harlie";
+    protected AttackHitbox MeleeHitbox => attackHitbox;
+    protected bool IsChargeSlideActive => isChargeSlideActive;
+    /// <summary>0 when not charging, 1 at full charge.</summary>
+    protected float ChargeRatio =>
+        isChargingKick ? Mathf.Clamp01(chargeKickTimer / Mathf.Max(0.05f, chargeKickMaxSeconds)) : 0f;
+    /// <summary>Damage of the automatic falling attack (pogo).</summary>
+    protected virtual int JumpAttackDamage => ScaleOutgoingDamage(jumpAttackDamage);
 
     public override float GetCameraFollowSpeedHint()
     {
@@ -204,45 +333,53 @@ public class HarliePlayerController : PlayerController
 
     protected override bool BlocksActionCancel()
     {
-        return isChargingKick || isChargeSlideActive;
+        return isChargeSlideActive;
     }
 
-    protected override float GetCurrentDashVelocityX()
-    {
-        float peak = dashDirSign * dashSpeed;
-        float easeInWindow = Mathf.Min(harlieDashEaseInFraction, dashDuration * 0.35f);
-        float stopWindow = Mathf.Min(dashSmoothStopDuration, dashDuration * 0.55f);
-
-        if (easeInWindow > 0.0001f && dashTimer < easeInWindow)
-        {
-            float t = Mathf.Clamp01(dashTimer / easeInWindow);
-            return peak * SmootherStep(t);
-        }
-
-        if (stopWindow <= 0.0001f || dashTimer < dashDuration - stopWindow)
-            return peak;
-
-        float stopT = Mathf.InverseLerp(dashDuration - stopWindow, dashDuration, dashTimer);
-        float end = dashDirSign * dashSpeed * dashEndSpeedMultiplier;
-        return Mathf.Lerp(peak, end, SmootherStep(stopT));
-    }
+    protected override bool CanBeHitStunned => false;
 
     protected override float GetCurrentMoveSpeed()
     {
-        return base.GetCurrentMoveSpeed() * StyleSpeedMultiplier();
+        return base.GetCurrentMoveSpeed() * StyleSpeedMultiplier()
+               + Mathf.Max(0f, hyperMoveSpeedPerLevel) * ActiveHyperLevel;
     }
 
-    protected override void TryBeginDash()
+    protected override int MaxAirDashesWithUpgrades =>
+        Mathf.Max(0, maxAirDashes) + Mathf.Max(0, aerialAirDashesPerLevel) * AerialLevel;
+
+    private int AerialLevel => PlayerUpgrades.GetActiveLevel(this, UpgradeType.AerialAction);
+    protected int HyperLevel => PlayerUpgrades.GetActiveLevel(this, UpgradeType.HyperAbility);
+    protected int StyleLevel => PlayerUpgrades.GetActiveLevel(this, UpgradeType.AttackStyle);
+    /// <summary>Hyper attack / speed / wave bonuses only count at full health.</summary>
+    protected int ActiveHyperLevel => PlayerUpgrades.IsHyperActive(this) ? HyperLevel : 0;
+    private int SpeedStyleLevel => UsesSpeedStyle() ? StyleLevel : 0;
+    private int HeavyStyleLevel => UsesHeavyStyle() ? StyleLevel : 0;
+    private bool ChainKillActive => HeavyStyleLevel > 0 && HeavyStyleLevel >= Mathf.Max(1, heavyChainKillMinLevel);
+    private float SlashKnockbackDistance =>
+        Mathf.Max(0f, attackKnockbackDistance) + Mathf.Max(0f, heavyKnockbackPerLevel) * HeavyStyleLevel;
+
+    /// <summary>Dash speed before the attack-style multiplier (Speed Style upgrades add to it).</summary>
+    private float UnstyledDashSpeed =>
+        Mathf.Max(0.1f, harlieDashSpeed + Mathf.Max(0f, speedStyleDashSpeedPerLevel) * SpeedStyleLevel);
+
+    /// <summary>Applies upgrade-driven stats. Dash values are left alone mid-dash.</summary>
+    private void RefreshUpgradeStats()
     {
-        float saved = dashSpeed;
-        dashSpeed *= StyleSpeedMultiplier();
-        base.TryBeginDash();
-        dashSpeed = saved;
+        if (!isDashing)
+        {
+            dashDistance = Mathf.Max(0.1f, harlieDashDistance + Mathf.Max(0f, speedStyleDashDistancePerLevel) * SpeedStyleLevel);
+            dashSpeed = UnstyledDashSpeed * StyleSpeedMultiplier();
+        }
+
+        fallMultiplier = baseFallMultiplier + Mathf.Max(0f, heavyFallMultiplierPerLevel) * HeavyStyleLevel;
+        SetMaxHealthRuntime(baseMaxHealth
+                            + Mathf.Max(0, hyperMaxHealthPerLevel) * HyperLevel
+                            + Mathf.Max(0, heavyMaxHealthPerLevel) * HeavyStyleLevel);
     }
 
     protected override float GetDashJumpHorizontalSpeed()
     {
-        float speed = base.GetDashJumpHorizontalSpeed();
+        float speed = dashJumpHorizontalSpeed > 0f ? dashJumpHorizontalSpeed : UnstyledDashSpeed;
         if (UsesSpeedStyle())
             return speed * Mathf.Max(0.1f, speedStyleDashJumpMultiplier);
         if (UsesHeavyStyle())
@@ -250,12 +387,12 @@ public class HarliePlayerController : PlayerController
         return speed;
     }
 
-    private static bool UsesSpeedStyle()
+    protected static bool UsesSpeedStyle()
     {
         return PlayerAttackStyle.Is(AttackStyleId.SpreadShot);
     }
 
-    private static bool UsesHeavyStyle()
+    protected static bool UsesHeavyStyle()
     {
         return PlayerAttackStyle.Is(AttackStyleId.MachineGun);
     }
@@ -269,25 +406,132 @@ public class HarliePlayerController : PlayerController
         return 1f;
     }
 
-    private int ScaleOutgoingDamage(int baseDamage)
+    protected int ScaleOutgoingDamage(int baseDamage)
     {
         int dmg = Mathf.Max(0, baseDamage);
         if (UsesHeavyStyle())
             dmg += Mathf.Max(0, heavyStyleDamageBonus);
-        return dmg;
+        dmg += Mathf.Max(0, speedStyleDamagePerLevel) * SpeedStyleLevel;
+        dmg += Mathf.Max(0, hyperDamagePerLevel) * ActiveHyperLevel;
+        dmg += PlayerGear.WeaponDamageBonus(this);
+        return Mathf.FloorToInt(dmg * Mathf.Max(0.1f, outgoingDamageMultiplier) + 0.5f);
     }
 
-    private int GetChargedAttackDamage()
+    /// <summary>Attack style × rapid-press tier × dash-cancel boost for the current swing.</summary>
+    private float AttackSpeed()
     {
-        return ScaleOutgoingDamage(chargeKickDamage);
+        return StyleSpeedMultiplier() * Mathf.Max(0.01f, currentMeleeSpeed);
     }
 
-    protected override int UpgradeAirJumps => PlayerUpgrades.GetActiveLevel(this, UpgradeType.AerialAction);
+    private int MaxAirJumps => Mathf.Max(0, harlieMaxAirJumps) + AerialLevel;
+
+    // ---------- Double jump (same as Malice) ----------
+
+    protected override void ApplyJump()
+    {
+        if (!jumpRequested)
+            return;
+
+        // Ground jump, drop-through, wall jump and action locks stay in the base.
+        if (isStunned || BlocksActionCancel() || IsGrounded || CanWallJumpNow() || airJumpsRemaining <= 0)
+        {
+            base.ApplyJump();
+            return;
+        }
+
+        jumpRequested = false;
+        PerformDoubleJump();
+    }
+
+    private void PerformDoubleJump()
+    {
+        if (rb == null)
+            return;
+
+        airJumpsRemaining--;
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, GetDoubleJumpForce());
+        SoundManager.Instance?.PlayJump();
+        ReportTutorialAction(TutorialAction.AirJump);
+
+        if (!IsMeleeAttacking && !isDashing)
+            PlayJumpAnimation();
+    }
+
+    private void PlayJumpAnimation()
+    {
+        if (animator == null)
+            return;
+
+        int jumpState = Animator.StringToHash("Jump");
+        if (animator.HasState(0, jumpState))
+            animator.Play(jumpState, 0, 0f);
+    }
+
+    /// <summary>Jump height scales with v², so v = reference × √(height fraction).</summary>
+    private float GetDoubleJumpForce()
+    {
+        float reference = doubleJumpReferenceForce > 0f ? doubleJumpReferenceForce : jumpForce;
+        return reference * Mathf.Sqrt(Mathf.Clamp01(doubleJumpHeightFraction));
+    }
+
+    protected override void OnLanded()
+    {
+        base.OnLanded();
+        airJumpsRemaining = MaxAirJumps;
+        pogoInvincibleUntilLanded = false;
+    }
+
+    // ---------- Rapid attack speed + dash cancel (same as Malice) ----------
+
+    private void RegisterRapidAttackPress()
+    {
+        lastAttackPressTime = Time.time;
+        rapidAttackPressCount = Mathf.Max(0, rapidAttackPressCount) + 1;
+
+        int perTier = Mathf.Max(1, pressesPerSpeedTier);
+        attackSpeedTier = Mathf.Min(Mathf.Max(0, maxAttackSpeedTier), rapidAttackPressCount / perTier);
+    }
+
+    private void TickRapidAttackSpeedIdleReset()
+    {
+        if (attackSpeedTier <= 0 && rapidAttackPressCount <= 0)
+            return;
+
+        if (Time.time - lastAttackPressTime < Mathf.Max(0.01f, attackSpeedIdleResetSeconds))
+            return;
+
+        ResetRapidAttackSpeed();
+    }
+
+    private void ResetRapidAttackSpeed()
+    {
+        rapidAttackPressCount = 0;
+        attackSpeedTier = 0;
+    }
+
+    private float ResolveTapAttackSpeed()
+    {
+        int tier = Mathf.Clamp(attackSpeedTier, 0, Mathf.Max(0, maxAttackSpeedTier));
+        float speed = 1f + tier * Mathf.Max(0f, attackSpeedPerTier);
+
+        if (dashCancelSlashQueued)
+        {
+            dashCancelSlashQueued = false;
+            speed *= Mathf.Max(1f, dashCancelSlashSpeedMul);
+        }
+
+        return Mathf.Max(0.01f, speed);
+    }
+
+    protected override void OnDashEnded()
+    {
+        dashEndedAt = Time.time;
+    }
 
     protected override void Awake()
     {
         base.Awake();
-        SetCharacterId("Harlie");
+        SetCharacterId(HarlieCharacterId);
 
         dashDistance = harlieDashDistance;
         dashSpeed = harlieDashSpeed;
@@ -302,7 +546,13 @@ public class HarliePlayerController : PlayerController
         dashAfterimageColor = harlieAfterimageColor;
         dashAfterimageAlphaStart = harlieAfterimageAlphaStart;
         dashAfterimageAlphaEnd = harlieAfterimageAlphaEnd;
+
+        baseMaxHealth = maxHealth;
+        baseFallMultiplier = fallMultiplier;
+        RefreshUpgradeStats();
+
         airDashesRemaining = MaxAirDashesWithUpgrades;
+        airJumpsRemaining = MaxAirJumps;
 
         CacheAttackComboParam();
         SetupChargeAura();
@@ -318,14 +568,25 @@ public class HarliePlayerController : PlayerController
 
     protected override void OnDisable()
     {
+        ClearHarlieExtras(instant: false);
+        base.OnDisable();
+    }
+
+    protected override void ClearForVehicleRide()
+    {
+        ClearHarlieExtras(instant: true);
+        base.ClearForVehicleRide();
+    }
+
+    private void ClearHarlieExtras(bool instant)
+    {
         StopHarlieChargeAudio();
         SetChargeAuraVisible(false);
-        StopAllKnockbacks();
         EndJumpAttack();
         CancelChargeKick();
         EndMeleeImmediate();
         SoundManager.Instance?.StopHarlieSwordSwingImmediate();
-        base.OnDisable();
+        DismissSilverSwords(instant);
     }
 
     protected override void LateUpdate()
@@ -337,7 +598,7 @@ public class HarliePlayerController : PlayerController
     protected override void UpdateAnimator()
     {
         if (animator != null)
-            animator.speed = StyleSpeedMultiplier();
+            animator.speed = IsMeleeAttacking ? AttackSpeed() : StyleSpeedMultiplier();
 
         base.UpdateAnimator();
         if (animator == null)
@@ -367,6 +628,8 @@ public class HarliePlayerController : PlayerController
 
     protected override void HandleCharacterUpdate()
     {
+        RefreshUpgradeStats();
+
         if (attackCooldownTimer > 0f)
             attackCooldownTimer -= Time.deltaTime;
 
@@ -379,24 +642,74 @@ public class HarliePlayerController : PlayerController
 
         if (isChargingKick)
         {
-            if (!isGrounded)
-                CancelChargeKick();
-            else
-            {
-                chargeKickTimer = Mathf.Min(chargeKickTimer + Time.deltaTime, Mathf.Max(0.05f, chargeKickMaxSeconds));
-                // Hyper Ability (full health): past a tap, the kick is instantly at max charge.
-                if (PlayerUpgrades.IsHyperActive(this) && chargeKickTimer >= chargeKickMinHoldSeconds)
-                    chargeKickTimer = Mathf.Max(0.05f, chargeKickMaxSeconds);
-                UpdateChargeAura(chargeKickTimer);
-            }
+            chargeKickTimer = Mathf.Min(chargeKickTimer + Time.deltaTime, Mathf.Max(0.05f, chargeKickMaxSeconds));
+            UpdateChargeAura(chargeKickTimer);
         }
         else
         {
             SetChargeAuraVisible(false);
         }
 
+        TickRapidAttackSpeedIdleReset();
         TickMelee(Time.deltaTime);
         UpdateJumpAttack();
+        UpdateSilverSwords();
+    }
+
+    // ---------- Silver Swords ----------
+
+    /// <summary>Hex has her own Up / Down + Attack moves.</summary>
+    protected virtual bool SilverSwordsAllowed => true;
+
+    private bool SilverSwordsUnlocked =>
+        SilverSwordsAllowed && silverSwords.swordPrefab != null &&
+        HyperLevel >= Mathf.Max(1, silverSwordMinHyperLevel) && PlayerUpgrades.IsHyperActive(this);
+
+    private void UpdateSilverSwords()
+    {
+        bool unlocked = SilverSwordsUnlocked;
+        if (silverSwordSquad == null)
+        {
+            if (unlocked)
+                silverSwordSquad = SilverSwordSquad.Create(transform, silverSwords, groundLayers);
+            return;
+        }
+
+        if (!unlocked && !silverSwordSquad.IsAttacking)
+            DismissSilverSwords();
+    }
+
+    private void DismissSilverSwords(bool instant = false)
+    {
+        if (silverSwordSquad != null)
+        {
+            if (instant)
+                silverSwordSquad.DespawnNow();
+            else
+                silverSwordSquad.Dismiss();
+        }
+        silverSwordSquad = null;
+    }
+
+    /// <summary>Up + Attack: base attack. Down + Attack: Grandmother Silk. Only while the swords are in place.</summary>
+    private bool TryUseSilverSwords()
+    {
+        if (silverSwordSquad == null || isChargingKick || !silverSwordSquad.IsReady)
+            return false;
+
+        if (IsAimingUp())
+            return silverSwordSquad.TryBaseAttack();
+        if (IsAimingDown())
+            return silverSwordSquad.TryGrandmotherSilk(FindSilverSwordTarget);
+        return false;
+    }
+
+    private Bounds FindSilverSwordTarget()
+    {
+        Bounds body = bodyCollider != null ? bodyCollider.bounds : new Bounds(transform.position, Vector3.one);
+        if (SilverSwordSquad.TryFindClosestEnemy(body.center, silverSwordTargetRadius, out Bounds enemy))
+            return enemy;
+        return new Bounds(body.center + Vector3.right * (facingSign * 5f), body.size);
     }
 
     protected override void HandleCharacterFixedUpdate()
@@ -406,6 +719,44 @@ public class HarliePlayerController : PlayerController
 
         if (isAttackLunging)
             UpdateAttackLungeFixed();
+
+        if (isDashing && HeavyStyleLevel > 0)
+            TickHeavyDashPush();
+    }
+
+    /// <summary>Heavy Style: the dash shoves (and chips) moving common enemies it passes through. Bosses never move.</summary>
+    private void TickHeavyDashPush()
+    {
+        if (bodyCollider == null || heavyDashPushPerLevel <= 0f)
+            return;
+
+        ContactFilter2D filter = new ContactFilter2D();
+        filter.useTriggers = true;
+        filter.NoFilter();
+
+        DashPushOverlaps.Clear();
+        Bounds body = bodyCollider.bounds;
+        Physics2D.OverlapBox(body.center, body.size, 0f, filter, DashPushOverlaps);
+        float distance = Mathf.Max(0f, heavyDashPushPerLevel) * HeavyStyleLevel;
+        for (int i = 0; i < DashPushOverlaps.Count; i++)
+        {
+            Collider2D c = DashPushOverlaps[i];
+            if (c == null || c.transform.IsChildOf(transform) || EnemyDetectionZone.IsDetectionOnlyCollider(c))
+                continue;
+            if (c.GetComponent<AttackHitbox>() != null || c.GetComponentInParent<Boss>() != null)
+                continue;
+
+            ICommonEnemy enemy = c.GetComponentInParent<ICommonEnemy>();
+            if (enemy is not Component enemyComponent || enemy.IsDead || MaliceSlashProjectile.IsStationaryEnemy(enemy))
+                continue;
+            if (!dashPushedIds.Add(enemyComponent.GetInstanceID()))
+                continue;
+
+            if (heavyDashPushDamage > 0)
+                enemy.TakeDamage(heavyDashPushDamage);
+            if (!enemy.IsDead)
+                GentleKnockback.Apply(enemyComponent, dashDirSign, distance, heavyDashPushDuration, ChainKillActive);
+        }
     }
 
     protected override void ApplyHorizontalMove()
@@ -449,11 +800,20 @@ public class HarliePlayerController : PlayerController
         if (InputLocked || isStunned)
             return;
 
+        if (TryUseSilverSwords())
+            return;
+
         if (attackCooldownTimer > 0f && !IsMeleeAttacking && !isChargingKick)
             return;
 
+        // Mid-dash or right after a dash: the next swing is faster (and the dash is canceled).
+        if (isDashing || Time.time - dashEndedAt <= Mathf.Max(0f, dashCancelSlashWindow))
+            dashCancelSlashQueued = true;
+
         if (isDashing)
             CancelDash(keepHorizontalMomentum: true);
+
+        RegisterRapidAttackPress();
 
         // Mid-combo tap chains the next ground swing immediately.
         if (IsMeleeAttacking && !currentAttackWasAir && comboTimer > 0f)
@@ -462,8 +822,8 @@ public class HarliePlayerController : PlayerController
             return;
         }
 
-        // Ground idle: hold to charge kick (release fires via OnAttackCanceled).
-        if (isGrounded && !IsMeleeAttacking)
+        // Not mid-swing (ground or air): hold to charge (release fires via OnAttackCanceled).
+        if (!IsMeleeAttacking)
         {
             CancelChargeKick();
             isChargingKick = true;
@@ -488,9 +848,14 @@ public class HarliePlayerController : PlayerController
         float held = chargeKickTimer;
         chargeKickTimer = 0f;
         StopHarlieChargeAudio();
+        SetChargeAuraVisible(false);
 
         if (!isGrounded)
+        {
+            float ratio = held / Mathf.Max(0.05f, chargeKickMaxSeconds);
+            BeginAttack(chargedAirSlash: held >= chargeKickMinHoldSeconds && ratio >= chargedAirSlashMinRatio);
             return;
+        }
 
         if (held >= chargeKickMinHoldSeconds)
             BeginChargedRelease(held);
@@ -500,14 +865,15 @@ public class HarliePlayerController : PlayerController
 
     protected override void OnDashStarted()
     {
-        StopHarlieChargeAudio();
-        CancelChargeKick();
+        // A held charge carries through the dash.
+        ResetRapidAttackSpeed();
+        dashPushedIds.Clear();
         EndJumpAttack();
         if (IsMeleeAttacking)
             EndMeleeImmediate();
     }
 
-    private void CancelChargeKick()
+    protected void CancelChargeKick()
     {
         isChargingKick = false;
         chargeKickTimer = 0f;
@@ -561,7 +927,7 @@ public class HarliePlayerController : PlayerController
             ref attackBoxHasLastWritten);
     }
 
-    private void BeginAttack()
+    private void BeginAttack(bool chargedAirSlash = false)
     {
         EndJumpAttack();
 
@@ -570,11 +936,22 @@ public class HarliePlayerController : PlayerController
 
         EndMeleeImmediate();
 
+        currentMeleeSpeed = ResolveTapAttackSpeed();
+        float attackSpeed = AttackSpeed();
+
         currentAttackWasAir = inAir;
         meleeTimer = 0f;
         hitboxArmed = true;
+
+        ReportTutorialAction(TutorialAction.Attack);
+        if (inAir)
+            ReportTutorialAction(TutorialAction.AirAttack);
+        if (chargedAirSlash)
+            ReportTutorialAction(TutorialAction.ChargeAttack);
         hitboxOpened = false;
         hitboxClosed = false;
+        slashWaveFired = false;
+        chargeSlideFiresWave = false;
         airSlashHoldUntil = 0f;
 
         if (inAir)
@@ -583,8 +960,10 @@ public class HarliePlayerController : PlayerController
             nextComboIndex = ComboKick;
             comboTimer = 0f;
             meleeState = MeleeState.AirSlash;
-            pendingHitDamage = ScaleOutgoingDamage(airSlashDamage);
-            meleeDuration = ResolveDuration("air slash", airSlashDuration) / StyleSpeedMultiplier();
+            currentChargedAirSlash = chargedAirSlash;
+            currentDamageMultiplier = chargedAirSlash ? Mathf.Max(1, chargedAirSlashDamageMultiplier) : 1;
+            pendingHitDamage = ScaleOutgoingDamage(airSlashDamage) * currentDamageMultiplier;
+            meleeDuration = ResolveDuration("air slash", airSlashDuration) / attackSpeed;
         }
         else
         {
@@ -600,22 +979,22 @@ public class HarliePlayerController : PlayerController
                 case ComboSlash1:
                     meleeState = MeleeState.Slash1;
                     pendingHitDamage = ScaleOutgoingDamage(slash1Damage);
-                    meleeDuration = ResolveDuration("slash 1", slash1Duration) / StyleSpeedMultiplier();
+                    meleeDuration = ResolveDuration("slash 1", slash1Duration) / attackSpeed;
                     break;
                 case ComboSlash2:
                     meleeState = MeleeState.Slash2;
                     pendingHitDamage = ScaleOutgoingDamage(slash2Damage);
-                    meleeDuration = ResolveDuration("slash 2", slash2Duration) / StyleSpeedMultiplier();
+                    meleeDuration = ResolveDuration("slash 2", slash2Duration) / attackSpeed;
                     break;
                 case ComboSlash3:
                     meleeState = MeleeState.Slash3;
                     pendingHitDamage = ScaleOutgoingDamage(slash3Damage);
-                    meleeDuration = ResolveDuration("slash 3", slash3Duration) / StyleSpeedMultiplier();
+                    meleeDuration = ResolveDuration("slash 3", slash3Duration) / attackSpeed;
                     break;
                 default:
                     meleeState = MeleeState.Kick;
                     pendingHitDamage = ScaleOutgoingDamage(kickDamage);
-                    meleeDuration = ResolveDuration("kick", kickDuration) / StyleSpeedMultiplier();
+                    meleeDuration = ResolveDuration("kick", kickDuration) / attackSpeed;
                     break;
             }
 
@@ -637,7 +1016,13 @@ public class HarliePlayerController : PlayerController
 
         PlayHarlieSlashSound(inAir, currentComboIndex);
         attackBoxHasLastWritten = false;
+
+        if (!chargedAirSlash)
+            OnRegularAttackStarted();
     }
+
+    /// <summary>A tap slash, air slash or kick just started (not charged attacks or the pogo).</summary>
+    protected virtual void OnRegularAttackStarted() { }
 
     private void BeginChargedRelease(float heldSeconds)
     {
@@ -651,6 +1036,11 @@ public class HarliePlayerController : PlayerController
             BeginAttack();
             return;
         }
+
+        ResetRapidAttackSpeed();
+        dashCancelSlashQueued = false;
+        slashWaveFired = false;
+        ReportTutorialAction(TutorialAction.ChargeAttack);
 
         float slideDuration = ComputeChargeSlideDuration(distance);
         if (ratio <= chargeSlashMaxRatio)
@@ -672,8 +1062,9 @@ public class HarliePlayerController : PlayerController
         nextComboIndex = ComboSlash1;
         comboTimer = Mathf.Max(0.05f, comboInputWindow);
         meleeState = MeleeState.Kick;
-        pendingHitDamage = GetChargedAttackDamage();
+        pendingHitDamage = ScaleOutgoingDamage(chargeKickDamage);
         chargeSlideUsesKick = true;
+        chargeSlideFiresWave = false;
         BeginChargeSlide(distance, slideDuration, useKickAnim: true);
         PlayHarlieSlashSound(inAir: false, ComboKick);
     }
@@ -685,8 +1076,9 @@ public class HarliePlayerController : PlayerController
         nextComboIndex = ComboSlash2;
         comboTimer = Mathf.Max(0.05f, comboInputWindow);
         meleeState = MeleeState.Slash1;
-        pendingHitDamage = GetChargedAttackDamage();
+        pendingHitDamage = ScaleOutgoingDamage(chargeSlashDamage);
         chargeSlideUsesKick = false;
+        chargeSlideFiresWave = true;
         BeginChargeSlide(distance, slideDuration, useKickAnim: false);
         PlayHarlieSlashSound(inAir: false, ComboSlash1);
     }
@@ -763,7 +1155,7 @@ public class HarliePlayerController : PlayerController
             SoundManager.Instance.PlayHarlieSwordSwing();
     }
 
-    private float ResolveDuration(string stateName, float fallback)
+    protected float ResolveDuration(string stateName, float fallback)
     {
         if (!syncAttackDurationToAnimation || animator == null)
             return Mathf.Max(0.05f, fallback);
@@ -806,16 +1198,22 @@ public class HarliePlayerController : PlayerController
             return;
 
         meleeTimer += dt;
+        float attackSpeed = AttackSpeed();
+
+        if (chargeSlideFiresWave && !slashWaveFired && !isChargeSlideActive && chargeSlideTimer >= chargeSlideDuration)
+            FireSlashWave();
 
         if (!isChargeSlideActive)
         {
-            float activeStart = Mathf.Max(0f, hitboxDelay) / StyleSpeedMultiplier();
-            float activeEnd = activeStart + Mathf.Max(0.01f, hitboxActiveTime) / StyleSpeedMultiplier();
+            float activeStart = Mathf.Max(0f, hitboxDelay) / attackSpeed;
+            float activeEnd = activeStart + Mathf.Max(0.01f, hitboxActiveTime) / attackSpeed;
 
             if (hitboxArmed && !hitboxOpened && meleeTimer >= activeStart)
             {
                 hitboxOpened = true;
                 attackHitbox?.Activate(Mathf.Max(0, pendingHitDamage), applyDamage: true);
+                if (UsesSlashForCombat())
+                    FireSlashWave();
             }
 
             if (hitboxOpened && !hitboxClosed && meleeTimer >= activeEnd)
@@ -835,13 +1233,69 @@ public class HarliePlayerController : PlayerController
 
         bool wasAir = currentAttackWasAir;
         EndMeleeImmediate();
-        attackCooldownTimer = Mathf.Max(0f, timeBetweenAttacks) / StyleSpeedMultiplier();
+        attackCooldownTimer = Mathf.Max(0f, timeBetweenAttacks) / attackSpeed;
 
         if (wasAir)
-            airSlashHoldUntil = Time.time + Mathf.Max(0f, airSlashAnimHold) / StyleSpeedMultiplier();
+            airSlashHoldUntil = Time.time + Mathf.Max(0f, airSlashAnimHold) / attackSpeed;
     }
 
-    private void EndMeleeImmediate()
+    private void FireSlashWave()
+    {
+        if (slashWaveFired)
+            return;
+
+        slashWaveFired = true;
+        if (slashWave == null)
+            return;
+
+        int damage = Mathf.Max(0, pendingHitDamage)
+                     + Mathf.Max(0, heavyWaveDamagePerLevel) * HeavyStyleLevel * currentDamageMultiplier;
+        float distanceMul = currentChargedAirSlash ? Mathf.Max(1f, chargedAirSlashDistanceMultiplier) : 1f;
+        Collider2D attackBox = attackHitbox != null ? attackHitbox.GetComponent<Collider2D>() : null;
+
+        bool chargedSlash = currentChargedAirSlash || chargeSlideFiresWave;
+        if (!tripleWaveOnChargedSlash || !chargedSlash)
+        {
+            FireWaveWithUpgrades(attackBox, null, damage, distanceMul, null, null);
+            return;
+        }
+
+        MaliceSlashVolley volley = new MaliceSlashVolley();
+        float rad = tripleWaveAngle * Mathf.Deg2Rad;
+        Vector2 up = new Vector2(FacingSign * Mathf.Cos(rad), Mathf.Sin(rad));
+        Vector2 down = new Vector2(up.x, -up.y);
+        FireWaveWithUpgrades(attackBox, null, damage, distanceMul, null, volley);
+        FireWaveWithUpgrades(attackBox, null, damage, distanceMul, up, volley);
+        FireWaveWithUpgrades(attackBox, null, damage, distanceMul, down, volley);
+    }
+
+    /// <summary>
+    /// One slash wave with Hyper / Speed / Heavy wave bonuses applied. Fires from the attack box front edge
+    /// unless a spawn point is given; direction null = straight ahead.
+    /// </summary>
+    protected MaliceSlashProjectile FireWaveWithUpgrades(Collider2D attackBox, Vector3? spawn, int damage,
+        float distanceMultiplier, Vector2? direction, MaliceSlashVolley volley,
+        float bonusDistance = 0f, float speedMultiplier = 1f)
+    {
+        if (slashWave == null)
+            return null;
+
+        int hyper = ActiveHyperLevel;
+        int speedLevel = SpeedStyleLevel;
+        int heavyLevel = HeavyStyleLevel;
+        float extraDistance = Mathf.Max(0f, hyperWaveDistancePerLevel) * hyper
+                              + Mathf.Max(0f, speedStyleWaveDistancePerLevel) * speedLevel
+                              + Mathf.Max(0f, bonusDistance);
+        float extraSpeed = Mathf.Max(0f, speedStyleWaveSpeedPerLevel) * speedLevel;
+        float size = 1f + Mathf.Max(0f, hyperWaveSizePerLevel) * hyper
+                        + Mathf.Max(0f, heavyWaveSizePerLevel) * heavyLevel;
+
+        return slashWave.Fire(transform, attackBox, FacingSign, damage, spriteRenderer,
+            distanceMultiplier, extraDistance, extraSpeed, size, SlashKnockbackDistance, ChainKillActive,
+            direction, volley, spawn, speedMultiplier);
+    }
+
+    protected void EndMeleeImmediate()
     {
         StopAttackLunge();
         isChargeSlideActive = false;
@@ -856,6 +1310,10 @@ public class HarliePlayerController : PlayerController
         hitboxOpened = false;
         hitboxClosed = false;
         currentAttackWasAir = false;
+        chargeSlideFiresWave = false;
+        currentMeleeSpeed = 1f;
+        currentChargedAirSlash = false;
+        currentDamageMultiplier = 1;
     }
 
     private void BeginAttackLunge(int combo)
@@ -868,10 +1326,10 @@ public class HarliePlayerController : PlayerController
         }
 
         float duration;
-        float speedMul = StyleSpeedMultiplier();
+        float speedMul = AttackSpeed();
         if (combo == ComboKick)
         {
-            float kickSpeed = Mathf.Max(0.01f, dashSpeed * Mathf.Max(1.01f, kickSpeedVsDash) * speedMul);
+            float kickSpeed = Mathf.Max(0.01f, harlieDashSpeed * Mathf.Max(1.01f, kickSpeedVsDash) * speedMul);
             duration = distance / kickSpeed;
         }
         else
@@ -947,7 +1405,7 @@ public class HarliePlayerController : PlayerController
 
     private void UpdateJumpAttack()
     {
-        bool wantJumpAttack = !isGrounded && !isDashing && !IsMeleeAttacking && !isChargingKick
+        bool wantJumpAttack = !isGrounded && !isDashing && !IsMeleeAttacking
             && !isChargeSlideActive && Time.time >= airSlashHoldUntil;
 
         if (wantJumpAttack)
@@ -962,7 +1420,20 @@ public class HarliePlayerController : PlayerController
             return;
 
         isJumpAttackActive = true;
-        attackHitbox.Activate(ScaleOutgoingDamage(jumpAttackDamage), applyDamage: true);
+        attackHitbox.Activate(JumpAttackDamage, applyDamage: true);
+    }
+
+    /// <summary>Re-arms the falling attack with the current JumpAttackDamage and a fresh hit list.</summary>
+    protected void RestartJumpAttack()
+    {
+        EndJumpAttack();
+        UpdateJumpAttack();
+    }
+
+    /// <summary>Ends the post-air-slash pose hold so fall / jump attack resume right away.</summary>
+    protected void ClearAirSlashHold()
+    {
+        airSlashHoldUntil = 0f;
     }
 
     private void EndJumpAttack()
@@ -1035,130 +1506,28 @@ public class HarliePlayerController : PlayerController
         return isJumpAttackActive || IsMeleeAttacking;
     }
 
+    /// <summary>Malice's push rule: a short shove on moving common enemies only (never bosses or stationary enemies).</summary>
     private void PushTargetOnHit(Collider2D hitCollider)
     {
-        if (hitCollider == null || attackKnockbackSpaces <= 0f)
+        float distance = SlashKnockbackDistance;
+        if (hitCollider == null || distance <= 0f)
             return;
 
-        if (hitCollider.GetComponentInParent<Projectile>() != null)
+        if (hitCollider.GetComponentInParent<Projectile>() != null
+            || hitCollider.GetComponentInParent<Boss>() != null
+            || hitCollider.GetComponentInParent<Crystal>() != null
+            || hitCollider.GetComponentInParent<PlayerController>() != null)
             return;
 
-        Transform pushRoot = ResolveKnockbackRoot(hitCollider);
-        if (pushRoot == null)
-            return;
-
-        Vector2 knockback = new Vector2(FacingSign * attackKnockbackSpaces * knockbackSpaceSize, 0f);
-        if (knockback.sqrMagnitude <= 0.0001f)
-            return;
-
-        StartSmoothKnockback(pushRoot, knockback);
-    }
-
-    private void StartSmoothKnockback(Transform root, Vector2 delta)
-    {
-        if (root == null)
-            return;
-
-        int id = root.GetInstanceID();
-        if (activeKnockbacks.TryGetValue(id, out Coroutine running) && running != null)
-            StopCoroutine(running);
-
-        activeKnockbacks[id] = StartCoroutine(CoSmoothKnockback(root, delta));
-    }
-
-    private void StopAllKnockbacks()
-    {
-        foreach (KeyValuePair<int, Coroutine> pair in activeKnockbacks)
-        {
-            if (pair.Value != null)
-                StopCoroutine(pair.Value);
-        }
-
-        activeKnockbacks.Clear();
-    }
-
-    private IEnumerator CoSmoothKnockback(Transform root, Vector2 delta)
-    {
-        if (root == null)
-            yield break;
-
-        int id = root.GetInstanceID();
-        Rigidbody2D body = root.GetComponent<Rigidbody2D>();
-        if (body == null)
-            body = root.GetComponentInParent<Rigidbody2D>();
-
-        Vector2 start = body != null ? body.position : (Vector2)root.position;
-        Vector2 end = start + delta;
-        float duration = Mathf.Max(0.08f, attackKnockbackDuration);
-        float elapsed = 0f;
-
-        while (elapsed < duration)
-        {
-            if (root == null)
-                yield break;
-
-            elapsed += Time.fixedDeltaTime;
-            float t = SmootherStep(Mathf.Clamp01(elapsed / duration));
-            Vector2 pos = Vector2.Lerp(start, end, t);
-
-            if (body != null)
-            {
-                body.MovePosition(pos);
-                body.linearVelocity = new Vector2(0f, body.linearVelocity.y);
-            }
-            else
-            {
-                root.position = pos;
-            }
-
-            yield return new WaitForFixedUpdate();
-        }
-
-        if (root != null)
-        {
-            if (body != null)
-            {
-                body.MovePosition(end);
-                body.linearVelocity = new Vector2(0f, body.linearVelocity.y);
-            }
-            else
-            {
-                root.position = end;
-            }
-        }
-
-        activeKnockbacks.Remove(id);
-    }
-
-    private Transform ResolveKnockbackRoot(Collider2D hitCollider)
-    {
-        AttackHitbox tool = hitCollider.GetComponent<AttackHitbox>();
-        if (tool == null)
-            tool = hitCollider.GetComponentInParent<AttackHitbox>();
-
+        AttackHitbox tool = hitCollider.GetComponentInParent<AttackHitbox>();
         if (tool != null && tool.OwnerBoss != null)
-            return tool.OwnerBoss.transform;
+            return;
 
-        Boss boss = hitCollider.GetComponent<Boss>();
-        if (boss == null)
-            boss = hitCollider.GetComponentInParent<Boss>();
+        ICommonEnemy enemy = hitCollider.GetComponentInParent<ICommonEnemy>();
+        if (enemy is not Component enemyComponent || enemy.IsDead || MaliceSlashProjectile.IsStationaryEnemy(enemy))
+            return;
 
-        if (boss != null)
-            return boss.transform;
-
-        if (hitCollider.GetComponentInParent<Crystal>() != null)
-            return null;
-
-        PlayerController otherPlayer = hitCollider.GetComponent<PlayerController>();
-        if (otherPlayer == null)
-            otherPlayer = hitCollider.GetComponentInParent<PlayerController>();
-
-        if (otherPlayer != null && otherPlayer != this)
-            return otherPlayer.transform;
-
-        return hitCollider.attachedRigidbody != null
-            ? hitCollider.attachedRigidbody.transform
-            : hitCollider.transform.root;
+        GentleKnockback.Apply(enemyComponent, FacingSign, distance, attackKnockbackDuration, ChainKillActive);
     }
 
     private bool UsesSlashForCombat()
@@ -1179,7 +1548,7 @@ public class HarliePlayerController : PlayerController
             || currentComboIndex == ComboSlash3;
     }
 
-    private bool CanPogoNow()
+    protected virtual bool CanPogoNow()
     {
         if (isGrounded || rb == null)
             return false;
@@ -1232,10 +1601,124 @@ public class HarliePlayerController : PlayerController
             : other.GetInstanceID();
     }
 
+    public override void TakeDamage(int amount, Transform hitSource)
+    {
+        TakeDamage(amount, hitSource, applyKnockback: true);
+    }
+
+    public override void TakeDamage(int amount, Transform hitSource, bool applyKnockback)
+    {
+        if (IsInvincibleFromMovement())
+            return;
+
+        if (IsHitCoveredByActiveAttackBox(hitSource))
+        {
+            slashGuardedSource = hitSource;
+            slashGuardedAt = Time.time;
+            return;
+        }
+
+        // Harlie is never pushed back by hits.
+        base.TakeDamage(amount, hitSource, applyKnockback: false);
+    }
+
+    /// <summary>Dash, pogo guard, and (max Ariel Action) the post-pogo fall.</summary>
+    private bool IsInvincibleFromMovement()
+    {
+        return (dashInvincible && isDashing) || Time.time < pogoInvincibleUntil || pogoInvincibleUntilLanded;
+    }
+
+    protected override bool ShouldIgnoreSoftBounceFrom(Transform source)
+    {
+        if (IsInvincibleFromMovement())
+            return true;
+
+        if (source == null || slashGuardedSource == null || Time.time - slashGuardedAt > 0.1f)
+            return false;
+
+        return source == slashGuardedSource
+               || source.IsChildOf(slashGuardedSource)
+               || slashGuardedSource.IsChildOf(source);
+    }
+
+    /// <summary>
+    /// True when an enemy/boss only touches the part of Harlie's body that her active
+    /// attack box overlaps — she's winning that exchange, so the contact can't hurt her.
+    /// </summary>
+    private bool IsHitCoveredByActiveAttackBox(Transform hitSource)
+    {
+        if (!slashGuardEnabled || hitSource == null || bodyCollider == null ||
+            attackHitbox == null || !attackHitbox.IsActive || GetGuardEnemyRoot(hitSource) == null)
+            return false;
+
+        Collider2D attackCollider = attackHitbox.GetComponent<Collider2D>();
+        if (attackCollider == null || !attackCollider.enabled)
+            return false;
+
+        Bounds guardZone = attackCollider.bounds;
+        guardZone.Expand(slashGuardTolerance * 2f);
+        Bounds body = bodyCollider.bounds;
+
+        CollectGuardSourceColliders(hitSource);
+
+        bool anyContact = false;
+        for (int i = 0; i < SlashGuardSourceColliders.Count; i++)
+        {
+            Collider2D c = SlashGuardSourceColliders[i];
+            if (c.Distance(bodyCollider).distance > SlashGuardContactSkin)
+                continue;
+
+            Bounds cb = c.bounds;
+            cb.Expand(SlashGuardContactSkin * 2f);
+            if (!cb.Intersects(body))
+                continue;
+
+            Vector3 min = Vector3.Max(cb.min, body.min);
+            Vector3 max = Vector3.Min(cb.max, body.max);
+            anyContact = true;
+
+            bool insideGuard = min.x >= guardZone.min.x && max.x <= guardZone.max.x &&
+                               min.y >= guardZone.min.y && max.y <= guardZone.max.y;
+            if (!insideGuard)
+                return false;
+        }
+
+        return anyContact;
+    }
+
+    private static Transform GetGuardEnemyRoot(Transform t)
+    {
+        Boss boss = t.GetComponentInParent<Boss>();
+        if (boss != null)
+            return boss.transform;
+
+        return t.GetComponentInParent<ICommonEnemy>() is Component enemy ? enemy.transform : null;
+    }
+
+    private static void CollectGuardSourceColliders(Transform hitSource)
+    {
+        SlashGuardSourceColliders.Clear();
+        hitSource.GetComponentsInChildren(false, SlashGuardSourceColliders);
+        for (int i = SlashGuardSourceColliders.Count - 1; i >= 0; i--)
+        {
+            Collider2D c = SlashGuardSourceColliders[i];
+            if (c == null || !c.enabled || EnemyDetectionZone.IsDetectionOnlyCollider(c))
+                SlashGuardSourceColliders.RemoveAt(i);
+        }
+    }
+
     private void BounceOffTarget(Collider2D hitCollider)
     {
         if (rb == null)
             return;
+
+        ReportTutorialAction(TutorialAction.Pogo);
+        if (pogoRefreshesDoubleJump)
+            airJumpsRemaining = MaxAirJumps;
+
+        pogoInvincibleUntil = Time.time + Mathf.Max(0f, pogoGuardSeconds);
+        if (AerialLevel >= PlayerUpgrades.MaxLevel)
+            pogoInvincibleUntilLanded = true;
 
         SeparateFromTargetForPogo(hitCollider);
 
@@ -1435,6 +1918,9 @@ public class HarliePlayerController : PlayerController
     protected override void OnValidate()
     {
         base.OnValidate();
+        silverSwordMinHyperLevel = Mathf.Clamp(silverSwordMinHyperLevel, 1, PlayerUpgrades.MaxLevel);
+        silverSwordTargetRadius = Mathf.Max(1f, silverSwordTargetRadius);
+        silverSwords?.Validate();
         harlieDashDistance = Mathf.Max(0.1f, harlieDashDistance);
         harlieDashSpeed = Mathf.Max(0.1f, harlieDashSpeed);
         harlieMaxAirDashes = Mathf.Max(0, harlieMaxAirDashes);
@@ -1453,18 +1939,132 @@ public class HarliePlayerController : PlayerController
         chargeKickSpaceSize = Mathf.Max(0.01f, chargeKickSpaceSize);
         chargeKickMinHoldSeconds = Mathf.Max(0f, chargeKickMinHoldSeconds);
         chargeKickDamage = Mathf.Max(0, chargeKickDamage);
+        chargeSlashDamage = Mathf.Max(0, chargeSlashDamage);
         harlieDashSmoothStop = Mathf.Max(0f, harlieDashSmoothStop);
-        harlieDashEaseInFraction = Mathf.Max(0f, harlieDashEaseInFraction);
+        harlieDashJumpMomentumDuration = Mathf.Max(0f, harlieDashJumpMomentumDuration);
+        harlieMaxAirJumps = Mathf.Max(0, harlieMaxAirJumps);
+        doubleJumpReferenceForce = Mathf.Max(0.1f, doubleJumpReferenceForce);
+        doubleJumpHeightFraction = Mathf.Max(0.01f, doubleJumpHeightFraction);
+        pressesPerSpeedTier = Mathf.Max(1, pressesPerSpeedTier);
+        attackSpeedPerTier = Mathf.Max(0f, attackSpeedPerTier);
+        maxAttackSpeedTier = Mathf.Max(0, maxAttackSpeedTier);
+        attackSpeedIdleResetSeconds = Mathf.Max(0.05f, attackSpeedIdleResetSeconds);
+        dashCancelSlashSpeedMul = Mathf.Max(1f, dashCancelSlashSpeedMul);
+        dashCancelSlashWindow = Mathf.Max(0f, dashCancelSlashWindow);
+        slashGuardTolerance = Mathf.Max(0f, slashGuardTolerance);
+        attackKnockbackDistance = Mathf.Max(0f, attackKnockbackDistance);
+        pogoGuardSeconds = Mathf.Max(0f, pogoGuardSeconds);
+        chargedAirSlashDamageMultiplier = Mathf.Max(1, chargedAirSlashDamageMultiplier);
+        chargedAirSlashDistanceMultiplier = Mathf.Max(1f, chargedAirSlashDistanceMultiplier);
+        aerialAirDashesPerLevel = Mathf.Max(0, aerialAirDashesPerLevel);
+        hyperDamagePerLevel = Mathf.Max(0, hyperDamagePerLevel);
+        hyperMaxHealthPerLevel = Mathf.Max(0, hyperMaxHealthPerLevel);
+        hyperMoveSpeedPerLevel = Mathf.Max(0f, hyperMoveSpeedPerLevel);
+        hyperWaveSizePerLevel = Mathf.Max(0f, hyperWaveSizePerLevel);
+        hyperWaveDistancePerLevel = Mathf.Max(0f, hyperWaveDistancePerLevel);
+        speedStyleDamagePerLevel = Mathf.Max(0, speedStyleDamagePerLevel);
+        speedStyleWaveDistancePerLevel = Mathf.Max(0f, speedStyleWaveDistancePerLevel);
+        speedStyleWaveSpeedPerLevel = Mathf.Max(0f, speedStyleWaveSpeedPerLevel);
+        speedStyleDashDistancePerLevel = Mathf.Max(0f, speedStyleDashDistancePerLevel);
+        speedStyleDashSpeedPerLevel = Mathf.Max(0f, speedStyleDashSpeedPerLevel);
+        heavyWaveSizePerLevel = Mathf.Max(0f, heavyWaveSizePerLevel);
+        heavyWaveDamagePerLevel = Mathf.Max(0, heavyWaveDamagePerLevel);
+        heavyMaxHealthPerLevel = Mathf.Max(0, heavyMaxHealthPerLevel);
+        heavyFallMultiplierPerLevel = Mathf.Max(0f, heavyFallMultiplierPerLevel);
+        heavyKnockbackPerLevel = Mathf.Max(0f, heavyKnockbackPerLevel);
+        heavyChainKillMinLevel = Mathf.Clamp(heavyChainKillMinLevel, 1, PlayerUpgrades.MaxLevel);
+        heavyDashPushPerLevel = Mathf.Max(0f, heavyDashPushPerLevel);
+        heavyDashPushDamage = Mathf.Max(0, heavyDashPushDamage);
+        heavyDashPushDuration = Mathf.Max(0.02f, heavyDashPushDuration);
         harlieAfterimageFadeStagger = Mathf.Max(0f, harlieAfterimageFadeStagger);
         harlieAfterimageFadeDuration = Mathf.Max(0.05f, harlieAfterimageFadeDuration);
         chargeSlashMaxRatio = Mathf.Clamp(chargeSlashMaxRatio, 0.1f, 0.9f);
         chargeAttackSpeedVsDash = Mathf.Max(1.01f, chargeAttackSpeedVsDash);
-        attackKnockbackDuration = Mathf.Max(0.08f, attackKnockbackDuration);
+        attackKnockbackDuration = Mathf.Max(0.02f, attackKnockbackDuration);
         auraBaseScale = Mathf.Max(1f, auraBaseScale);
         jumpAttackDamage = Mathf.Max(0, jumpAttackDamage);
         aerialBounceForce = Mathf.Max(0.1f, aerialBounceForce);
-        attackKnockbackSpaces = Mathf.Max(0f, attackKnockbackSpaces);
-        knockbackSpaceSize = Mathf.Max(0.01f, knockbackSpaceSize);
+        outgoingDamageMultiplier = Mathf.Max(0.1f, outgoingDamageMultiplier);
+        slashWave?.Validate();
     }
 #endif
+}
+
+/// <summary>Harlie's single yellow slash wave (reuses Malice's slash projectile).</summary>
+[System.Serializable]
+public class HarlieSlashWaveSettings
+{
+    public bool enabled = true;
+    [Tooltip("Yellow copy of Malice's purple slash projectile.")]
+    public MaliceSlashProjectile prefab;
+    [Tooltip("Base travel distance (world units, ~1.5 spaces).")]
+    public float travelDistance = 1.5f;
+    [Tooltip("Seconds to cover the base distance. Base speed = distance / seconds; longer waves keep that speed.")]
+    public float travelSeconds = 0.2f;
+    [Tooltip("Push on moving common enemies is Harlie's slash knockback; this is how long it takes.")]
+    public float knockbackDuration = 0.12f;
+    [Tooltip("Sorting order offset vs. Harlie's body.")]
+    public int sortingOffset = 1;
+    public float fadeDelay = 0f;
+
+    public MaliceSlashProjectile Fire(
+        Transform owner,
+        Collider2D attackBox,
+        float facingSign,
+        int damage,
+        SpriteRenderer ownerRenderer,
+        float distanceMultiplier,
+        float extraDistance,
+        float extraSpeed,
+        float sizeMultiplier,
+        float knockbackDistance,
+        bool chainKill,
+        Vector2? travelDirection = null,
+        MaliceSlashVolley volley = null,
+        Vector3? spawnOverride = null,
+        float speedMultiplier = 1f)
+    {
+        if (!enabled || prefab == null || owner == null)
+            return null;
+
+        float baseSpeed = Mathf.Max(0.01f, travelDistance) / Mathf.Max(0.02f, travelSeconds);
+        float distance = Mathf.Max(0f, travelDistance * Mathf.Max(0f, distanceMultiplier) + Mathf.Max(0f, extraDistance));
+        float speed = Mathf.Max(0.01f, (baseSpeed + Mathf.Max(0f, extraSpeed)) * Mathf.Max(0.1f, speedMultiplier));
+        float seconds = distance / speed;
+
+        float dir = facingSign >= 0f ? 1f : -1f;
+        Vector3 spawn = owner.position;
+        if (attackBox is BoxCollider2D box)
+        {
+            Vector3 center = box.transform.TransformPoint(box.offset);
+            float halfWidth = box.size.x * 0.5f * Mathf.Abs(box.transform.lossyScale.x);
+            spawn = center + new Vector3(dir * halfWidth, 0f, 0f);
+        }
+        else if (attackBox != null)
+        {
+            Bounds b = attackBox.bounds;
+            spawn = new Vector3(dir > 0f ? b.max.x : b.min.x, b.center.y, owner.position.z);
+        }
+
+        if (spawnOverride.HasValue)
+            spawn = spawnOverride.Value;
+
+        spawn.z = owner.position.z;
+        MaliceSlashProjectile wave = Object.Instantiate(prefab, spawn, Quaternion.identity);
+        wave.transform.localScale = Vector3.Scale(wave.transform.localScale, Vector3.one * Mathf.Max(0.1f, sizeMultiplier));
+        wave.ChainKillOnPush = chainKill;
+        wave.Launch(dir, distance, seconds, damage, owner, volley ?? new MaliceSlashVolley(),
+            ownerRenderer, sortingOffset, fadeDelay, knockbackDistance, knockbackDuration);
+        if (travelDirection.HasValue)
+            wave.SetTravelDirection(travelDirection.Value);
+        return wave;
+    }
+
+    public void Validate()
+    {
+        travelDistance = Mathf.Max(0f, travelDistance);
+        travelSeconds = Mathf.Max(0.02f, travelSeconds);
+        knockbackDuration = Mathf.Max(0.02f, knockbackDuration);
+        fadeDelay = Mathf.Max(0f, fadeDelay);
+    }
 }

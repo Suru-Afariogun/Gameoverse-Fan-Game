@@ -332,6 +332,7 @@ public class MalicePlayerController : PlayerController
         airJumpsRemaining--;
         rb.linearVelocity = new Vector2(rb.linearVelocity.x, GetDoubleJumpForce());
         SoundManager.Instance?.PlayJump();
+        ReportTutorialAction(TutorialAction.AirJump);
 
         if (!IsMeleeAttacking && !isDashing)
             PlayJumpAnimation();
@@ -458,6 +459,16 @@ public class MalicePlayerController : PlayerController
         SetChargeAuraVisible(false);
         RestoreAttackBoxParent();
         base.OnDisable();
+    }
+
+    protected override void ClearForVehicleRide()
+    {
+        EndMeleeImmediate();
+        SetDashHitboxActive(false);
+        ClearGrabbedTargets();
+        isCharging = false;
+        SetChargeAuraVisible(false);
+        base.ClearForVehicleRide();
     }
 
     protected override void OnDestroy()
@@ -633,6 +644,7 @@ public class MalicePlayerController : PlayerController
             dmg += Mathf.Max(0, cruelClawAttackBonus) + Mathf.Max(0, cruelClawDamagePerLevel) * StyleLevel;
         if (HyperActive)
             dmg += Mathf.Max(0, hyperDamagePerLevel) * HyperLevel;
+        dmg += PlayerGear.WeaponDamageBonus(this);
         return dmg;
     }
 
@@ -1148,6 +1160,7 @@ public class MalicePlayerController : PlayerController
 
         float diveSpeed = Mathf.Max(0.1f, airSlashDiveSpeed);
         rb.linearVelocity = new Vector2(rb.linearVelocity.x, -diveSpeed);
+        ReportTutorialAction(TutorialAction.Dive);
     }
 
     private void StartMelee(MeleeState state, float duration, int damage, string triggerName)
@@ -1189,6 +1202,10 @@ public class MalicePlayerController : PlayerController
             animator.SetBool("IsAttacking", true);
 
         PlayMaliceSlashSound(state);
+
+        ReportTutorialAction(TutorialAction.Attack);
+        if (state == MeleeState.AirSlash)
+            ReportTutorialAction(TutorialAction.AirAttack);
     }
 
     private static void PlayMaliceSlashSound(MeleeState state)
@@ -1260,6 +1277,10 @@ public class MalicePlayerController : PlayerController
         grappleIsGrab = grab;
         grappleIsAirMove = air;
         ClearGrapplePullState();
+
+        ReportTutorialAction(TutorialAction.ChargeAttack);
+        if (grab)
+            ReportTutorialAction(TutorialAction.GrappleGrab);
         pendingHitDamage = ScaleOutgoingDamage(damage);
         hitboxArmed = true;
         hitboxWasActive = false;
@@ -1647,6 +1668,7 @@ public class MalicePlayerController : PlayerController
 
     private void BeginGrapplePullAnchor()
     {
+        ReportTutorialAction(TutorialAction.GrapplePull);
         EnsureGrapplePullAnchorLocalCached();
 
         // Freeze tip from the extension-frame pose, then detach so Animator cannot tow it back.

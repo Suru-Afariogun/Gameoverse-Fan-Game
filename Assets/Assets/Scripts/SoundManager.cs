@@ -187,6 +187,17 @@ public class SoundManager : MonoBehaviour
     [Tooltip("Pickup lands on the ground after burst.")]
     [SerializeField] private AudioClip itemHitGroundSfx;
 
+    [Header("Gameplay SFX — Clockwork Platforms")]
+    [Tooltip("Played every second while green/red platforms are counting down. Empty = Count's Tick shot sound.")]
+    [SerializeField] private AudioClip clockworkTicSfx;
+    [Tooltip("Played right as the platforms switch.")]
+    [SerializeField] private AudioClip clockworkTocSfx;
+    [Tooltip("Where in the Toc clip playback starts (seconds).")]
+    [SerializeField] private float clockworkTocStartTime = 0f;
+    [Tooltip("The Toc clip is cut off after this many seconds (the source clip is long).")]
+    [SerializeField] private float clockworkTocMaxSeconds = 0.6f;
+    [SerializeField] [Range(0f, 1f)] private float clockworkVolume = 1f;
+
     [Header("Gameplay SFX — Crystals")]
     [SerializeField] private AudioClip crystalHitSfx;
     [Tooltip("Crystal shattering.")]
@@ -248,6 +259,7 @@ public class SoundManager : MonoBehaviour
     private AudioSource sfxSource;
     private AudioSource pitchedSfxSource;
     private AudioSource chargeLoopSource;
+    private AudioSource clockworkTocSource;
     private AudioSource dialogueTypingSource;
     private AudioSource grappleSource;
     private AudioSource[] harlieSwingPool;
@@ -1654,6 +1666,35 @@ public class SoundManager : MonoBehaviour
     public void PlayItemDrop() => PlaySfx(itemDropSfx, gameplaySfxVolume);
 
     public void PlayItemHitGround() => PlaySfx(itemHitGroundSfx, gameplaySfxVolume);
+
+    public void PlayClockworkTic() => PlaySfx(clockworkTicSfx != null ? clockworkTicSfx : countMeow, clockworkVolume);
+
+    public void PlayClockworkToc()
+    {
+        if (clockworkTocSfx == null)
+        {
+            PlaySfxPitched(clockworkTicSfx != null ? clockworkTicSfx : countMeow, 0.7f, clockworkVolume);
+            return;
+        }
+
+        if (clockworkTocSource == null)
+        {
+            clockworkTocSource = gameObject.AddComponent<AudioSource>();
+            clockworkTocSource.playOnAwake = false;
+            clockworkTocSource.loop = false;
+            clockworkTocSource.spatialBlend = 0f;
+            clockworkTocSource.priority = 100;
+        }
+
+        clockworkTocSource.Stop();
+        clockworkTocSource.clip = clockworkTocSfx;
+        clockworkTocSource.volume = Mathf.Clamp01(masterVolume * sfxVolume * clockworkVolume);
+        clockworkTocSource.time = Mathf.Clamp(clockworkTocStartTime, 0f, Mathf.Max(0f, clockworkTocSfx.length - 0.02f));
+
+        double now = AudioSettings.dspTime;
+        clockworkTocSource.PlayScheduled(now);
+        clockworkTocSource.SetScheduledEndTime(now + Mathf.Max(0.05f, clockworkTocMaxSeconds));
+    }
 
     public void PlayCrystalHit() => PlaySfx(crystalHitSfx, gameplaySfxVolume);
 

@@ -51,6 +51,12 @@ MonoBehaviour:
     prefab: {fileID: 6231144415895922472, guid: d551dcf1c478deb469f6d53da0a8a8e3, type: 3}
   - bossId: Kit
     prefab: {fileID: 3672412826225818953, guid: 3f9e8c2b1a0d4e7f9b6c5a4d3e2f1a08, type: 3}
+  - bossId: Harlie
+    prefab: {fileID: 4817001000000000001, guid: 9c4d2b7a1e6f4a3b8d5c0e9f2a1b7c64, type: 3}
+  - bossId: Hex
+    prefab: {fileID: 4817002000000000001, guid: 7860434ddabe4f89868b1e6fe3532385, type: 3}
+  - bossId: Count
+    prefab: {fileID: 3672412826225818953, guid: 9d4b2f6a8c1e3a5b7d9f1c3e5a7b2d46, type: 3}
   spawnPoint: {fileID: 5805629488484123955}
   destroyMismatchedBossesOnStart: 1
   homeTownSceneName: HomeTown

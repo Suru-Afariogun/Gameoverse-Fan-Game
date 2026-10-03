@@ -1,6 +1,7 @@
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 /// <summary>
@@ -8,10 +9,26 @@ using UnityEngine.UI;
 /// Flashes on/off and plays the robot warning sound every time it turns on.
 /// Locks player + boss (and optionally camera) for the whole sequence — including
 /// the first load before anyone has spawned.
+/// The same component runs the level START text (<see cref="Purpose.LevelStart"/>): it plays once at the
+/// start of level scenes after Kit's rocket ship drops the player off, with the respawn sound.
 /// </summary>
 [DefaultExecutionOrder(-1000)]
 public class WarningText : MonoBehaviour
 {
+    public enum Purpose
+    {
+        BossWarning = 0,
+        LevelStart = 1
+    }
+
+    /// <summary>Resources prefab spawned in level scenes that don't already have a START text.</summary>
+    public const string LevelStartResourceName = "Start Canvas";
+
+    [Header("Purpose")]
+    [Tooltip("Boss Warning: plays on load in Boss Fight scenes and at level boss gates (robot warning sound).\n" +
+             "Level Start: plays once on load in level scenes, after the rocket ship drops the player off (respawn sound).")]
+    [SerializeField] private Purpose purpose = Purpose.BossWarning;
+
     [Header("Display (auto-finds on this object if left empty)")]
     [SerializeField] private TextMeshProUGUI uiText;
     [SerializeField] private TextMeshPro worldText;
@@ -30,10 +47,13 @@ public class WarningText : MonoBehaviour
     [SerializeField] private bool disableGameObjectWhenFinished = false;
 
     [Header("Sound")]
-    [Tooltip("Robot Warning sound for game.")]
+    [Tooltip("Fallback clip when there is no SoundManager. Boss Warning: Robot Warning sound for game. " +
+             "Level Start: Game restart sound for games.")]
     [SerializeField] private AudioClip robotWarningSound;
     [SerializeField] [Range(0f, 1f)] private float warningVolume = 1f;
     [SerializeField] private bool useSoundManagerIfAvailable = true;
+    [Tooltip("Off: the sound only plays on the first flash (the respawn sound is longer than one flash).")]
+    [SerializeField] private bool soundOnEveryFlash = true;
 
     [Header("Gameplay Freeze (optional MMX feel)")]
     [SerializeField] private bool lockPlayerInputDuringWarning = true;
@@ -45,10 +65,12 @@ public class WarningText : MonoBehaviour
 
     public bool IsPlaying { get; private set; }
     public bool HasCompletedAtLeastOnce { get; private set; }
+    public Purpose TextPurpose => purpose;
     public event System.Action OnWarningFinished;
 
     private AudioSource localSource;
     private Coroutine routine;
+    private Coroutine arrivalWaitRoutine;
     private bool cameraFollowWasEnabled;
     private bool pendingPlayOnStart;
     private bool freezeCameraOverrideActive;
@@ -76,24 +98,85 @@ public class WarningText : MonoBehaviour
 
     private void Start()
     {
-        if (ShouldAutoPlayOnLoad())
+        if (!ShouldAutoPlayOnLoad())
+            return;
+
+        if (purpose == Purpose.LevelStart)
+            arrivalWaitRoutine = StartCoroutine(PlayAfterArrival());
+        else
             Play();
     }
 
     private bool ShouldAutoPlayOnLoad()
     {
-        return playOnStart && !HasCompletedAtLeastOnce;
+        return playOnStart && !HasCompletedAtLeastOnce && AutoPlaysInScene(CurrentSceneName());
+    }
+
+    /// <summary>WARNING only opens Boss Fight scenes; START opens level scenes.</summary>
+    private bool AutoPlaysInScene(string sceneName)
+    {
+        return purpose == Purpose.LevelStart
+            ? LevelRespawnDirector.IsLevelScene(sceneName)
+            : BossFightDirector.IsBossFightScene(sceneName);
+    }
+
+    private string CurrentSceneName()
+    {
+        return gameObject.scene.IsValid() ? gameObject.scene.name : SceneManager.GetActiveScene().name;
+    }
+
+    /// <summary>START waits until the rocket ship has dropped the player off and flown away.</summary>
+    private IEnumerator PlayAfterArrival()
+    {
+        // The Player Spawner starts the ship's arrival in its Start().
+        yield return null;
+
+        while (KitRocketShip.IsArrivalInProgress)
+            yield return null;
+
+        arrivalWaitRoutine = null;
+        if (pendingPlayOnStart)
+            Play();
+    }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void RegisterLevelStartHook()
+    {
+        SceneManager.sceneLoaded -= EnsureLevelStartText;
+        SceneManager.sceneLoaded += EnsureLevelStartText;
+    }
+
+    private static void EnsureLevelStartText(Scene scene, LoadSceneMode mode)
+    {
+        if (!LevelRespawnDirector.IsLevelScene(scene.name) || FindFirstObjectByType<PlayerSpawner>() == null)
+            return;
+
+        if (FindInScene(Purpose.LevelStart) != null)
+            return;
+
+        GameObject prefab = Resources.Load<GameObject>(LevelStartResourceName);
+        if (prefab == null)
+        {
+            Debug.LogWarning($"[WarningText] Missing Resources/{LevelStartResourceName} prefab — no START text.");
+            return;
+        }
+
+        GameObject spawned = Instantiate(prefab);
+        spawned.name = prefab.name;
     }
 
     private void LateUpdate()
     {
         // Re-apply every frame so late-spawned players/bosses stay locked.
-        if (BlocksGameplay || IsPlaying || pendingPlayOnStart)
+        // Only the text that is playing does this (a level has both START and the boss WARNING).
+        if (IsPlaying || pendingPlayOnStart)
             FreezeGameplay();
     }
 
     private void OnDisable()
     {
+        CancelArrivalWait();
+
         if (routine != null)
         {
             StopCoroutine(routine);
@@ -148,6 +231,7 @@ public class WarningText : MonoBehaviour
             return;
         }
 
+        CancelArrivalWait();
         if (routine != null)
             StopCoroutine(routine);
 
@@ -155,6 +239,15 @@ public class WarningText : MonoBehaviour
         IsPlaying = true;
         BlocksGameplay = true;
         routine = StartCoroutine(FlashRoutine());
+    }
+
+    private void CancelArrivalWait()
+    {
+        if (arrivalWaitRoutine == null)
+            return;
+
+        StopCoroutine(arrivalWaitRoutine);
+        arrivalWaitRoutine = null;
     }
 
     /// <summary>Play the warning and wait until the flash sequence finishes.</summary>
@@ -209,14 +302,29 @@ public class WarningText : MonoBehaviour
         enabled = true;
     }
 
+    /// <summary>The boss WARNING text (never the level START text).</summary>
     public static WarningText FindInScene(bool includeInactive = true)
     {
-        return Object.FindFirstObjectByType<WarningText>(
-            includeInactive ? FindObjectsInactive.Include : FindObjectsInactive.Exclude);
+        return FindInScene(Purpose.BossWarning, includeInactive);
+    }
+
+    public static WarningText FindInScene(Purpose wanted, bool includeInactive = true)
+    {
+        WarningText[] all = Object.FindObjectsByType<WarningText>(
+            includeInactive ? FindObjectsInactive.Include : FindObjectsInactive.Exclude,
+            FindObjectsSortMode.None);
+        for (int i = 0; i < all.Length; i++)
+        {
+            if (all[i] != null && all[i].purpose == wanted)
+                return all[i];
+        }
+
+        return null;
     }
 
     public void StopImmediate(bool hide = true)
     {
+        CancelArrivalWait();
         if (routine != null)
         {
             StopCoroutine(routine);
@@ -249,7 +357,8 @@ public class WarningText : MonoBehaviour
         for (int i = 0; i < flashes; i++)
         {
             SetVisible(true);
-            PlayWarningSound();
+            if (i == 0 || soundOnEveryFlash)
+                PlayWarningSound();
             if (flashOnSeconds > 0f)
                 yield return new WaitForSecondsRealtime(flashOnSeconds);
             else
@@ -282,7 +391,10 @@ public class WarningText : MonoBehaviour
     {
         if (useSoundManagerIfAvailable && SoundManager.Instance != null)
         {
-            SoundManager.Instance.PlayRobotWarning();
+            if (purpose == Purpose.LevelStart)
+                SoundManager.Instance.PlayGameRestart();
+            else
+                SoundManager.Instance.PlayRobotWarning();
             return;
         }
 
@@ -412,7 +524,9 @@ public class WarningText : MonoBehaviour
 
 #if UNITY_EDITOR
         robotWarningSound = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(
-            "Assets/Sounds/Robot Warning sound for game.wav");
+            purpose == Purpose.LevelStart
+                ? "Assets/Sounds/Game restart sound for games.wav"
+                : "Assets/Sounds/Robot Warning sound for game.wav");
 #endif
     }
 

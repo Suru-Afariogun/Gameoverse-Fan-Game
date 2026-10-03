@@ -178,7 +178,7 @@ public sealed class KitRocketShip : MonoBehaviour
         if (player == null || player.IsDead)
             return false;
 
-        KitRocketShip ship = FindIdleShip();
+        KitRocketShip ship = FindIdleShip() ?? TakeOverFreeShip();
         bool spawnedNow = ship == null;
         if (spawnedNow)
             ship = SpawnFromResources();
@@ -210,7 +210,7 @@ public sealed class KitRocketShip : MonoBehaviour
         if (checkpoint == null || !checkpoint.isActiveAndEnabled)
             return false;
 
-        KitRocketShip ship = FindIdleShip();
+        KitRocketShip ship = FindIdleShip() ?? TakeOverFreeShip();
         bool spawnedNow = ship == null;
         if (spawnedNow)
             ship = SpawnFromResources();
@@ -238,7 +238,7 @@ public sealed class KitRocketShip : MonoBehaviour
         if (player == null || player.IsDead || player.IsRidingVehicle || !player.isActiveAndEnabled)
             return false;
 
-        KitRocketShip ship = FindIdleShip();
+        KitRocketShip ship = FindIdleShip() ?? TakeOverFreeShip();
         bool spawnedNow = ship == null;
         if (spawnedNow)
             ship = SpawnFromResources();
@@ -266,6 +266,33 @@ public sealed class KitRocketShip : MonoBehaviour
         return true;
     }
 
+    /// <summary>
+    /// Bannana Phone: the ship swoops in above the player (its bottom <paramref name="hoverAboveHead"/> over
+    /// their head), drops <paramref name="count"/> random Juice Boxes / Hot Dogs onto them, and flies off.
+    /// A parked or hovering ship goes back to where it was afterwards.
+    /// </summary>
+    public static bool TryDeliverSupplies(
+        PlayerController player,
+        CollectableConsumable juiceBox,
+        CollectableConsumable hotDog,
+        int count,
+        float hoverAboveHead)
+    {
+        if (player == null || player.IsDead || !player.isActiveAndEnabled)
+            return false;
+
+        KitRocketShip ship = FindIdleShip();
+        bool spawnedNow = ship == null;
+        if (spawnedNow)
+            ship = SpawnFromResources();
+
+        if (ship == null)
+            return false;
+
+        ship.StartCoroutine(ship.SupplyDropRoutine(player, juiceBox, hotDog, Mathf.Max(0, count), Mathf.Max(0f, hoverAboveHead), spawnedNow));
+        return true;
+    }
+
     /// <summary>A ship already in the scene that is free (hovering first, then parked).</summary>
     private static KitRocketShip FindIdleShip()
     {
@@ -285,6 +312,47 @@ public sealed class KitRocketShip : MonoBehaviour
         }
 
         return parked;
+    }
+
+    /// <summary>
+    /// No idle ship: take over one that is busy without a rider (flying back to park, mid supply drop, or
+    /// left stuck by an interrupted routine) so a boss defeat / respawn / pick-up never comes up empty.
+    /// </summary>
+    private static KitRocketShip TakeOverFreeShip()
+    {
+        KitRocketShip[] ships = FindObjectsByType<KitRocketShip>(FindObjectsSortMode.None);
+        for (int i = 0; i < ships.Length; i++)
+        {
+            KitRocketShip ship = ships[i];
+            if (ship == null || !ship.isActiveAndEnabled || ship.rider != null)
+                continue;
+
+            ship.InterruptCurrentRoutine();
+            return ship;
+        }
+
+        return null;
+    }
+
+    private void InterruptCurrentRoutine()
+    {
+        StopAllCoroutines();
+
+        if (ownsArrivalFlag)
+            FinishArrival(null);
+
+        if (ownsRespawnFlag)
+        {
+            ownsRespawnFlag = false;
+            IsRespawnDeliveryInProgress = false;
+        }
+
+        riderSeated = false;
+        riderSortingSwapped = false;
+        SetShipSorting(originalSortingLayerId, originalSortingOrder);
+        if (body != null)
+            body.flipX = originalFlipX;
+        state = ShipState.Parked;
     }
 
     private static KitRocketShip FindParkedSceneShip()
@@ -910,6 +978,128 @@ public sealed class KitRocketShip : MonoBehaviour
             state = ShipState.Busy;
             LoadDestination();
         }
+    }
+
+    #endregion
+
+    #region Bannana Phone supply drop
+
+    private const float SupplyDropInterval = 0.25f;
+
+    private IEnumerator SupplyDropRoutine(
+        PlayerController player,
+        CollectableConsumable juiceBox,
+        CollectableConsumable hotDog,
+        int count,
+        float hoverAboveHead,
+        bool spawnedNow)
+    {
+        ShipState previousState = state;
+        Vector3 previousHoverBase = hoverBase;
+        bool fresh = spawnedNow || IsOutsideView(0f);
+
+        state = ShipState.Busy;
+        SetSymbolVisible(false);
+        EnterFlightMode();
+        if (body != null)
+            body.flipX = originalFlipX;
+        SetFlyingAnimation(true, playTrigger: true);
+
+        if (fresh)
+            PlaceOffscreenAbove(-1f, player != null ? player.transform.position : transform.position);
+
+        // Swoop in, tracking the player as they move.
+        float speed = Mathf.Max(0.5f, pickUpApproachSpeed);
+        float timeout = 8f;
+        while (timeout > 0f && player != null && !player.IsDead)
+        {
+            Vector3 target = ResolveSupplyHoverPosition(player, hoverAboveHead);
+            transform.position = Vector3.MoveTowards(transform.position, target, speed * Time.deltaTime);
+            if ((transform.position - target).sqrMagnitude < 0.0025f)
+                break;
+
+            timeout -= Time.deltaTime;
+            yield return null;
+        }
+
+        // Drop the supplies one at a time, staying over the player.
+        float nextDrop = 0f;
+        int dropped = 0;
+        float bobTime = 0f;
+        while (dropped < count)
+        {
+            float dt = Time.deltaTime;
+            bobTime += dt;
+            if (player != null && !player.IsDead)
+            {
+                Vector3 target = ResolveSupplyHoverPosition(player, hoverAboveHead)
+                    + Vector3.up * (Mathf.Sin(bobTime * hoverBobSpeed * Mathf.PI) * hoverBobAmplitude);
+                transform.position = Vector3.MoveTowards(transform.position, target, speed * dt);
+            }
+
+            nextDrop -= dt;
+            if (nextDrop <= 0f)
+            {
+                UsableItem.DropSupply(juiceBox, hotDog, GetSpawnPosition() + Vector3.right * Random.Range(-0.3f, 0.3f));
+                dropped++;
+                nextDrop = SupplyDropInterval;
+            }
+
+            yield return null;
+        }
+
+        yield return HoverInPlace(0.3f);
+
+        // Fly away like the scene-arrival departure.
+        Vector3 dir = AngleToDirection(departAngle);
+        float departCurrent = departSpeed * 0.35f;
+        float elapsed = 0f;
+        while (elapsed < 10f && !IsOutsideView(despawnDistanceOutsideView))
+        {
+            float dt = Time.deltaTime;
+            departCurrent = Mathf.MoveTowards(departCurrent, departSpeed, departSpeed * 1.5f * dt);
+            transform.position += dir * (departCurrent * dt);
+            elapsed += dt;
+            yield return null;
+        }
+
+        if (spawnedNow)
+        {
+            Destroy(gameObject);
+            yield break;
+        }
+
+        if (previousState == ShipState.Hovering)
+        {
+            if (body != null)
+                body.flipX = previousHoverBase.x < transform.position.x ? !originalFlipX : originalFlipX;
+            yield return FlyTo(previousHoverBase, returnToParkSpeed, 0f, 3f);
+            if (body != null)
+                body.flipX = originalFlipX;
+            BeginHover();
+            yield break;
+        }
+
+        if (body != null)
+            body.flipX = parkPosition.x < transform.position.x ? !originalFlipX : originalFlipX;
+        yield return FlyTo(parkPosition, returnToParkSpeed, 0f, 3f);
+        Park();
+    }
+
+    /// <summary>Drop point over the player's center, ship bottom <paramref name="hoverAboveHead"/> above their head.</summary>
+    private Vector3 ResolveSupplyHoverPosition(PlayerController player, float hoverAboveHead)
+    {
+        float pivotToBottom = transform.position.y - GetVisualBounds().min.y;
+        float spawnOffsetX = GetSpawnPosition().x - transform.position.x;
+
+        Bounds playerBounds = player.BodyCollider != null && player.BodyCollider.enabled
+            ? player.BodyCollider.bounds
+            : new Bounds(player.transform.position, Vector3.one);
+
+        return new Vector3(
+            playerBounds.center.x - spawnOffsetX,
+            playerBounds.max.y + hoverAboveHead + pivotToBottom,
+            transform.position.z);
     }
 
     #endregion

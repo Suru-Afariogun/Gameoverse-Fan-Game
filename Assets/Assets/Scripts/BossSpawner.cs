@@ -22,7 +22,10 @@ public class BossSpawner : MonoBehaviour
     [SerializeField] private BossEntry[] bosses = new BossEntry[]
     {
         new BossEntry { bossId = "Malice" },
-        new BossEntry { bossId = "Kit" }
+        new BossEntry { bossId = "Kit" },
+        new BossEntry { bossId = "Harlie" },
+        new BossEntry { bossId = "Hex" },
+        new BossEntry { bossId = "Count" }
     };
 
     [Header("Spawn")]
@@ -97,7 +100,8 @@ public class BossSpawner : MonoBehaviour
         Vector3 pos = GetSpawnWorldPosition();
         Quaternion rot = spawnPoint != null ? spawnPoint.rotation : transform.rotation;
         Boss instance = Instantiate(prefab, pos, rot);
-        instance.ConfigureAsCopyBot(maxHealth);
+        int overrideHp = instance.CopyBotMaxHealthOverride;
+        instance.ConfigureAsCopyBot(overrideHp > 0 ? overrideHp : maxHealth);
         return instance;
     }
 
@@ -128,13 +132,17 @@ public class BossSpawner : MonoBehaviour
     }
 
     /// <summary>
-    /// Boss Fight Mode rival: Kit fights Malice; everyone else fights Kit.
+    /// Boss Fight Mode rival: Kit fights Malice, Harlie and Hex fight each other; everyone else fights Kit.
     /// </summary>
     public static string GetBossFightOpponentBossId()
     {
         string playerId = ResolvePlayerCharacterId();
         if (string.Equals(playerId, BossEncounter.BossIdKit, StringComparison.OrdinalIgnoreCase))
             return BossEncounter.BossIdMalice;
+        if (string.Equals(playerId, BossEncounter.BossIdHarlie, StringComparison.OrdinalIgnoreCase))
+            return BossEncounter.BossIdHex;
+        if (string.Equals(playerId, BossEncounter.BossIdHex, StringComparison.OrdinalIgnoreCase))
+            return BossEncounter.BossIdHarlie;
 
         return BossEncounter.BossIdKit;
     }
@@ -144,13 +152,9 @@ public class BossSpawner : MonoBehaviour
         if (string.IsNullOrWhiteSpace(characterId))
             characterId = BossEncounter.BossIdKit;
 
-        string id = characterId.Trim();
-        if (string.Equals(id, BossEncounter.BossIdMalice, StringComparison.OrdinalIgnoreCase))
-        {
-            BossEntry malice = FindEntry(BossEncounter.BossIdMalice);
-            if (malice != null && malice.prefab != null)
-                return malice.prefab;
-        }
+        BossEntry own = FindEntry(characterId.Trim());
+        if (own != null && own.prefab != null)
+            return own.prefab;
 
         BossEntry kit = FindEntry(BossEncounter.BossIdKit);
         return kit != null ? kit.prefab : null;

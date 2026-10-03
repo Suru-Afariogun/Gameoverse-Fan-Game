@@ -8,29 +8,38 @@ using UnityEngine.Events;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
+/// <summary>Which catalog a shop sells.</summary>
+public enum ShopCatalog
+{
+    ScratchUpgrades = 0,
+    BlacksmithGear = 1
+}
+
 /// <summary>
-/// Scratch's upgrade shop (HomeTown). Hidden until the owning NPC's dialogue finishes.
-/// Up/Down (or stick / mouse hover) picks an upgrade, Left/Right moves between its buy button and
-/// its Equip button, Confirm (or click) buys / toggles equip, Back closes.
-/// Levels and equip state are per character (see <see cref="PlayerUpgrades"/>).
+/// HomeTown crystal shop (Scratch's upgrades or Blacksmith Cat's gear). Hidden until the owning NPC's
+/// dialogue finishes. Up/Down (or stick / mouse hover) picks a row, Left/Right moves between its buy
+/// button and its Equip button, Confirm (or click) buys / toggles equip, Back closes.
+/// The authored rows are slots: when the catalog has more items than rows, the rows scroll.
+/// The info box under the shop explains the selected item for the current character.
+/// Levels and equip state are per character (see <see cref="PlayerUpgrades"/> / <see cref="PlayerGear"/>).
 /// </summary>
 public sealed class UpgradeShop : MonoBehaviour
 {
+    [Header("Catalog")]
+    [SerializeField] private ShopCatalog catalog = ShopCatalog.ScratchUpgrades;
+    [Tooltip("Info box title while nothing is selected. Empty = default for the catalog.")]
+    [SerializeField] private string shopTitle = "";
+
     [Header("UI (auto-finds by scene names if empty)")]
+    [Tooltip("Defaults to the child whose name ends with \"Shop Canvas\".")]
     [SerializeField] private GameObject shopRoot;
-    [SerializeField] private Button aerialActionButton;
-    [SerializeField] private Button hyperAbilityButton;
-    [SerializeField] private Button attackStyleButton;
-    [SerializeField] private TMP_Text aerialActionLevelText;
-    [SerializeField] private TMP_Text hyperAbilityLevelText;
-    [SerializeField] private TMP_Text attackStyleLevelText;
     [SerializeField] private TMP_Text crystalAmountText;
-    [Tooltip("Shows the price of the hovered / selected upgrade. Hidden when nothing is selected.")]
+    [Tooltip("Shows the price of the hovered / selected item. Hidden when nothing is selected.")]
     [SerializeField] private TMP_Text crystalCostText;
-    [Tooltip("Auto-found as the \"Equip Button\" child of each upgrade button if empty.")]
-    [SerializeField] private Button aerialActionEquipButton;
-    [SerializeField] private Button hyperAbilityEquipButton;
-    [SerializeField] private Button attackStyleEquipButton;
+    [Tooltip("Auto-found as \"Shop Info Title\" under the shop canvas.")]
+    [SerializeField] private TMP_Text infoTitleText;
+    [Tooltip("Auto-found as \"Shop Info Text\" under the shop canvas.")]
+    [SerializeField] private TMP_Text infoBodyText;
 
     [Header("Equip Button Look")]
     [SerializeField] private Color equippedColor = new Color(0.22f, 1f, 0.08f, 1f);
@@ -53,10 +62,11 @@ public sealed class UpgradeShop : MonoBehaviour
     [Tooltip("After closing, keep dash blocked this long so Back / Confirm does not also dash.")]
     [SerializeField] private float postCloseDashLockSeconds = 0.35f;
 
-    private sealed class Entry
+    /// <summary>One authored row (button + level text + equip button). Shows item windowStart + its index.</summary>
+    private sealed class Slot
     {
-        public UpgradeType Type;
         public Button Button;
+        public TMP_Text LabelText;
         public TMP_Text LevelText;
         public Image Image;
         public Color BaseColor = Color.white;
@@ -66,15 +76,19 @@ public sealed class UpgradeShop : MonoBehaviour
         public TMP_Text EquipText;
         public Vector3 EquipBaseScale = Vector3.one;
         public bool PointerOverEquip;
+        public UpgradeType BoundUpgrade;
     }
 
-    private readonly List<Entry> entries = new List<Entry>(3);
+    private readonly List<Slot> slots = new List<Slot>(3);
+    // Item codes: (int)UpgradeType for Scratch, (int)GearType for Blacksmith.
+    private readonly List<int> items = new List<int>(8);
     private InputActions controls;
     private PlayerController shopper;
     private Action onClosed;
     private Coroutine dashReleaseRoutine;
     private bool isOpen;
-    private int selectedIndex = -1;
+    private int selectedItem = -1;
+    private int windowStart;
     private bool equipColumnSelected;
     private bool selectionFromPointer;
     private float nextInputTime;
@@ -84,11 +98,13 @@ public sealed class UpgradeShop : MonoBehaviour
     private bool moveRightHeld;
 
     public bool IsOpen => isOpen;
+    private bool IsGearShop => catalog == ShopCatalog.BlacksmithGear;
 
     private void Awake()
     {
         CacheUi();
-        BuildEntries();
+        BuildSlots();
+        BuildItems();
         HookButtons();
         SetShopVisible(false);
     }
@@ -113,6 +129,8 @@ public sealed class UpgradeShop : MonoBehaviour
             PlayerInventory.Instance.OnInventoryChanged += RefreshTexts;
         PlayerUpgrades.OnChanged += OnUpgradeChanged;
         PlayerUpgrades.OnEquippedChanged += OnUpgradeEquippedChanged;
+        PlayerGear.OnChanged += OnGearChanged;
+        PlayerGear.OnEquippedChanged += OnGearEquippedChanged;
     }
 
     private void OnDisable()
@@ -135,6 +153,8 @@ public sealed class UpgradeShop : MonoBehaviour
             PlayerInventory.Instance.OnInventoryChanged -= RefreshTexts;
         PlayerUpgrades.OnChanged -= OnUpgradeChanged;
         PlayerUpgrades.OnEquippedChanged -= OnUpgradeEquippedChanged;
+        PlayerGear.OnChanged -= OnGearChanged;
+        PlayerGear.OnEquippedChanged -= OnGearEquippedChanged;
 
         if (isOpen)
             Close();
@@ -157,7 +177,8 @@ public sealed class UpgradeShop : MonoBehaviour
         isOpen = true;
         shopper = player != null ? player : PlayerController.ResolveActive();
         onClosed = closedCallback;
-        selectedIndex = -1;
+        selectedItem = -1;
+        windowStart = 0;
         equipColumnSelected = false;
         selectionFromPointer = false;
         moveUpHeld = true;
@@ -191,10 +212,10 @@ public sealed class UpgradeShop : MonoBehaviour
             return;
 
         isOpen = false;
-        selectedIndex = -1;
+        selectedItem = -1;
         equipColumnSelected = false;
-        for (int i = 0; i < entries.Count; i++)
-            entries[i].PointerOverEquip = false;
+        for (int i = 0; i < slots.Count; i++)
+            slots[i].PointerOverEquip = false;
         RefreshSelectionVisuals();
         SetShopVisible(false);
 
@@ -302,16 +323,16 @@ public sealed class UpgradeShop : MonoBehaviour
         if (!context.performed || !CanAcceptInput())
             return;
 
-        if (selectedIndex < 0)
+        if (selectedItem < 0)
         {
             MoveSelection(1);
             return;
         }
 
         if (equipColumnSelected)
-            TryToggleEquip(selectedIndex);
+            TryToggleEquip(selectedItem);
         else
-            TryBuy(selectedIndex);
+            TryBuy(selectedItem);
     }
 
     private void OnBackPerformed(InputAction.CallbackContext context)
@@ -325,45 +346,63 @@ public sealed class UpgradeShop : MonoBehaviour
 
     private void MoveSelection(int delta)
     {
-        if (entries.Count == 0)
+        if (items.Count == 0)
             return;
 
         selectionFromPointer = false;
-        if (selectedIndex < 0)
-            selectedIndex = delta > 0 ? 0 : entries.Count - 1;
+        if (selectedItem < 0)
+            selectedItem = delta > 0 ? windowStart : Mathf.Min(items.Count, windowStart + slots.Count) - 1;
         else
-            selectedIndex = (selectedIndex + delta + entries.Count) % entries.Count;
+            selectedItem = (selectedItem + delta + items.Count) % items.Count;
 
-        if (entries[selectedIndex].EquipButton == null)
-            equipColumnSelected = false;
-
+        ScrollToSelection();
         ConsumeInputCooldown();
         RefreshAll();
     }
 
-    /// <summary>Left = the upgrade's buy button, Right = its Equip button.</summary>
+    /// <summary>Left = the item's buy button, Right = its Equip button.</summary>
     private void SelectColumn(bool equip)
     {
-        if (entries.Count == 0)
+        if (items.Count == 0)
             return;
 
         selectionFromPointer = false;
-        if (selectedIndex < 0)
-            selectedIndex = 0;
+        if (selectedItem < 0)
+            selectedItem = windowStart;
 
-        equipColumnSelected = equip && entries[selectedIndex].EquipButton != null;
+        Slot slot = SlotForItem(selectedItem);
+        equipColumnSelected = equip && slot != null && slot.EquipButton != null;
         ConsumeInputCooldown();
         RefreshAll();
     }
 
-    private void TryBuy(int index)
+    private void ScrollToSelection()
     {
-        if (index < 0 || index >= entries.Count)
+        int visible = Mathf.Max(1, slots.Count);
+        if (selectedItem < windowStart)
+            windowStart = selectedItem;
+        else if (selectedItem >= windowStart + visible)
+            windowStart = selectedItem - visible + 1;
+
+        windowStart = Mathf.Clamp(windowStart, 0, Mathf.Max(0, items.Count - visible));
+
+        Slot slot = SlotForItem(selectedItem);
+        if (slot == null || slot.EquipButton == null)
+            equipColumnSelected = false;
+    }
+
+    private void TryBuy(int item)
+    {
+        if (item < 0 || item >= items.Count)
             return;
 
         ConsumeInputCooldown();
         string id = GetShopperId();
-        if (PlayerUpgrades.TryBuy(id, entries[index].Type))
+        bool bought = IsGearShop
+            ? PlayerGear.TryBuy(id, (GearType)items[item])
+            : PlayerUpgrades.TryBuy(id, (UpgradeType)items[item]);
+
+        if (bought)
             SoundManager.Instance?.PlayUiConfirm();
         else
             SoundManager.Instance?.PlayUiBack();
@@ -371,13 +410,18 @@ public sealed class UpgradeShop : MonoBehaviour
         RefreshAll();
     }
 
-    private void TryToggleEquip(int index)
+    private void TryToggleEquip(int item)
     {
-        if (index < 0 || index >= entries.Count)
+        if (item < 0 || item >= items.Count)
             return;
 
         ConsumeInputCooldown();
-        if (PlayerUpgrades.TryToggleEquipped(GetShopperId(), entries[index].Type))
+        string id = GetShopperId();
+        bool toggled = IsGearShop
+            ? PlayerGear.TryToggleEquipped(id, (GearType)items[item])
+            : PlayerUpgrades.TryToggleEquipped(id, (UpgradeType)items[item]);
+
+        if (toggled)
             SoundManager.Instance?.PlayUiConfirm();
         else
             SoundManager.Instance?.PlayUiBack();
@@ -389,29 +433,29 @@ public sealed class UpgradeShop : MonoBehaviour
 
     private void HookButtons()
     {
-        for (int i = 0; i < entries.Count; i++)
+        for (int i = 0; i < slots.Count; i++)
         {
             int index = i;
-            Entry entry = entries[i];
-            entry.Button.onClick.AddListener(() => OnButtonClicked(index));
+            Slot slot = slots[i];
+            slot.Button.onClick.AddListener(() => OnButtonClicked(index));
 
-            EventTrigger trigger = entry.Button.GetComponent<EventTrigger>();
+            EventTrigger trigger = slot.Button.GetComponent<EventTrigger>();
             if (trigger == null)
-                trigger = entry.Button.gameObject.AddComponent<EventTrigger>();
+                trigger = slot.Button.gameObject.AddComponent<EventTrigger>();
 
             AddPointerCallback(trigger, EventTriggerType.PointerEnter, _ => OnPointerEnter(index));
             AddPointerCallback(trigger, EventTriggerType.PointerExit, _ => OnPointerExit(index));
 
-            if (entry.EquipButton == null)
+            if (slot.EquipButton == null)
                 continue;
 
             // Equip colors must show exactly (green / gray), so no hover tint on top.
-            entry.EquipButton.transition = Selectable.Transition.None;
-            entry.EquipButton.onClick.AddListener(() => OnEquipClicked(index));
+            slot.EquipButton.transition = Selectable.Transition.None;
+            slot.EquipButton.onClick.AddListener(() => OnEquipClicked(index));
 
-            EventTrigger equipTrigger = entry.EquipButton.GetComponent<EventTrigger>();
+            EventTrigger equipTrigger = slot.EquipButton.GetComponent<EventTrigger>();
             if (equipTrigger == null)
-                equipTrigger = entry.EquipButton.gameObject.AddComponent<EventTrigger>();
+                equipTrigger = slot.EquipButton.gameObject.AddComponent<EventTrigger>();
 
             AddPointerCallback(equipTrigger, EventTriggerType.PointerEnter, _ => OnEquipPointerEnter(index));
             AddPointerCallback(equipTrigger, EventTriggerType.PointerExit, _ => OnEquipPointerExit(index));
@@ -425,72 +469,132 @@ public sealed class UpgradeShop : MonoBehaviour
         trigger.triggers.Add(entry);
     }
 
-    private void OnButtonClicked(int index)
+    private int ItemForSlot(int slotIndex)
     {
-        if (!CanAcceptInput())
-            return;
-
-        selectedIndex = index;
-        TryBuy(index);
+        int item = windowStart + slotIndex;
+        return item >= 0 && item < items.Count ? item : -1;
     }
 
-    private void OnEquipClicked(int index)
+    private Slot SlotForItem(int item)
     {
-        if (!CanAcceptInput())
+        int slotIndex = item - windowStart;
+        return item >= 0 && slotIndex >= 0 && slotIndex < slots.Count ? slots[slotIndex] : null;
+    }
+
+    private void OnButtonClicked(int slotIndex)
+    {
+        int item = ItemForSlot(slotIndex);
+        if (!CanAcceptInput() || item < 0)
+            return;
+
+        selectedItem = item;
+        TryBuy(item);
+    }
+
+    private void OnEquipClicked(int slotIndex)
+    {
+        int item = ItemForSlot(slotIndex);
+        if (!CanAcceptInput() || item < 0)
             return;
 
         // Keep the UI Submit key from clicking this button again right after our own Confirm.
         if (EventSystem.current != null)
             EventSystem.current.SetSelectedGameObject(null);
 
-        selectedIndex = index;
+        selectedItem = item;
         equipColumnSelected = true;
-        TryToggleEquip(index);
+        TryToggleEquip(item);
     }
 
-    private void OnPointerEnter(int index)
+    private void OnPointerEnter(int slotIndex)
     {
-        if (!isOpen)
+        int item = ItemForSlot(slotIndex);
+        if (!isOpen || item < 0)
             return;
 
-        // The Equip button is a child, so entering it also enters the upgrade button (child fires first).
-        selectedIndex = index;
-        equipColumnSelected = entries[index].PointerOverEquip;
+        // The Equip button is a child, so entering it also enters the row button (child fires first).
+        selectedItem = item;
+        equipColumnSelected = slots[slotIndex].PointerOverEquip;
         selectionFromPointer = true;
         RefreshAll();
     }
 
-    private void OnEquipPointerEnter(int index)
+    private void OnEquipPointerEnter(int slotIndex)
     {
-        entries[index].PointerOverEquip = true;
-        if (!isOpen)
+        slots[slotIndex].PointerOverEquip = true;
+        int item = ItemForSlot(slotIndex);
+        if (!isOpen || item < 0)
             return;
 
-        selectedIndex = index;
+        selectedItem = item;
         equipColumnSelected = true;
         selectionFromPointer = true;
         RefreshAll();
     }
 
-    private void OnEquipPointerExit(int index)
+    private void OnEquipPointerExit(int slotIndex)
     {
-        entries[index].PointerOverEquip = false;
-        if (!isOpen || !selectionFromPointer || selectedIndex != index)
+        slots[slotIndex].PointerOverEquip = false;
+        if (!isOpen || !selectionFromPointer || selectedItem != ItemForSlot(slotIndex))
             return;
 
         equipColumnSelected = false;
         RefreshAll();
     }
 
-    private void OnPointerExit(int index)
+    private void OnPointerExit(int slotIndex)
     {
-        if (!isOpen || !selectionFromPointer || selectedIndex != index)
+        if (!isOpen || !selectionFromPointer || selectedItem != ItemForSlot(slotIndex))
             return;
 
-        selectedIndex = -1;
+        selectedItem = -1;
         equipColumnSelected = false;
         selectionFromPointer = false;
         RefreshAll();
+    }
+
+    // ---------- Catalog ----------
+
+    private int GetLevel(string id, int item)
+    {
+        return IsGearShop ? PlayerGear.GetLevel(id, (GearType)items[item]) : PlayerUpgrades.GetLevel(id, (UpgradeType)items[item]);
+    }
+
+    private bool IsAvailable(string id, int item)
+    {
+        return IsGearShop || PlayerUpgrades.IsAvailable(id, (UpgradeType)items[item]);
+    }
+
+    private int MaxLevel => IsGearShop ? PlayerGear.MaxLevel : PlayerUpgrades.MaxLevel;
+
+    private int GetPrice(int level)
+    {
+        return IsGearShop ? PlayerGear.GetPrice(level) : PlayerUpgrades.GetPrice(level);
+    }
+
+    /// <summary>Not bought yet (or not available for this character) always reads as unequipped.</summary>
+    private bool IsShownEquipped(string id, int item)
+    {
+        if (IsGearShop)
+        {
+            GearType gear = (GearType)items[item];
+            return PlayerGear.CanToggleEquipped(id, gear) && PlayerGear.IsEquipped(id, gear);
+        }
+
+        UpgradeType upgrade = (UpgradeType)items[item];
+        return PlayerUpgrades.CanToggleEquipped(id, upgrade) && PlayerUpgrades.IsEquipped(id, upgrade);
+    }
+
+    private string GetItemName(int item)
+    {
+        return IsGearShop ? ShopDescriptions.GearName((GearType)items[item]) : ShopDescriptions.UpgradeName((UpgradeType)items[item]);
+    }
+
+    private string GetItemDescription(string id, int item)
+    {
+        return IsGearShop
+            ? ShopDescriptions.Gear(id, (GearType)items[item])
+            : ShopDescriptions.Upgrade(id, (UpgradeType)items[item]);
     }
 
     // ---------- Display ----------
@@ -502,6 +606,18 @@ public sealed class UpgradeShop : MonoBehaviour
     }
 
     private void OnUpgradeEquippedChanged(string characterId, UpgradeType type, bool equipped)
+    {
+        if (isOpen)
+            RefreshAll();
+    }
+
+    private void OnGearChanged(string characterId, GearType type, int level)
+    {
+        if (isOpen)
+            RefreshAll();
+    }
+
+    private void OnGearEquippedChanged(string characterId, GearType type, bool equipped)
     {
         if (isOpen)
             RefreshAll();
@@ -523,32 +639,87 @@ public sealed class UpgradeShop : MonoBehaviour
         if (crystalAmountText != null)
             crystalAmountText.text = ": " + crystals;
 
-        for (int i = 0; i < entries.Count; i++)
+        for (int i = 0; i < slots.Count; i++)
         {
-            Entry entry = entries[i];
-            if (entry.LevelText != null)
-                entry.LevelText.text = "Level: " + PlayerUpgrades.GetLevel(id, entry.Type);
+            Slot slot = slots[i];
+            int item = ItemForSlot(i);
+            bool used = item >= 0;
+            if (slot.Button.gameObject.activeSelf != used)
+                slot.Button.gameObject.SetActive(used);
+            if (!used)
+                continue;
 
-            if (entry.EquipText != null)
-                entry.EquipText.text = IsShownEquipped(id, entry) ? equippedText : unequippedText;
+            if (IsGearShop && slot.LabelText != null)
+                slot.LabelText.text = GetItemName(item);
+            if (slot.LevelText != null)
+                slot.LevelText.text = "Level: " + GetLevel(id, item);
+            if (slot.EquipText != null)
+                slot.EquipText.text = IsShownEquipped(id, item) ? equippedText : unequippedText;
         }
 
+        RefreshCostText(id);
+        RefreshInfoBox(id);
+    }
+
+    private void RefreshCostText(string id)
+    {
         if (crystalCostText == null)
             return;
 
-        bool show = selectedIndex >= 0 && selectedIndex < entries.Count;
+        bool show = selectedItem >= 0 && selectedItem < items.Count;
         crystalCostText.enabled = show;
         if (!show)
             return;
 
-        UpgradeType type = entries[selectedIndex].Type;
-        int level = PlayerUpgrades.GetLevel(id, type);
-        if (!PlayerUpgrades.IsAvailable(id, type))
+        int level = GetLevel(id, selectedItem);
+        if (!IsAvailable(id, selectedItem))
             crystalCostText.text = ": N/A";
-        else if (level >= PlayerUpgrades.MaxLevel)
+        else if (level >= MaxLevel)
             crystalCostText.text = ": MAX";
         else
-            crystalCostText.text = ": - " + PlayerUpgrades.GetPrice(level);
+            crystalCostText.text = ": - " + GetPrice(level);
+    }
+
+    private void RefreshInfoBox(string id)
+    {
+        if (infoTitleText == null && infoBodyText == null)
+            return;
+
+        string title;
+        string body;
+        if (selectedItem >= 0 && selectedItem < items.Count)
+        {
+            int level = GetLevel(id, selectedItem);
+            string state = !IsAvailable(id, selectedItem) ? "Not for " + id
+                : level <= 0 ? "Not bought"
+                : IsShownEquipped(id, selectedItem) ? "Equipped" : "Unequipped";
+            title = GetItemName(selectedItem) + "  Lv " + level + "/" + MaxLevel + "  (" + state + ")";
+            if (items.Count > slots.Count)
+                title += "  " + (selectedItem + 1) + "/" + items.Count;
+            body = GetItemDescription(id, selectedItem);
+        }
+        else
+        {
+            title = !string.IsNullOrWhiteSpace(shopTitle) ? shopTitle
+                : IsGearShop ? "Blacksmith Cat's Gear" : "Scratch's Upgrades";
+            body = (IsGearShop
+                       ? "Gear for " + id + ", paid in crystals. Gear is saved per character, and you can unequip it any time."
+                       : "Upgrades for " + id + ", paid in crystals. Upgrades are saved per character, and you can unequip them any time.") +
+                   "\nEach level costs 100 more crystals than the last (max level " + MaxLevel + ").";
+        }
+
+        if (infoTitleText != null)
+            infoTitleText.text = title;
+        if (infoBodyText != null)
+            infoBodyText.text = body + "\n<size=80%>" + BuildNavigationHint() + "</size>";
+    }
+
+    private string BuildNavigationHint()
+    {
+        string browse = items.Count > slots.Count
+            ? "<b>Up</b>/<b>Down</b>: browse " + items.Count + " items"
+            : "<b>Up</b>/<b>Down</b>: choose";
+        return browse + "   <b>Left</b>/<b>Right</b>: buy / equip   <b>Confirm</b>: buy or toggle   <b>Back</b>: leave";
     }
 
     private void RefreshSelectionVisuals()
@@ -556,35 +727,30 @@ public sealed class UpgradeShop : MonoBehaviour
         string id = GetShopperId();
         float grow = 1f + Mathf.Max(0f, selectedScaleBonus);
         float equipGrow = 1f + Mathf.Max(0f, equipFocusedScaleBonus);
-        for (int i = 0; i < entries.Count; i++)
+        for (int i = 0; i < slots.Count; i++)
         {
-            Entry entry = entries[i];
-            bool selected = isOpen && i == selectedIndex;
-            bool equipSelected = selected && equipColumnSelected && entry.EquipButton != null;
+            Slot slot = slots[i];
+            int item = ItemForSlot(i);
+            bool selected = isOpen && item >= 0 && item == selectedItem;
+            bool equipSelected = selected && equipColumnSelected && slot.EquipButton != null;
 
             // The row keeps its highlight color; only the focused button (buy or equip) grows.
-            entry.Button.transform.localScale = selected && !equipSelected ? entry.BaseScale * grow : entry.BaseScale;
-            if (entry.Image != null)
-                entry.Image.color = selected ? selectedButtonColor : entry.BaseColor;
+            slot.Button.transform.localScale = selected && !equipSelected ? slot.BaseScale * grow : slot.BaseScale;
+            if (slot.Image != null)
+                slot.Image.color = selected ? selectedButtonColor : slot.BaseColor;
 
-            if (entry.EquipButton == null)
+            if (slot.EquipButton == null)
                 continue;
 
-            entry.EquipButton.transform.localScale = equipSelected ? entry.EquipBaseScale * equipGrow : entry.EquipBaseScale;
-            if (entry.EquipImage != null)
+            slot.EquipButton.transform.localScale = equipSelected ? slot.EquipBaseScale * equipGrow : slot.EquipBaseScale;
+            if (slot.EquipImage != null)
             {
-                entry.EquipImage.color = equipSelected
+                bool shownEquipped = item >= 0 && IsShownEquipped(id, item);
+                slot.EquipImage.color = equipSelected
                     ? equipFocusedColor
-                    : IsShownEquipped(id, entry) ? equippedColor : unequippedColor;
+                    : shownEquipped ? equippedColor : unequippedColor;
             }
         }
-    }
-
-    /// <summary>Not bought yet (or not available for this character) always reads as unequipped.</summary>
-    private static bool IsShownEquipped(string characterId, Entry entry)
-    {
-        return PlayerUpgrades.CanToggleEquipped(characterId, entry.Type) &&
-               PlayerUpgrades.IsEquipped(characterId, entry.Type);
     }
 
     private void SetShopVisible(bool visible)
@@ -605,69 +771,102 @@ public sealed class UpgradeShop : MonoBehaviour
     {
         if (shopRoot == null)
         {
-            Transform root = FindDeepChild(transform, "Scrath's Shop Canvas") ??
-                             FindDeepChild(transform, "Scratch's Shop Canvas");
+            Transform root = FindDeepChildEndingWith(transform, "Shop Canvas");
             if (root != null)
                 shopRoot = root.gameObject;
         }
 
         Transform search = shopRoot != null ? shopRoot.transform : transform;
-        if (aerialActionButton == null)
-            aerialActionButton = FindButton(search, "Ariel Action", "Aerial Action");
-        if (hyperAbilityButton == null)
-            hyperAbilityButton = FindButton(search, "Hyper Ability");
-        if (attackStyleButton == null)
-            attackStyleButton = FindButton(search, "Attack Style Level", "Attack Style");
-
-        if (aerialActionLevelText == null)
-            aerialActionLevelText = FindLevelText(aerialActionButton);
-        if (hyperAbilityLevelText == null)
-            hyperAbilityLevelText = FindLevelText(hyperAbilityButton);
-        if (attackStyleLevelText == null)
-            attackStyleLevelText = FindLevelText(attackStyleButton);
-
-        if (aerialActionEquipButton == null)
-            aerialActionEquipButton = FindEquipButton(aerialActionButton);
-        if (hyperAbilityEquipButton == null)
-            hyperAbilityEquipButton = FindEquipButton(hyperAbilityButton);
-        if (attackStyleEquipButton == null)
-            attackStyleEquipButton = FindEquipButton(attackStyleButton);
-
         if (crystalAmountText == null)
             crystalAmountText = FindText(search, "Crystal amount text");
         if (crystalCostText == null)
             crystalCostText = FindTextStartingWith(search, "Crystal subtract");
+        if (infoTitleText == null)
+            infoTitleText = FindText(search, "Shop Info Title");
+        if (infoBodyText == null)
+            infoBodyText = FindText(search, "Shop Info Text");
     }
 
-    private void BuildEntries()
+    /// <summary>Every button with a "Level text" child is a row, ordered top to bottom on screen.</summary>
+    private void BuildSlots()
     {
-        entries.Clear();
-        AddEntry(UpgradeType.AerialAction, aerialActionButton, aerialActionLevelText, aerialActionEquipButton);
-        AddEntry(UpgradeType.HyperAbility, hyperAbilityButton, hyperAbilityLevelText, hyperAbilityEquipButton);
-        AddEntry(UpgradeType.AttackStyle, attackStyleButton, attackStyleLevelText, attackStyleEquipButton);
-    }
-
-    private void AddEntry(UpgradeType type, Button button, TMP_Text levelText, Button equipButton)
-    {
-        if (button == null)
-            return;
-
-        Image image = GetButtonImage(button);
-        Image equipImage = GetButtonImage(equipButton);
-
-        entries.Add(new Entry
+        slots.Clear();
+        Transform search = shopRoot != null ? shopRoot.transform : transform;
+        Button[] buttons = search.GetComponentsInChildren<Button>(true);
+        for (int i = 0; i < buttons.Length; i++)
         {
-            Type = type,
-            Button = button,
-            LevelText = levelText,
-            Image = image,
-            BaseColor = image != null ? image.color : Color.white,
-            BaseScale = button.transform.localScale,
-            EquipButton = equipButton,
-            EquipImage = equipImage,
-            EquipText = equipButton != null ? equipButton.GetComponentInChildren<TMP_Text>(true) : null,
-            EquipBaseScale = equipButton != null ? equipButton.transform.localScale : Vector3.one
-        });
+            Button button = buttons[i];
+            Transform levelText = FindDeepChild(button.transform, "Level text");
+            if (levelText == null || button.name.Equals("Equip Button", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            Button equipButton = FindEquipButton(button);
+            Image image = GetButtonImage(button);
+            Image equipImage = GetButtonImage(equipButton);
+
+            slots.Add(new Slot
+            {
+                Button = button,
+                LabelText = FindLabelText(button, levelText, equipButton),
+                LevelText = levelText.GetComponent<TMP_Text>(),
+                Image = image,
+                BaseColor = image != null ? image.color : Color.white,
+                BaseScale = button.transform.localScale,
+                EquipButton = equipButton,
+                EquipImage = equipImage,
+                EquipText = equipButton != null ? equipButton.GetComponentInChildren<TMP_Text>(true) : null,
+                EquipBaseScale = equipButton != null ? equipButton.transform.localScale : Vector3.one,
+                BoundUpgrade = UpgradeFromName(button.name)
+            });
+        }
+
+        // Layout height, not world position: the canvas may still be hidden / unscaled during Awake.
+        slots.Sort((a, b) => RowHeight(b.Button).CompareTo(RowHeight(a.Button)));
+    }
+
+    private static float RowHeight(Button button)
+    {
+        return button.transform is RectTransform rect ? rect.anchoredPosition.y : button.transform.localPosition.y;
+    }
+
+    /// <summary>Scratch: each row keeps its authored upgrade. Blacksmith: every gear type, scrolled through the rows.</summary>
+    private void BuildItems()
+    {
+        items.Clear();
+        if (IsGearShop)
+        {
+            for (int i = 0; i < PlayerGear.All.Length; i++)
+                items.Add((int)PlayerGear.All[i]);
+            return;
+        }
+
+        for (int i = 0; i < slots.Count; i++)
+            items.Add((int)slots[i].BoundUpgrade);
+    }
+
+    private static UpgradeType UpgradeFromName(string objectName)
+    {
+        if (objectName.IndexOf("Hyper", StringComparison.OrdinalIgnoreCase) >= 0)
+            return UpgradeType.HyperAbility;
+        if (objectName.IndexOf("Attack", StringComparison.OrdinalIgnoreCase) >= 0)
+            return UpgradeType.AttackStyle;
+        return UpgradeType.AerialAction;
+    }
+
+    /// <summary>The row's own caption: a direct text child that is not the level text or the equip button's.</summary>
+    private static TMP_Text FindLabelText(Button button, Transform levelText, Button equipButton)
+    {
+        Transform t = button.transform;
+        for (int i = 0; i < t.childCount; i++)
+        {
+            Transform child = t.GetChild(i);
+            if (child == levelText || (equipButton != null && child == equipButton.transform))
+                continue;
+            if (child.TryGetComponent(out TMP_Text text))
+                return text;
+        }
+
+        return null;
     }
 
     private static Image GetButtonImage(Button button)
@@ -679,34 +878,13 @@ public sealed class UpgradeShop : MonoBehaviour
         return image != null ? image : button.GetComponent<Image>();
     }
 
-    private static Button FindEquipButton(Button upgradeButton)
+    private static Button FindEquipButton(Button rowButton)
     {
-        if (upgradeButton == null)
+        if (rowButton == null)
             return null;
 
-        Transform t = FindDeepChild(upgradeButton.transform, "Equip Button");
+        Transform t = FindDeepChild(rowButton.transform, "Equip Button");
         return t != null ? t.GetComponent<Button>() : null;
-    }
-
-    private static Button FindButton(Transform root, params string[] names)
-    {
-        for (int i = 0; i < names.Length; i++)
-        {
-            Transform t = FindDeepChild(root, names[i]);
-            if (t != null && t.TryGetComponent(out Button button))
-                return button;
-        }
-
-        return null;
-    }
-
-    private static TMP_Text FindLevelText(Button button)
-    {
-        if (button == null)
-            return null;
-
-        Transform t = FindDeepChild(button.transform, "Level text");
-        return t != null ? t.GetComponent<TMP_Text>() : null;
     }
 
     private static TMP_Text FindText(Transform root, string objectName)
@@ -727,6 +905,25 @@ public sealed class UpgradeShop : MonoBehaviour
         for (int i = 0; i < root.childCount; i++)
         {
             TMP_Text found = FindTextStartingWith(root.GetChild(i), prefix);
+            if (found != null)
+                return found;
+        }
+
+        return null;
+    }
+
+    private static Transform FindDeepChildEndingWith(Transform root, string suffix)
+    {
+        if (root == null)
+            return null;
+
+        for (int i = 0; i < root.childCount; i++)
+        {
+            Transform child = root.GetChild(i);
+            if (child.name.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+                return child;
+
+            Transform found = FindDeepChildEndingWith(child, suffix);
             if (found != null)
                 return found;
         }

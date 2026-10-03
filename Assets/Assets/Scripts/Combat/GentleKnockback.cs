@@ -17,7 +17,10 @@ public interface IKnockbackReceiver
 public sealed class GentleKnockback : MonoBehaviour
 {
     private static readonly RaycastHit2D[] CastHits = new RaycastHit2D[8];
+    private static readonly System.Collections.Generic.List<Collider2D> ChainOverlaps =
+        new System.Collections.Generic.List<Collider2D>(16);
     private const float WallSkin = 0.02f;
+    private const float ChainContactSkin = 0.06f;
 
     private Rigidbody2D rb;
     private Collider2D body;
@@ -28,8 +31,16 @@ public sealed class GentleKnockback : MonoBehaviour
     private float duration;
     private float elapsed;
     private bool active;
+    private bool chainKill;
+    private ICommonEnemy selfEnemy;
 
     public static void Apply(Component target, float directionSign, float distance, float seconds)
+    {
+        Apply(target, directionSign, distance, seconds, chainKill: false);
+    }
+
+    /// <param name="chainKill">If the pushed enemy runs into another moving common enemy, both are destroyed.</param>
+    public static void Apply(Component target, float directionSign, float distance, float seconds, bool chainKill)
     {
         if (target == null || distance <= 0.0001f || Mathf.Abs(directionSign) < 0.01f)
             return;
@@ -41,6 +52,8 @@ public sealed class GentleKnockback : MonoBehaviour
         if (push == null)
             push = host.AddComponent<GentleKnockback>();
 
+        push.chainKill = chainKill;
+        push.selfEnemy = target as ICommonEnemy ?? target.GetComponentInParent<ICommonEnemy>();
         push.Begin(Mathf.Sign(directionSign), distance, seconds);
     }
 
@@ -97,8 +110,61 @@ public sealed class GentleKnockback : MonoBehaviour
             traveled += step;
         }
 
+        if (chainKill && TryChainKill())
+        {
+            active = false;
+            return;
+        }
+
         if (t >= 1f)
             active = false;
+    }
+
+    private bool TryChainKill()
+    {
+        if (body == null || !body.enabled || selfEnemy == null || selfEnemy.IsDead)
+            return false;
+
+        Bounds b = body.bounds;
+        Vector2 size = new Vector2(b.size.x + ChainContactSkin * 2f, b.size.y);
+        ContactFilter2D filter = new ContactFilter2D();
+        filter.useTriggers = true;
+        filter.NoFilter();
+
+        ChainOverlaps.Clear();
+        Physics2D.OverlapBox(b.center, size, 0f, filter, ChainOverlaps);
+        for (int i = 0; i < ChainOverlaps.Count; i++)
+        {
+            Collider2D c = ChainOverlaps[i];
+            if (c == null || c.transform.IsChildOf(transform) || EnemyDetectionZone.IsDetectionOnlyCollider(c))
+                continue;
+            if (c.GetComponent<AttackHitbox>() != null)
+                continue;
+            // Only enemies it is being pushed into, not ones behind it.
+            if (direction * (c.bounds.center.x - b.center.x) < 0f)
+                continue;
+
+            ICommonEnemy other = c.GetComponentInParent<ICommonEnemy>();
+            if (other == null || other == selfEnemy || other.IsDead || MaliceSlashProjectile.IsStationaryEnemy(other))
+                continue;
+
+            Kill(other);
+            Kill(selfEnemy);
+            return true;
+        }
+
+        return false;
+    }
+
+    private static void Kill(ICommonEnemy enemy)
+    {
+        if (enemy == null || enemy.IsDead)
+            return;
+
+        if (enemy is IForceKillable killable)
+            killable.ForceKill();
+        else
+            enemy.TakeDamage(Mathf.Max(1, enemy.CurrentHealth) + 999);
     }
 
     private float ClampAgainstWalls(float step)

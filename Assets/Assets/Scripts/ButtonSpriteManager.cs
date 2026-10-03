@@ -560,6 +560,7 @@ public class ButtonSpriteManager : MonoBehaviour
         // Dash / Confirm   = buttonEast
         // Pause / Start    = gamepad start
         // Select           = gamepad select
+        // Use Item         = buttonNorth / V
         //
         // Face-button names players actually say:
         //   PlayStation: South=X, East=O, West=Square, North=Triangle
@@ -602,6 +603,15 @@ public class ButtonSpriteManager : MonoBehaviour
                     ControlDeviceKind.Xbox => "B",
                     ControlDeviceKind.Switch => "A",
                     _ => "M"
+                };
+
+            case "Use Item":
+                return device switch
+                {
+                    ControlDeviceKind.PlayStation => "Triangle",
+                    ControlDeviceKind.Xbox => "Y",
+                    ControlDeviceKind.Switch => "X",
+                    _ => "V"
                 };
 
             case "Pause":

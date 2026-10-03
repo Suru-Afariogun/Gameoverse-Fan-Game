@@ -189,6 +189,11 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
     public Vector2 MoveInput => moveInput;
     public bool InputLocked => inputLocked;
     public LayerMask GroundLayers => groundLayers;
+
+    /// <summary>Fired when the player performs a move the Tutorial level guide can ask for.</summary>
+    public static event Action<PlayerController, TutorialAction> TutorialActionPerformed;
+
+    public void ReportTutorialAction(TutorialAction action) => TutorialActionPerformed?.Invoke(this, action);
     public virtual float GetCameraFollowSpeedHint()
     {
         if (rb == null)
@@ -260,7 +265,17 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
     {
         IsScriptedInvulnerable = invulnerable;
     }
+
+    /// <summary>Super Candy: no damage or shoves from enemies / hazards (pits and InstaDeath Zones still kill).</summary>
+    public bool IsStarPowered { get; private set; }
+
+    public void SetStarPowered(bool starPowered)
+    {
+        IsStarPowered = starPowered;
+    }
+
     public Collider2D BodyCollider => bodyCollider;
+    public SpriteRenderer BodySpriteRenderer => spriteRenderer;
     /// <summary>Upward gravity acceleration (positive) used for normal jumps.</summary>
     public float JumpGravity => Mathf.Abs(Physics2D.gravity.y * (rb != null ? rb.gravityScale : 1f));
 
@@ -310,6 +325,18 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
 
         isGrounded = true;
         IsVoluntarilyAirborne = false;
+        ClearForVehicleRide();
+    }
+
+    /// <summary>
+    /// Climbing into a vehicle: auras, summoned helpers (V-Bots, swords, clones) and the held item go away
+    /// so nothing hangs in the air or rides along. Subclasses clear their own extras and call base.
+    /// </summary>
+    protected virtual void ClearForVehicleRide()
+    {
+        SetDashAfterimagesActive(false);
+        SuperCandyStarPower.Cancel(this);
+        HeldItemCarrier.DiscardHeldItems();
     }
 
     public void EndVehicleRide()
@@ -318,6 +345,80 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
         if (rb != null)
             rb.simulated = true;
     }
+
+    /// <summary>When true, every Scratch upgrade and Blacksmith gear counts as level 0 (Count playing as his last Time Clone).</summary>
+    public bool UpgradesSuppressed { get; protected set; }
+
+    /// <summary>Kit / Count: Weapon Gear speeds up their buster shots (and Level 5 lets kill shots fly on).</summary>
+    public virtual bool WeaponGearBoostsShots => false;
+
+    // Blacksmith gear: stats are rebuilt from these Inspector values whenever gear changes.
+    private bool gearBaseCaptured;
+    private float gearBaseMoveSpeed;
+    private float gearBaseJumpForce;
+    private float gearBaseDashCooldown;
+    private float gearBaseInvincibility;
+    private float gearBaseKnockback;
+    private int gearBaseMaxAirDashes;
+    private int gearAppliedVersion = -1;
+    private string gearAppliedCharacterId;
+    private bool gearAppliedSuppressed;
+    private int gearMaxHealthBonus;
+    private bool gearIgnoresHitStun;
+    private int requestedMaxHealth = -1;
+    private float lastHurtTime = -999f;
+    private float repairTimer;
+    private float lastAutoUseTime = float.NegativeInfinity;
+
+    /// <summary>True while a time stop (Boss Count) holds the character in place.</summary>
+    public bool IsTimeFrozen { get; private set; }
+    private Vector2 timeFrozenVelocity;
+    private RigidbodyConstraints2D timeFrozenConstraints;
+    private bool timeFrozenHadInputLock;
+
+    /// <summary>
+    /// Time stop: no input, no movement and a paused animation. Velocity is restored on release.
+    /// Hits still land (the stopper's shots only fire after time resumes).
+    /// </summary>
+    public void SetTimeFrozen(bool frozen)
+    {
+        if (IsTimeFrozen == frozen)
+            return;
+
+        IsTimeFrozen = frozen;
+        if (frozen)
+        {
+            timeFrozenHadInputLock = inputLocked;
+            timeFrozenVelocity = rb != null ? rb.linearVelocity : Vector2.zero;
+            CancelAllDashState();
+            SetInputLocked(true);
+            if (rb != null)
+            {
+                timeFrozenConstraints = rb.constraints;
+                rb.linearVelocity = Vector2.zero;
+                rb.constraints = RigidbodyConstraints2D.FreezeAll;
+            }
+
+            if (animator != null)
+                animator.speed = 0f;
+            OnTimeFrozenChanged(true);
+            return;
+        }
+
+        if (rb != null)
+        {
+            rb.constraints = timeFrozenConstraints;
+            rb.linearVelocity = timeFrozenVelocity;
+        }
+
+        if (animator != null)
+            animator.speed = 1f;
+        SetInputLocked(timeFrozenHadInputLock || IsDead);
+        OnTimeFrozenChanged(false);
+    }
+
+    /// <summary>Character hook for a time stop starting or ending (Count drops his own time powers).</summary>
+    protected virtual void OnTimeFrozenChanged(bool frozen) { }
 
     /// <summary>
     /// Temporarily blocks dash (e.g. near Kaboodle so Confirm can be used without dashing).
@@ -368,6 +469,7 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
     protected bool dashDisabled;
     protected float stunTimer;
     protected float invincibilityTimer;
+    private float armoredHitSparkTimer;
     private int upgradeAirJumpsRemaining;
     private float invincibilityFlickerTimer;
     private bool invincibilityFlickerActive;
@@ -491,6 +593,9 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
 
     protected virtual void Update()
     {
+        RefreshGearIfChanged();
+        TickRepairGear(Time.deltaTime);
+
         if (IsRidingVehicle)
         {
             UpdateAnimator();
@@ -513,6 +618,9 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
 
         UpdateAnimator();
         HandleCharacterUpdate();
+
+        if (IsTimeFrozen && animator != null)
+            animator.speed = 0f;
     }
 
     /// <summary>
@@ -520,6 +628,9 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
     /// </summary>
     protected virtual void LateUpdate()
     {
+        if (IsTimeFrozen && animator != null)
+            animator.speed = 0f;
+
         MirrorFirePointForFacing();
         ClampToPlayableWorld();
     }
@@ -536,6 +647,8 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
         HandleLandingAndAirDashRefill();
         TickDashJumpMomentum(Time.fixedDeltaTime);
         TickDash(Time.fixedDeltaTime);
+        if (knockbackActive && !HitStunAllowed && (isDashing || jumpRequested))
+            knockbackActive = false;
         TickHitKnockback(Time.fixedDeltaTime);
 
         if (isDashing)
@@ -847,7 +960,7 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
         rb.linearVelocity = new Vector2(rb.linearVelocity.x, newVy);
     }
 
-    private void CancelAllDashState()
+    protected void CancelAllDashState()
     {
         bool hadDash = isDashing || isDashJumping;
         isDashing = false;
@@ -1018,6 +1131,7 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
         float awaySign = GetWallJumpAwaySign();
         float intoSign = -awaySign;
         StartWallBounce(awaySign, intoSign);
+        ReportTutorialAction(TutorialAction.WallJump);
     }
 
     private void EnsureFrictionlessBodyMaterial()
@@ -1239,7 +1353,7 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
     }
 
     /// <summary>Character's air dashes plus one per equipped Ariel Action level.</summary>
-    protected int MaxAirDashesWithUpgrades =>
+    protected virtual int MaxAirDashesWithUpgrades =>
         Mathf.Max(0, maxAirDashes) + PlayerUpgrades.GetActiveLevel(this, UpgradeType.AerialAction);
 
     protected virtual void OnLanded()
@@ -1343,6 +1457,7 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
                 coyoteTimer = 0f;
                 isGrounded = false;
                 IsVoluntarilyAirborne = true;
+                ReportTutorialAction(TutorialAction.DropThrough);
                 return;
             }
         }
@@ -1362,6 +1477,7 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
         rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
         IsVoluntarilyAirborne = true;
         SoundManager.Instance?.PlayJump();
+        ReportTutorialAction(TutorialAction.Jump);
     }
 
     /// <summary>
@@ -1376,6 +1492,7 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
         rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
         IsVoluntarilyAirborne = true;
         SoundManager.Instance?.PlayJump();
+        ReportTutorialAction(TutorialAction.AirJump);
 
         if (animator == null || isShooting || isDashing)
             return;
@@ -1849,6 +1966,29 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
         return isShooting;
     }
 
+    /// <summary>
+    /// Changes max HP at runtime (upgrade bonuses). Raising it adds the same amount to current HP;
+    /// lowering it only clamps current HP.
+    /// </summary>
+    protected void SetMaxHealthRuntime(int newMax)
+    {
+        requestedMaxHealth = Mathf.Max(1, newMax);
+        ApplyMaxHealth(requestedMaxHealth + gearMaxHealthBonus);
+    }
+
+    private void ApplyMaxHealth(int newMax)
+    {
+        newMax = Mathf.Max(1, newMax);
+        if (newMax == maxHealth)
+            return;
+
+        int gained = Mathf.Max(0, newMax - maxHealth);
+        maxHealth = newMax;
+        if (currentHealth > 0)
+            currentHealth = Mathf.Clamp(currentHealth + gained, 1, maxHealth);
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+    }
+
     public virtual void SetHealth(int value)
     {
         int clamped = Mathf.Clamp(value, 0, maxHealth);
@@ -1885,7 +2025,7 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
     /// </summary>
     public void ApplyStunOnly(float duration)
     {
-        if (duration <= 0f || currentHealth <= 0)
+        if (duration <= 0f || currentHealth <= 0 || !HitStunAllowed)
             return;
 
         isStunned = true;
@@ -1913,20 +2053,118 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
 
     public virtual void TakeDamage(int amount, Transform hitSource, bool applyKnockback)
     {
-        if (amount <= 0 || currentHealth <= 0 || IsRidingVehicle || IsScriptedInvulnerable)
+        if (amount <= 0 || currentHealth <= 0 || IsRidingVehicle || IsScriptedInvulnerable || IsStarPowered)
             return;
 
         if (invincibilityTimer > 0f)
             return;
 
+        if (TryAutoUseItemAgainstHit(amount))
+            return;
+
+        amount = PlayerGear.ReduceIncomingDamage(this, amount);
+        lastHurtTime = Time.time;
+        repairTimer = 0f;
         SetHealth(currentHealth - amount);
 
         if (currentHealth > 0)
             BeginHitReaction(hitSource, applyKnockback);
     }
 
+    /// <summary>
+    /// Auto Use gear: a hit that would defeat the player uses the front held item instead, and the hit is
+    /// blocked (with the normal post-hit invincibility). Recharges per <see cref="PlayerGear.AutoUseCooldownSeconds"/>.
+    /// </summary>
+    protected bool TryAutoUseItemAgainstHit(int amount)
+    {
+        if (amount <= 0 || currentHealth <= 0 || invincibilityTimer > 0f ||
+            IsRidingVehicle || IsScriptedInvulnerable || IsStarPowered)
+            return false;
+
+        if (PlayerGear.ReduceIncomingDamage(this, amount) < currentHealth)
+            return false;
+
+        float cooldown = PlayerGear.AutoUseCooldownSeconds(this);
+        if (cooldown <= 0f || Time.time < lastAutoUseTime + cooldown)
+            return false;
+
+        if (!HeldItemCarrier.TryAutoUse(this))
+            return false;
+
+        lastAutoUseTime = Time.time;
+        invincibilityTimer = Mathf.Max(invincibilityTimer, hitInvincibilityDuration);
+        invincibilityFlickerTimer = 0f;
+        invincibilityFlickerActive = true;
+        SetBodySpriteAlpha(invincibilityFlickerAlphaHigh);
+        return true;
+    }
+
+    /// <summary>Re-applies Blacksmith gear when it is bought / toggled, or the character changes.</summary>
+    private void RefreshGearIfChanged()
+    {
+        if (gearBaseCaptured &&
+            gearAppliedVersion == PlayerGear.Version &&
+            gearAppliedSuppressed == UpgradesSuppressed &&
+            string.Equals(gearAppliedCharacterId, CharacterId, System.StringComparison.Ordinal))
+            return;
+
+        if (!gearBaseCaptured)
+        {
+            // Captured on the first Update so each character's Awake values are already in place.
+            gearBaseCaptured = true;
+            gearBaseMoveSpeed = moveSpeed;
+            gearBaseJumpForce = jumpForce;
+            gearBaseDashCooldown = dashCooldown;
+            gearBaseInvincibility = hitInvincibilityDuration;
+            gearBaseKnockback = hitKnockbackDistance;
+            gearBaseMaxAirDashes = maxAirDashes;
+            if (requestedMaxHealth < 0)
+                requestedMaxHealth = maxHealth;
+        }
+
+        gearAppliedVersion = PlayerGear.Version;
+        gearAppliedSuppressed = UpgradesSuppressed;
+        gearAppliedCharacterId = CharacterId;
+
+        moveSpeed = gearBaseMoveSpeed + PlayerGear.MoveSpeedBonus(this);
+        jumpForce = gearBaseJumpForce * PlayerGear.JumpForceMultiplier(this);
+        dashCooldown = gearBaseDashCooldown * PlayerGear.DashCooldownMultiplier(this);
+        hitInvincibilityDuration = gearBaseInvincibility + PlayerGear.InvincibilityBonusSeconds(this);
+        hitKnockbackDistance = gearBaseKnockback * PlayerGear.KnockbackMultiplier(this);
+        maxAirDashes = gearBaseMaxAirDashes + PlayerGear.ExtraAirDashes(this);
+        gearIgnoresHitStun = PlayerGear.IgnoresHitStun(this);
+        gearMaxHealthBonus = PlayerGear.MaxHealthBonus(this);
+        ApplyMaxHealth(requestedMaxHealth + gearMaxHealthBonus);
+    }
+
+    /// <summary>Repair Gear: after a few seconds without getting hit, recover 1 HP every interval.</summary>
+    private void TickRepairGear(float dt)
+    {
+        float interval = PlayerGear.RepairIntervalSeconds(this);
+        if (interval <= 0f || currentHealth <= 0 || currentHealth >= maxHealth ||
+            Time.time - lastHurtTime < PlayerGear.RepairDelaySeconds)
+        {
+            repairTimer = 0f;
+            return;
+        }
+
+        repairTimer += dt;
+        if (repairTimer < interval)
+            return;
+
+        repairTimer = 0f;
+        Heal(1);
+    }
+
     protected virtual void TickHitReaction(float dt)
     {
+        if (armoredHitSparkTimer > 0f)
+        {
+            armoredHitSparkTimer -= dt;
+            if (armoredHitSparkTimer <= 0f && !isStunned)
+                VisualEffects.StopStunned(this);
+        }
+
         if (stunTimer > 0f)
         {
             stunTimer -= dt;
@@ -2006,6 +2244,12 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
     /// </summary>
     protected virtual void BeginHitReaction(Transform hitSource = null, bool applyKnockback = true)
     {
+        if (!HitStunAllowed)
+        {
+            BeginArmoredHitReaction(hitSource, applyKnockback);
+            return;
+        }
+
         isStunned = true;
         stunTimer = Mathf.Max(0f, hitStunDuration);
         invincibilityTimer = Mathf.Max(0f, hitInvincibilityDuration);
@@ -2024,6 +2268,29 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
             ApplyHitKnockback(hitSource);
 
         OnHitStunStarted();
+    }
+
+    /// <summary>
+    /// False = hit armor (Harlie): hits still cost HP, flicker, spark and shove, but never lock controls.
+    /// Jumping or dashing breaks out of the shove.
+    /// </summary>
+    protected virtual bool CanBeHitStunned => true;
+
+    /// <summary>Character hit stun, unless max Armor Gear removes it.</summary>
+    private bool HitStunAllowed => CanBeHitStunned && !gearIgnoresHitStun;
+
+    private void BeginArmoredHitReaction(Transform hitSource, bool applyKnockback)
+    {
+        invincibilityTimer = Mathf.Max(0f, hitInvincibilityDuration);
+        invincibilityFlickerTimer = 0f;
+        invincibilityFlickerActive = true;
+        SetBodySpriteAlpha(invincibilityFlickerAlphaHigh);
+
+        if (applyKnockback)
+            ApplyHitKnockback(hitSource);
+
+        VisualEffects.PlayStunned(stunnedEffectPrefab, this);
+        armoredHitSparkTimer = Mathf.Max(0.05f, hitStunDuration);
     }
 
     private void ApplyHitKnockback(Transform hitSource)
@@ -2066,7 +2333,7 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
     /// <summary>Soft shove in an explicit horizontal direction (Blocker Bot side hits).</summary>
     public void ApplySoftBounce(float direction, float distance = 1f, float duration = 0.18f)
     {
-        if (rb == null || IsDead || IsRidingVehicle || IsScriptedInvulnerable)
+        if (rb == null || IsDead || IsRidingVehicle || IsScriptedInvulnerable || IsStarPowered)
             return;
 
         float dir = Mathf.Sign(direction);

@@ -465,7 +465,7 @@ Rigidbody2D:
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
-  m_Mass: 30
+  m_Mass: 20
   m_LinearDamping: 0
   m_AngularDamping: 0.05
   m_GravityScale: 2
@@ -548,14 +548,15 @@ MonoBehaviour:
   firePoint: {fileID: 0}
   firePointFlipCenterLocal: {x: 0, y: 0}
   moveSpeed: 6
-  jumpForce: 15
+  jumpForce: 16
+  coyoteTime: 0.4
   fallMultiplier: 2.5
   spriteFacesLeft: 1
   upAimThreshold: 0.35
-  dashDistance: 5
-  dashSpeed: 28
-  dashCooldown: 0.06
-  dashSmoothStopDuration: 0.1
+  dashDistance: 4.5
+  dashSpeed: 16
+  dashCooldown: 0.01
+  dashSmoothStopDuration: 0.12
   dashEndSpeedMultiplier: 0.15
   allowAirDash: 1
   maxAirDashes: 3
@@ -563,7 +564,7 @@ MonoBehaviour:
   dashJumpHorizontalSpeed: 0
   dashJumpForce: 0
   dashJumpMomentumUntilLanded: 1
-  dashJumpMomentumDuration: 0.22
+  dashJumpMomentumDuration: 0.55
   dashJumpSteerCancel: 0.25
   enableDashAfterimages: 1
   dashAfterimageCount: 5
@@ -585,20 +586,42 @@ MonoBehaviour:
   maxHealth: 20
   currentHealth: 20
   attackHitbox: {fileID: 9128456712345678901}
-  harlieDashDistance: 5
-  harlieDashSpeed: 28
-  harlieDashSmoothStop: 0.1
+  harlieDashDistance: 7
+  harlieDashSpeed: 19
+  harlieDashSmoothStop: 0.12
   harlieMaxAirDashes: 3
+  dashInvincible: 1
   harlieAllowDashJump: 1
-  harlieDashJumpMomentumDuration: 0.22
+  harlieDashJumpMomentumDuration: 0.55
   harlieDashJumpMomentumUntilLanded: 1
+  harlieMaxAirJumps: 1
+  doubleJumpReferenceForce: 16
+  doubleJumpHeightFraction: 1
+  pogoRefreshesDoubleJump: 1
+  pogoGuardSeconds: 0.3
+  pressesPerSpeedTier: 6
+  attackSpeedPerTier: 0.5
+  maxAttackSpeedTier: 1
+  attackSpeedIdleResetSeconds: 0.7
+  dashCancelSlashSpeedMul: 1.5
+  dashCancelSlashWindow: 0.2
+  slashGuardEnabled: 1
+  slashGuardTolerance: 0.8
+  slashWave:
+    enabled: 1
+    prefab: {fileID: 4716001000000000005, guid: b7e3c91a4f2d4c58a6d0e2f4b1c8a593, type: 3}
+    travelDistance: 1.5
+    travelSeconds: 0.2
+    knockbackDuration: 0.12
+    sortingOffset: 1
+    fadeDelay: 0
   harlieEnableDashAfterimages: 1
   harlieAfterimageCount: 5
   harlieAfterimageSpacing: 0.1
   harlieAfterimageColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   harlieAfterimageAlphaStart: 0.65
   harlieAfterimageAlphaEnd: 0.2
-  comboInputWindow: 0.5
+  comboInputWindow: 0.8
   kickDuration: 0.38
   slash1Duration: 0.38
   slash2Duration: 0.38
@@ -607,19 +630,19 @@ MonoBehaviour:
   syncAttackDurationToAnimation: 1
   attackDurationPadding: 0.02
   timeBetweenAttacks: 0.05
-  kickDamage: 1
-  slash1Damage: 1
-  slash2Damage: 1
-  slash3Damage: 2
-  airSlashDamage: 1
+  kickDamage: 2
+  slash1Damage: 2
+  slash2Damage: 2
+  slash3Damage: 3
+  airSlashDamage: 2
   hitboxDelay: 0.05
   hitboxActiveTime: 0.22
   lockMoveDuringGroundAttack: 1
   airSlashAnimHold: 0.5
-  jumpAttackDamage: 1
+  jumpAttackDamage: 2
   aerialBounceForce: 12
-  attackKnockbackSpaces: 5
-  knockbackSpaceSize: 1
+  attackKnockbackDistance: 2
+  attackKnockbackDuration: 0.12
   kickLungeDistance: 1
   slash1LungeDistance: 0.3
   slash2LungeDistance: 0.5
@@ -632,8 +655,14 @@ MonoBehaviour:
   chargeKickMaxSpaces: 7
   chargeKickSpaceSize: 1
   chargeKickMinHoldSeconds: 0.08
-  chargeKickDamage: 2
+  chargeSlashDamage: 2
+  chargeKickDamage: 4
   chargeKickHoldAfterSlide: 0.3
+  silverSwords:
+    swordPrefab: {fileID: 5203110000000000004, guid: 9c4e1a7b3d5f4b82a6e8c0d2f4a6b917, type: 3}
+    slashPrefab: {fileID: 4716003000000000005, guid: 6a1e3c5b7d9f4a28b0c2e4f6a8d1b394, type: 3}
+    needleTempo: 3
+    needleSpeed: 42
 --- !u!95 &7748614338369767857
 Animator:
   serializedVersion: 7

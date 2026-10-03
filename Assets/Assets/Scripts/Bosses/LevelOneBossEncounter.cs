@@ -26,6 +26,9 @@ public class LevelOneBossEncounter : MonoBehaviour
     [Tooltip("Kit's rocket ship lands after the Copy Bot is beaten (Level one + Tutorial) and flies here. " +
              "Falls back to the spawner crystal if the ship prefab is missing.")]
     [SerializeField] private string copyBotRocketDestination = "Boss Fight Mode";
+    [Tooltip("Keeps calling the ship this long if it can't come right away (player mid-revive, ship busy). " +
+             "After that Level one drops the spawner crystal; Tutorial fades straight to the destination.")]
+    [SerializeField] private float copyBotShipRetrySeconds = 5f;
 
     [Header("Copy Bot")]
     [SerializeField] private int copyBotMaxHealth = 40;
@@ -602,24 +605,52 @@ public class LevelOneBossEncounter : MonoBehaviour
         if (copyBotDefeatHandled)
             return;
 
-        // Kit's rocket ship replaces the spawner crystal; Tutorial has no crystal either way.
-        bool shipSummoned = KitRocketShip.TrySummonAfterBoss(copyBotRocketDestination);
-        if (shipSummoned || !IsLevelOneScene(SceneManager.GetActiveScene().name))
-        {
-            copyBotDefeatHandled = true;
-            SetBossHealthUiVisible(false);
-            if (bossLifeBar != null)
-                bossLifeBar.SetBossOverride(null);
-            SoundManager.Instance?.StopLevelOneCopyBotBossMusic();
-            UnbindCopyBoss();
-            return;
-        }
-
         Vector3 spawnPosition = defeated.transform.position;
         Collider2D body = defeated.GetComponent<Collider2D>();
         if (body != null)
             spawnPosition = body.bounds.center;
 
+        copyBotDefeatHandled = true;
+        SetBossHealthUiVisible(false);
+        if (bossLifeBar != null)
+            bossLifeBar.SetBossOverride(null);
+        SoundManager.Instance?.StopLevelOneCopyBotBossMusic();
+        UnbindCopyBoss();
+
+        // Kit's rocket ship replaces the spawner crystal.
+        if (!KitRocketShip.TrySummonAfterBoss(copyBotRocketDestination))
+            StartCoroutine(RetryCopyBotShip(spawnPosition));
+    }
+
+    private IEnumerator RetryCopyBotShip(Vector3 crystalPosition)
+    {
+        float waited = 0f;
+        while (waited < copyBotShipRetrySeconds)
+        {
+            yield return null;
+            waited += Time.deltaTime;
+            if (KitRocketShip.TrySummonAfterBoss(copyBotRocketDestination))
+                yield break;
+        }
+
+        if (IsLevelOneScene(SceneManager.GetActiveScene().name) && SpawnFallbackCrystal(crystalPosition))
+            yield break;
+
+        string target = copyBotRocketDestination != null ? copyBotRocketDestination.Trim() : string.Empty;
+        if (string.IsNullOrEmpty(target) || !Application.CanStreamedLevelBeLoaded(target))
+        {
+            Debug.LogError($"[LevelOneBossEncounter] The rocket ship never came and '{target}' can't be loaded.", this);
+            yield break;
+        }
+
+        Debug.LogWarning($"[LevelOneBossEncounter] The rocket ship never came — going straight to '{target}'.", this);
+        if (BossFightDirector.IsBossFightScene(target))
+            BossEncounter.PrepareBossFightFromLevelProgress();
+        ScreenFade.EnsureExists().LoadScene(target, deathFadeOutSeconds, deathFadeInSeconds);
+    }
+
+    private bool SpawnFallbackCrystal(Vector3 spawnPosition)
+    {
         SpawnCrystal spawned = null;
 
         if (sceneSpawnerCrystalOverride != null)
@@ -639,17 +670,10 @@ public class LevelOneBossEncounter : MonoBehaviour
                 "[LevelOneBossEncounter] Cannot spawn Spawner Crystal — assign Spawner Crystal Prefab " +
                 "on Boss Spawner → Level One Boss Encounter.",
                 this);
-            return;
+            return false;
         }
 
-        copyBotDefeatHandled = true;
-
-        SetBossHealthUiVisible(false);
-        if (bossLifeBar != null)
-            bossLifeBar.SetBossOverride(null);
-
-        SoundManager.Instance?.StopLevelOneCopyBotBossMusic();
-        UnbindCopyBoss();
+        return true;
     }
 
     private IEnumerator PlayAssemblyIntro(Boss boss)

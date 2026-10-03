@@ -32,6 +32,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Tutorial level.unity
     guid: 2dffea910a3c1834e9ff1cf998bca013
+  - enabled: 1
+    path: Assets/Scenes/Bonus Level 0.unity
+    guid: 2fd542127461d2e499ddb1a11b368cee
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0

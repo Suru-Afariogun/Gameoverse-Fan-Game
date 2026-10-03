@@ -244,6 +244,7 @@ MonoBehaviour:
     - {fileID: -1395861514, guid: c193b6668123c304ba1df0db8f0322a9, type: 3}
     - {fileID: 1696717760, guid: c193b6668123c304ba1df0db8f0322a9, type: 3}
     damagedLifeBarSprite: {fileID: 1332609407, guid: c193b6668123c304ba1df0db8f0322a9, type: 3}
+    sizeMultiplier: 3
   - characterId: Count
     lifeBarSprites:
     - {fileID: -7849933211252913511, guid: 3713ed55690a41d409aa659e6ddefec3, type: 3}
@@ -255,6 +256,16 @@ MonoBehaviour:
     - {fileID: 5622668395133422969, guid: 3713ed55690a41d409aa659e6ddefec3, type: 3}
     damagedLifeBarSprite: {fileID: -7849933211252913511, guid: 3713ed55690a41d409aa659e6ddefec3, type: 3}
     positionOffsetDownSpaces: 2
+  - characterId: Hex
+    lifeBarSprites:
+    - {fileID: 1332609407, guid: c193b6668123c304ba1df0db8f0322a9, type: 3}
+    - {fileID: 440639605, guid: c193b6668123c304ba1df0db8f0322a9, type: 3}
+    - {fileID: 389522576, guid: c193b6668123c304ba1df0db8f0322a9, type: 3}
+    - {fileID: -609583556, guid: c193b6668123c304ba1df0db8f0322a9, type: 3}
+    - {fileID: -1395861514, guid: c193b6668123c304ba1df0db8f0322a9, type: 3}
+    - {fileID: 1696717760, guid: c193b6668123c304ba1df0db8f0322a9, type: 3}
+    damagedLifeBarSprite: {fileID: 1332609407, guid: c193b6668123c304ba1df0db8f0322a9, type: 3}
+    sizeMultiplier: 3
   lifeBarSpriteRenderer: {fileID: 8343243882425708302}
   autoFindActivePlayer: 1
   playerOverride: {fileID: 0}

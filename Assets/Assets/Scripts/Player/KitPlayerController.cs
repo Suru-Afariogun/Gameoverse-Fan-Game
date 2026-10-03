@@ -218,6 +218,19 @@ public class KitPlayerController : PlayerController
         SetChargeAuraVisible(false);
     }
 
+    protected override void ClearForVehicleRide()
+    {
+        EndHover();
+        hoverQueuedAtApex = false;
+        boostedDashActive = false;
+        machineGunHolding = false;
+        machineGunFirstShotQueued = false;
+        isCharging = false;
+        CancelPendingShot();
+        SetChargeAuraVisible(false);
+        base.ClearForVehicleRide();
+    }
+
     protected override void OnDestroy()
     {
         if (chargeAuraObject != null)
@@ -271,6 +284,8 @@ public class KitPlayerController : PlayerController
     {
         return PlayerAttackStyle.Is(AttackStyleId.SpreadShot);
     }
+
+    public override bool WeaponGearBoostsShots => true;
 
     private int AerialLevel => PlayerUpgrades.GetActiveLevel(this, UpgradeType.AerialAction);
     private int HyperLevel => PlayerUpgrades.GetActiveLevel(this, UpgradeType.HyperAbility);
@@ -345,11 +360,13 @@ public class KitPlayerController : PlayerController
             return;
 
         // Every pellet: projectile + buster blast + meow/laser (all hard-capped elsewhere).
+        Vector2 aim = GetAimDirection();
         SpawnShotBurst(
-            GetAimDirection(),
+            aim,
             ProjectileShotType.Small,
             spawnBusterBlast: true,
             trackAsMachineGunShot: true);
+        ReportShotForTutorial(aim, charged: false);
 
         shootCooldownTimer = Mathf.Max(0.05f, machineGunFireInterval);
         SoundManager.Instance?.PlayKitFireRapid();
@@ -496,6 +513,7 @@ public class KitPlayerController : PlayerController
         rb.linearVelocity = new Vector2(rb.linearVelocity.x, force);
         hoverQueuedAtApex = true;
         SoundManager.Instance?.PlayJump();
+        ReportTutorialAction(TutorialAction.AirJump);
 
         if (animator != null && !isShooting && !isDashing)
             animator.Play("Jump", 0, 0f);
@@ -525,6 +543,8 @@ public class KitPlayerController : PlayerController
 
         if (animator != null)
             animator.SetTrigger("Hover");
+
+        ReportTutorialAction(TutorialAction.Hover);
     }
 
     private void EndHover()
@@ -829,6 +849,8 @@ public class KitPlayerController : PlayerController
         if (GetPrefab(firedType) == null)
             return;
 
+        ReportShotForTutorial(aim, charged: hyper || firedType != ProjectileShotType.Small);
+
         if (hyper)
         {
             SpawnHyperVolley(aim);
@@ -858,6 +880,15 @@ public class KitPlayerController : PlayerController
     {
         pendingShot = false;
         pendingShotHyper = false;
+    }
+
+    private void ReportShotForTutorial(Vector2 aim, bool charged)
+    {
+        ReportTutorialAction(TutorialAction.Attack);
+        if (aim.y > 0.2f)
+            ReportTutorialAction(TutorialAction.AimShot);
+        if (charged)
+            ReportTutorialAction(TutorialAction.ChargeAttack);
     }
 
     private void SpawnShotBurst(

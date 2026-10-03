@@ -71,7 +71,6 @@ public class PlayerSpawner : MonoBehaviour
 
     [Tooltip("Retarget CameraFollow after spawn/switch.")]
     [SerializeField] private bool retargetCamera = true;
-
     public PlayerController CurrentPlayer { get; private set; }
 
     /// <summary>Transform the camera should frame before a player exists (spawn point, else this object).</summary>

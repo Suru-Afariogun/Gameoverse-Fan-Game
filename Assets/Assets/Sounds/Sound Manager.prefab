@@ -97,6 +97,11 @@ MonoBehaviour:
   collectItemSfx: {fileID: 8300000, guid: ba978b0cd2637ea428727605c3ac47b0, type: 3}
   itemDropSfx: {fileID: 8300000, guid: 497efc4ff68e96141b67bfa8be07158e, type: 3}
   itemHitGroundSfx: {fileID: 8300000, guid: dd4fdb9facf2f504b979ec9070c78215, type: 3}
+  clockworkTicSfx: {fileID: 8300000, guid: 95b0a8e82f1cf0142b78043f0a32634a, type: 3}
+  clockworkTocSfx: {fileID: 8300000, guid: f195b6c19d31f074b9306f4511b5737c, type: 3}
+  clockworkTocStartTime: 0
+  clockworkTocMaxSeconds: 0.6
+  clockworkVolume: 1
   crystalHitSfx: {fileID: 8300000, guid: 273e0cda54b37e249a9a3bd895d21929, type: 3}
   crystalShatterSfx: {fileID: 8300000, guid: c05665fc6ef6bce43bd75aa3ef3b75c8, type: 3}
   enemyExplosionSfx: {fileID: 8300000, guid: 5c39ca1ff1f656c40b6b05115f6d03c3, type: 3}
