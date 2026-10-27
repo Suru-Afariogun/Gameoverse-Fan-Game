@@ -57,6 +57,23 @@ public class HexSparkEmitter : MonoBehaviour
     [Tooltip("Stay fully visible until this fraction of the rise is complete, then fade out.")]
     [SerializeField] [Range(0.5f, 0.98f)] private float fadeStartNormalized = 0.82f;
 
+    [Header("Charge Aura - Inward Gather (Bass QuickTime / MM7-style)")]
+    [Tooltip("Outer ring radius — keep large enough to read clearly around Bass.")]
+    [SerializeField] private float inwardRadiusMin = 3.1f;
+    [SerializeField] private float inwardRadiusMax = 3.85f;
+    [SerializeField] private float inwardDurationAtMinCharge = 0.55f;
+    [SerializeField] private float inwardDurationAtMaxCharge = 0.28f;
+    [Tooltip("Seconds between full ring waves at low charge.")]
+    [SerializeField] private float inwardWaveIntervalAtMin = 0.55f;
+    [Tooltip("Seconds between full ring waves near max charge.")]
+    [SerializeField] private float inwardWaveIntervalAtMax = 0.28f;
+    [SerializeField] private int inwardRingCountMin = 8;
+    [SerializeField] private int inwardRingCountMax = 14;
+    [SerializeField] private float inwardStartScale = 1.35f;
+    [SerializeField] private float inwardEndScale = 0.2f;
+    [Tooltip("Stay bright until this fraction of the inward trip, then fade.")]
+    [SerializeField] [Range(0.35f, 0.95f)] private float inwardFadeStartNormalized = 0.72f;
+
     private struct AuraSpark
     {
         public Transform Transform;
@@ -70,6 +87,10 @@ public class HexSparkEmitter : MonoBehaviour
         public float StartTime;
         public float Duration;
         public float StartAlpha;
+        public bool Inward;
+        public float StartScale;
+        public float EndScale;
+        public Color BaseRgb;
     }
 
     private PlayerController player;
@@ -81,7 +102,9 @@ public class HexSparkEmitter : MonoBehaviour
     private float[] nextSpawnAt = new float[0];
     private float nextLeftSideSpawnAt;
     private float nextRightSideSpawnAt;
+    private float nextInwardWaveAt;
     private bool wasStreaming;
+    private bool wasFullCharge;
     private bool dissipating;
     private float dissipateEndTime;
 
@@ -94,6 +117,20 @@ public class HexSparkEmitter : MonoBehaviour
     /// <summary>Full charge: denser aura with all three spark types.</summary>
     public bool FullCharge { get; set; }
 
+    /// <summary>
+    /// When true, partial charge uses circle→center gather (shrink/fade).
+    /// At full charge, switches to Hex's usual rising aura.
+    /// </summary>
+    public bool InwardGatherUntilFull { get; set; }
+
+    /// <summary>Multiplies spark RGB (alpha still driven by aura). Light pink for Bass QuickTime.</summary>
+    public Color Tint { get; set; } = Color.white;
+
+    /// <summary>When false, health loss does not spawn hurt bursts (Bass charge-only use).</summary>
+    public bool EnableHurtBursts { get; set; } = true;
+
+    private bool UsesInwardGather => InwardGatherUntilFull && !FullCharge;
+
     private SortingGroup HostGroup =>
         player != null ? player.EffectSortingGroup : boss != null ? boss.EffectSortingGroup : null;
 
@@ -102,9 +139,52 @@ public class HexSparkEmitter : MonoBehaviour
         player = GetComponent<PlayerController>();
         boss = GetComponent<Boss>();
         body = GetComponent<SpriteRenderer>();
-        if (sparkBox == null)
-            sparkBox = transform.Find("Spark box");
+        ResolveSparkBox();
         ResetSpawnState();
+    }
+
+    /// <summary>Hurt-burst / spark origin (Bass uses child "Spark Spawner").</summary>
+    public Transform SparkBox
+    {
+        get
+        {
+            ResolveSparkBox();
+            return sparkBox;
+        }
+    }
+
+    /// <summary>Hurt-burst / spark origin (Bass uses child "Spark Spawner").</summary>
+    public void SetSparkBox(Transform box)
+    {
+        sparkBox = box;
+    }
+
+    private void ResolveSparkBox()
+    {
+        if (sparkBox != null)
+            return;
+
+        sparkBox = transform.Find("Spark box");
+        if (sparkBox == null)
+            sparkBox = transform.Find("Spark Spawner");
+        // Bass.prefab currently has a trailing space in the child name.
+        if (sparkBox == null)
+            sparkBox = transform.Find("Spark Spawner ");
+        if (sparkBox != null)
+            return;
+
+        for (int i = 0; i < transform.childCount; i++)
+        {
+            Transform child = transform.GetChild(i);
+            if (child == null)
+                continue;
+            string n = child.name;
+            if (n != null && n.Trim() == "Spark Spawner")
+            {
+                sparkBox = child;
+                return;
+            }
+        }
     }
 
     private void OnEnable()
@@ -142,13 +222,45 @@ public class HexSparkEmitter : MonoBehaviour
     {
         Streaming = false;
         wasStreaming = false;
+        wasFullCharge = false;
         dissipating = false;
         ClearAura();
+        ResetSpawnState();
+    }
+
+    /// <summary>Assign Hex Spark 1/2/3 prefabs at runtime (Bass QuickTime).</summary>
+    public void SetSparkPrefabs(HexSpark[] prefabs)
+    {
+        if (prefabs == null || prefabs.Length == 0)
+            return;
+
+        bool changed = sparkPrefabs == null || sparkPrefabs.Length != prefabs.Length;
+        if (!changed)
+        {
+            for (int i = 0; i < prefabs.Length; i++)
+            {
+                if (sparkPrefabs[i] != prefabs[i])
+                {
+                    changed = true;
+                    break;
+                }
+            }
+        }
+
+        if (!changed)
+            return;
+
+        sparkPrefabs = prefabs;
+        EnsureSpawnArray();
+        // Only reset timers when the prefab list actually changes — calling this every
+        // frame used to freeze inward/rising spawns after the first wave.
+        if (!Streaming)
+            ResetSpawnState();
     }
 
     private void HandleHealthChanged(int current, int max)
     {
-        if (lastHealth >= 0 && current < lastHealth)
+        if (EnableHurtBursts && lastHealth >= 0 && current < lastHealth)
             Burst();
         lastHealth = current;
     }
@@ -165,11 +277,26 @@ public class HexSparkEmitter : MonoBehaviour
             BeginDissipate();
         }
 
+        // Entering full charge: stop MM7 ring waves and kick Hex's rising aura schedule.
+        if (Streaming && FullCharge && !wasFullCharge && InwardGatherUntilFull)
+        {
+            ClearInwardAuraSparks();
+            ScheduleInitialSpawns();
+        }
+
         wasStreaming = Streaming;
+        wasFullCharge = FullCharge;
         if (Streaming)
         {
-            TrySpawnAura();
-            TrySpawnSideStreams();
+            if (UsesInwardGather)
+            {
+                TrySpawnInwardRingWaves();
+            }
+            else
+            {
+                TrySpawnAura();
+                TrySpawnSideStreams();
+            }
         }
 
         UpdateAuraSparks();
@@ -202,6 +329,64 @@ public class HexSparkEmitter : MonoBehaviour
             HexSpark spark = Instantiate(sparkPrefabs[i], new Vector3(position.x, position.y, 0f), Quaternion.identity);
             CharacterEffectSorting.ApplyDetachedEffectNearHost(spark.GetComponent<SpriteRenderer>(), group, body, sortingOffset);
         }
+    }
+
+    /// <summary>
+    /// Fire Hex aura sparks in random directions (boss defeat cinema). Prefabs resolve from this
+    /// emitter, any scene HexSparkEmitter, or Resources/Hex Spark 1–3.
+    /// </summary>
+    public static void BurstRandomDirections(
+        Vector3 position,
+        int count,
+        SortingGroup hostGroup = null,
+        SpriteRenderer hostBody = null,
+        bool useUnscaledTime = true)
+    {
+        HexSpark[] prefabs = ResolveSparkPrefabs();
+        if (prefabs == null || prefabs.Length == 0 || count <= 0)
+            return;
+
+        int spawn = Mathf.Clamp(count, 1, 48);
+        for (int i = 0; i < spawn; i++)
+        {
+            HexSpark prefab = prefabs[Random.Range(0, prefabs.Length)];
+            if (prefab == null)
+                continue;
+
+            HexSpark spark = Instantiate(prefab, new Vector3(position.x, position.y, 0f), Quaternion.identity);
+            float ang = Random.Range(0f, 360f) * Mathf.Deg2Rad;
+            float speed = Random.Range(3.5f, 9.5f);
+            Vector2 vel = new Vector2(Mathf.Cos(ang) * speed, Mathf.Sin(ang) * speed + Random.Range(1f, 4f));
+            spark.LaunchOutward(vel, useUnscaledTime);
+            CharacterEffectSorting.ApplyDetachedEffectNearHost(
+                spark.GetComponent<SpriteRenderer>(), hostGroup, hostBody, 6);
+        }
+    }
+
+    public static HexSpark[] ResolveSparkPrefabs()
+    {
+        HexSparkEmitter any = Object.FindFirstObjectByType<HexSparkEmitter>(FindObjectsInactive.Include);
+        if (any != null && any.sparkPrefabs != null && any.sparkPrefabs.Length > 0)
+        {
+            for (int i = 0; i < any.sparkPrefabs.Length; i++)
+            {
+                if (any.sparkPrefabs[i] != null)
+                    return any.sparkPrefabs;
+            }
+        }
+
+        var loaded = new List<HexSpark>(3);
+        TryLoadSpark(loaded, "Hex Spark 1");
+        TryLoadSpark(loaded, "Hex Spark 2");
+        TryLoadSpark(loaded, "Hex Spark 3");
+        return loaded.Count > 0 ? loaded.ToArray() : null;
+    }
+
+    private static void TryLoadSpark(List<HexSpark> list, string resourceName)
+    {
+        HexSpark spark = Resources.Load<HexSpark>(resourceName);
+        if (spark != null)
+            list.Add(spark);
     }
 
     // ---------- Charge aura ----------
@@ -292,6 +477,78 @@ public class HexSparkEmitter : MonoBehaviour
         return false;
     }
 
+    /// <summary>
+    /// Mega Man 7-style pre-max charge: a full ring of sparks appears around Bass and
+    /// rushes to the center together, then the wave repeats until full charge.
+    /// </summary>
+    private void TrySpawnInwardRingWaves()
+    {
+        if (KindCount <= 0 || AllowedKinds <= 0 || Time.time < nextInwardWaveAt)
+            return;
+
+        float progress = Mathf.Clamp01(ChargeProgress);
+        float startAlpha = Mathf.Lerp(Mathf.Max(0.75f, startAlphaPartial), startAlphaFull, progress);
+        SpawnInwardRingWave(startAlpha);
+
+        float interval = Mathf.Lerp(inwardWaveIntervalAtMin, inwardWaveIntervalAtMax, progress);
+        nextInwardWaveAt = Time.time + Mathf.Max(0.08f, interval + Random.Range(-spawnIntervalJitter * 0.35f, spawnIntervalJitter * 0.35f));
+    }
+
+    private void SpawnInwardRingWave(float startAlpha)
+    {
+        float progress = Mathf.Clamp01(ChargeProgress);
+        int count = Mathf.RoundToInt(Mathf.Lerp(inwardRingCountMin, inwardRingCountMax, progress));
+        count = Mathf.Clamp(count, 6, 20);
+
+        // One shared radius/duration so the ring reads as a single converging pulse.
+        float radius = Mathf.Lerp(inwardRadiusMin, inwardRadiusMax, Random.value);
+        float duration = Mathf.Lerp(inwardDurationAtMinCharge, inwardDurationAtMaxCharge, progress)
+                         * Random.Range(0.95f, 1.05f);
+        float baseAngle = Random.Range(0f, Mathf.PI * 2f);
+        Vector3 center = transform.position;
+        center.z = 0f;
+
+        for (int i = 0; i < count; i++)
+        {
+            int kind = i % AllowedKinds;
+            if (sparkPrefabs[kind] == null)
+                continue;
+
+            float angle = baseAngle + (Mathf.PI * 2f * i) / count;
+            Vector3 startWorld = center + new Vector3(Mathf.Cos(angle) * radius, Mathf.Sin(angle) * radius, 0f);
+            Vector2 jitter = Random.insideUnitCircle * 0.04f;
+            Vector3 endWorld = center + new Vector3(jitter.x, jitter.y, 0f);
+
+            PushAuraSpark(
+                kind,
+                startWorld,
+                endWorld,
+                startAlpha * Random.Range(0.9f, 1f),
+                duration,
+                inward: true,
+                driftX: 0f,
+                wobblePhase: 0f,
+                wobbleStrength: 0f,
+                startScale: inwardStartScale * Random.Range(0.95f, 1.1f),
+                endScale: inwardEndScale);
+        }
+    }
+
+    private void ClearInwardAuraSparks()
+    {
+        for (int i = auraSparks.Count - 1; i >= 0; i--)
+        {
+            if (!auraSparks[i].Inward)
+                continue;
+
+            if (auraSparks[i].Transform != null)
+                Destroy(auraSparks[i].Transform.gameObject);
+            auraSparks.RemoveAt(i);
+        }
+
+        nextInwardWaveAt = float.MaxValue;
+    }
+
     private void SpawnAuraSpark(int kind, float startAlpha, int sideSign)
     {
         HexSpark prefab = sparkPrefabs[kind];
@@ -310,17 +567,57 @@ public class HexSparkEmitter : MonoBehaviour
         startWorld.z = 0f;
         endWorld.z = 0f;
 
+        PushAuraSpark(
+            kind,
+            startWorld,
+            endWorld,
+            startAlpha,
+            floatDuration * Random.Range(0.65f, 1.35f),
+            inward: false,
+            driftX: Random.Range(-horizontalDrift * 0.5f, horizontalDrift * 0.5f),
+            wobblePhase: Random.Range(0f, Mathf.PI * 2f),
+            wobbleStrength: Random.Range(0.65f, 1.35f),
+            startScale: 1f,
+            endScale: 1f);
+    }
+
+    private void PushAuraSpark(
+        int kind,
+        Vector3 startWorld,
+        Vector3 endWorld,
+        float startAlpha,
+        float duration,
+        bool inward,
+        float driftX,
+        float wobblePhase,
+        float wobbleStrength,
+        float startScale,
+        float endScale)
+    {
+        HexSpark prefab = sparkPrefabs[kind];
+        if (prefab == null)
+            return;
+
         HexSpark spark = Instantiate(prefab, startWorld, Quaternion.identity);
         // The aura drives the spark; its own pop-and-fall motion stays off.
         spark.enabled = false;
         SpriteRenderer renderer = spark.Renderer != null ? spark.Renderer : spark.GetComponent<SpriteRenderer>();
+        Color baseRgb = Color.white;
         if (renderer != null)
         {
             CharacterEffectSorting.ApplyDetachedEffectNearHost(renderer, HostGroup, body, sortingOffset);
-            Color c = renderer.color;
-            c.a = startAlpha;
-            renderer.color = c;
+            baseRgb = renderer.color;
+            baseRgb.a = 1f;
+            renderer.color = ApplyTint(baseRgb, startAlpha);
         }
+
+        // Keep authored prefab scale (Bass Spark is smaller than Hex's) as the 1.0 baseline.
+        float prefabScale = Mathf.Abs(spark.transform.localScale.x);
+        if (prefabScale < 0.01f)
+            prefabScale = 1f;
+        float scaledStart = Mathf.Max(0.05f, startScale) * prefabScale;
+        float scaledEnd = Mathf.Max(0.02f, endScale) * prefabScale;
+        spark.transform.localScale = Vector3.one * scaledStart;
 
         auraSparks.Add(new AuraSpark
         {
@@ -329,13 +626,29 @@ public class HexSparkEmitter : MonoBehaviour
             Kind = kind,
             StartWorldPos = startWorld,
             EndWorldPos = endWorld,
-            DriftX = Random.Range(-horizontalDrift * 0.5f, horizontalDrift * 0.5f),
-            WobblePhase = Random.Range(0f, Mathf.PI * 2f),
-            WobbleStrength = Random.Range(0.65f, 1.35f),
+            DriftX = driftX,
+            WobblePhase = wobblePhase,
+            WobbleStrength = wobbleStrength,
             StartTime = Time.time,
-            Duration = floatDuration * Random.Range(0.65f, 1.35f),
-            StartAlpha = startAlpha
+            Duration = Mathf.Max(0.08f, duration),
+            StartAlpha = startAlpha,
+            Inward = inward,
+            StartScale = scaledStart,
+            EndScale = scaledEnd,
+            BaseRgb = baseRgb
         });
+    }
+
+    private Color ApplyTint(Color baseColor, float alpha)
+    {
+        Color tint = Tint.a <= 0.001f ? Color.white : Tint;
+        // White tint keeps Hex's authored yellow. Any other tint (Bass light pink)
+        // replaces RGB so the aura reads clearly instead of multiplying into yellow.
+        bool useTintColor = tint.r < 0.98f || tint.g < 0.98f || tint.b < 0.98f;
+        if (!useTintColor)
+            return new Color(baseColor.r, baseColor.g, baseColor.b, alpha);
+
+        return new Color(tint.r, tint.g, tint.b, alpha);
     }
 
     private float PickSpawnX(int sideSign)
@@ -358,6 +671,9 @@ public class HexSparkEmitter : MonoBehaviour
 
     private void UpdateAuraSparks()
     {
+        Vector3 followCenter = transform.position;
+        followCenter.z = 0f;
+
         for (int i = auraSparks.Count - 1; i >= 0; i--)
         {
             AuraSpark spark = auraSparks[i];
@@ -370,24 +686,54 @@ public class HexSparkEmitter : MonoBehaviour
             float t = Mathf.Clamp01((Time.time - spark.StartTime) / spark.Duration);
             float eased = 1f - (1f - t) * (1f - t);
 
-            Vector3 pos = Vector3.Lerp(spark.StartWorldPos, spark.EndWorldPos, eased);
-            pos.x += spark.DriftX * eased;
-            float wobbleFalloff = 1f - eased * 0.65f;
-            pos.x += Mathf.Sin(t * Mathf.PI * wobbleFrequency + spark.WobblePhase)
-                     * wobbleAmplitude * spark.WobbleStrength * wobbleFalloff;
+            Vector3 start = spark.StartWorldPos;
+            Vector3 end = spark.EndWorldPos;
+            if (spark.Inward)
+            {
+                // Keep the gather aimed at Bass as he moves.
+                Vector3 startOffset = spark.StartWorldPos - spark.EndWorldPos;
+                end = followCenter;
+                start = followCenter + startOffset;
+            }
+
+            Vector3 pos = Vector3.Lerp(start, end, eased);
+            if (!spark.Inward)
+            {
+                pos.x += spark.DriftX * eased;
+                float wobbleFalloff = 1f - eased * 0.65f;
+                pos.x += Mathf.Sin(t * Mathf.PI * wobbleFrequency + spark.WobblePhase)
+                         * wobbleAmplitude * spark.WobbleStrength * wobbleFalloff;
+            }
+
             spark.Transform.position = pos;
+
+            if (spark.Inward)
+            {
+                float scale = Mathf.Lerp(spark.StartScale, spark.EndScale, eased);
+                spark.Transform.localScale = Vector3.one * Mathf.Max(0.02f, scale);
+            }
 
             if (spark.Renderer != null)
             {
-                float alpha = t <= fadeStartNormalized
-                    ? spark.StartAlpha
-                    : Mathf.Lerp(spark.StartAlpha, 0f, Mathf.InverseLerp(fadeStartNormalized, 1f, t));
+                float alpha;
+                if (spark.Inward)
+                {
+                    // Stay bright on the ring, fade only near the center (MM7-readable).
+                    alpha = t <= inwardFadeStartNormalized
+                        ? spark.StartAlpha
+                        : Mathf.Lerp(spark.StartAlpha, 0f, Mathf.InverseLerp(inwardFadeStartNormalized, 1f, t));
+                }
+                else
+                {
+                    alpha = t <= fadeStartNormalized
+                        ? spark.StartAlpha
+                        : Mathf.Lerp(spark.StartAlpha, 0f, Mathf.InverseLerp(fadeStartNormalized, 1f, t));
+                }
+
                 if (dissipating)
                     alpha *= Mathf.Clamp01((dissipateEndTime - Time.time) / Mathf.Max(0.05f, dissipateDuration));
 
-                Color c = spark.Renderer.color;
-                c.a = alpha;
-                spark.Renderer.color = c;
+                spark.Renderer.color = ApplyTint(spark.BaseRgb, alpha);
             }
 
             if (t >= 1f)
@@ -449,6 +795,7 @@ public class HexSparkEmitter : MonoBehaviour
             nextSpawnAt[i] = now + Random.Range(0f, spawnIntervalFull * 0.35f);
         nextLeftSideSpawnAt = now + Random.Range(0f, sideSpawnIntervalFull * 0.25f);
         nextRightSideSpawnAt = now + Random.Range(0f, sideSpawnIntervalFull * 0.25f);
+        nextInwardWaveAt = now;
     }
 
     private void ResetSpawnState()
@@ -460,6 +807,8 @@ public class HexSparkEmitter : MonoBehaviour
             nextSpawnAt[i] = float.MaxValue;
         nextLeftSideSpawnAt = float.MaxValue;
         nextRightSideSpawnAt = float.MaxValue;
+        nextInwardWaveAt = float.MaxValue;
+        wasFullCharge = false;
     }
 
     private void ClearAura()
@@ -494,6 +843,17 @@ public class HexSparkEmitter : MonoBehaviour
         wobbleAmplitude = Mathf.Max(0f, wobbleAmplitude);
         wobbleFrequency = Mathf.Max(0.5f, wobbleFrequency);
         dissipateDuration = Mathf.Max(0.1f, dissipateDuration);
+        inwardRadiusMin = Mathf.Max(0.5f, inwardRadiusMin);
+        inwardRadiusMax = Mathf.Max(inwardRadiusMin, inwardRadiusMax);
+        inwardDurationAtMinCharge = Mathf.Max(0.12f, inwardDurationAtMinCharge);
+        inwardDurationAtMaxCharge = Mathf.Max(0.08f, inwardDurationAtMaxCharge);
+        inwardWaveIntervalAtMin = Mathf.Max(0.12f, inwardWaveIntervalAtMin);
+        inwardWaveIntervalAtMax = Mathf.Max(0.08f, inwardWaveIntervalAtMax);
+        inwardRingCountMin = Mathf.Clamp(inwardRingCountMin, 4, 20);
+        inwardRingCountMax = Mathf.Clamp(inwardRingCountMax, inwardRingCountMin, 24);
+        inwardStartScale = Mathf.Max(0.1f, inwardStartScale);
+        inwardEndScale = Mathf.Clamp(inwardEndScale, 0.02f, inwardStartScale);
+        inwardFadeStartNormalized = Mathf.Clamp(inwardFadeStartNormalized, 0.35f, 0.95f);
     }
 #endif
 }

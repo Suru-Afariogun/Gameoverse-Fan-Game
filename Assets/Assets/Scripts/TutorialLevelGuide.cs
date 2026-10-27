@@ -251,6 +251,7 @@ public sealed class TutorialLevelGuide : MonoBehaviour
             b.SyncDeviceForPrompts();
 
         bool kit = Is(characterId, "Kit");
+        bool bass = Is(characterId, "Bass");
         bool count = Is(characterId, "Count");
         bool malice = Is(characterId, "Malice");
         bool hex = Is(characterId, "Hex");
@@ -267,11 +268,14 @@ public sealed class TutorialLevelGuide : MonoBehaviour
             () => Player != null && Player.IsDashing && !Player.IsPhysicallyGrounded);
         Add($"To dash jump, {b.FormatPress("Jump")} while dashing.", () => Player != null && Player.IsDashJumping);
 
-        if (kit || count)
+        if (kit || count || bass)
         {
             Add($"To shoot, {b.FormatPress("Attack")}.", TutorialAction.Attack);
             Add($"To shoot diagonally up, {b.FormatAimUp()} and {b.FormatPress("Attack")}.", TutorialAction.AimShot);
-            Add($"For a charged shot, {b.FormatHold("Attack")}, then let go.", TutorialAction.ChargeAttack);
+            if (!bass)
+                Add($"For a charged shot, {b.FormatHold("Attack")}, then let go.", TutorialAction.ChargeAttack);
+            if (bass)
+                Add($"To shoot downward, {b.FormatAimDown()} and {b.FormatPress("Attack")}.", TutorialAction.Attack);
         }
         else if (malice)
         {
@@ -306,6 +310,9 @@ public sealed class TutorialLevelGuide : MonoBehaviour
         Add($"To drop through a thin platform, stand on it, {b.FormatAimDown()} and {b.FormatPress("Jump")}.",
             TutorialAction.DropThrough);
         Add($"To wall jump, slide down a wall and {b.FormatPress("Jump")}.", TutorialAction.WallJump);
+        Add(
+            $"To look up or down with the camera, hold {b.FormatAimUp()} or {b.FormatAimDown()} by itself — no other buttons.",
+            () => Player != null && Player.IsRequestingManualCameraLook());
 
         Add("To carry an item, break an item box and touch the item.", TutorialAction.ItemPickup,
             () => HeldItemCarrier.HeldCount > 0, () => !ItemSourcesLeft());

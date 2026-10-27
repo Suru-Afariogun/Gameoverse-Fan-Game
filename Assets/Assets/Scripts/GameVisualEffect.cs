@@ -130,6 +130,12 @@ public class GameVisualEffect : MonoBehaviour
     public bool IsEnemyExplosionSmallPurpleType => effectType == VisualEffectType.EnemyExplosionSmallPurple;
     public bool IsInteractableSymbolType => effectType == VisualEffectType.InteractableSymbol;
 
+    /// <summary>
+    /// World sprites use low orders (walls ~2, platforms ~5). Draw the prompt above them
+    /// but below HUD / pause canvases (typically 50+).
+    /// </summary>
+    public const int InteractableSymbolWorldSortOrder = 45;
+
     public string EnemyExplosionAnimationStateName => enemyExplosionAnimationStateName;
     public float EnemyExplosionMaxLifetime => enemyExplosionMaxDuration;
 
@@ -138,8 +144,26 @@ public class GameVisualEffect : MonoBehaviour
         if (!IsInteractableSymbolType)
             return;
 
+        EnsureInteractableSymbolDrawsAboveWorld();
         interactableBobBaseLocalPos = transform.localPosition;
         interactableBobBaseCached = true;
+    }
+
+    /// <summary>
+    /// Keeps the interact logo visible over pillars/walls while leaving Screen Space UI on top.
+    /// </summary>
+    public void EnsureInteractableSymbolDrawsAboveWorld()
+    {
+        if (!IsInteractableSymbolType)
+            return;
+
+        SpriteRenderer sr = GetComponent<SpriteRenderer>();
+        if (sr == null)
+            return;
+
+        sr.sortingLayerID = 0; // Default — below Overlay UI canvases
+        if (sr.sortingOrder < InteractableSymbolWorldSortOrder)
+            sr.sortingOrder = InteractableSymbolWorldSortOrder;
     }
 
     private void Update()
@@ -161,6 +185,7 @@ public class GameVisualEffect : MonoBehaviour
     /// <summary>Call after parenting/moving so the bob centers on the new local position.</summary>
     public void ResetInteractableBobBase()
     {
+        EnsureInteractableSymbolDrawsAboveWorld();
         interactableBobBaseLocalPos = transform.localPosition;
         interactableBobBaseCached = true;
     }
@@ -253,7 +278,7 @@ public class GameVisualEffect : MonoBehaviour
             case VisualEffectType.InteractableSymbol:
                 interactableBobAmplitude = 0.12f;
                 interactableBobSpeed = 2.4f;
-                sortOrderInFrontOfHost = 3;
+                sortOrderInFrontOfHost = InteractableSymbolWorldSortOrder;
                 break;
         }
     }

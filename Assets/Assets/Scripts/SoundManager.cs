@@ -36,6 +36,10 @@ public class SoundManager : MonoBehaviour
     [SerializeField] private AudioClip levelOneCopyBotBossMusic;
     [SerializeField] [Range(0f, 1f)] private float levelOneCopyBotBossMusicVolume = 1f;
 
+    [Tooltip("The City Level scene — race / stage loop.")]
+    [SerializeField] private AudioClip cityLevelMusic;
+    [SerializeField] [Range(0f, 1f)] private float cityLevelMusicVolume = 1f;
+
     [Tooltip("Boss Fight Mode scene — drag your song here.")]
     [SerializeField] private AudioClip bossFightMusic;
     [SerializeField] [Range(0f, 1f)] private float bossFightMusicVolume = 1f;
@@ -331,9 +335,23 @@ public class SoundManager : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
         EnsureAudioSources();
-        ApplyVolumes();
+        ApplyGameSettingsAudio();
         BeginWebAudioUnlockWatch();
     }
+
+    /// <summary>Pull volumes / mutes from <see cref="GameSettings"/> and refresh all sources.</summary>
+    public void ApplyGameSettingsAudio()
+    {
+        musicVolume = Mathf.Clamp01(GameSettings.MusicVolume);
+        sfxVolume = Mathf.Clamp01(GameSettings.SfxVolume);
+        ApplyVolumes();
+        RefreshActiveMusicVolume();
+    }
+
+    public float MusicVolumeLevel => musicVolume;
+    public float SfxVolumeLevel => sfxVolume;
+    public bool IsMusicMuted => GameSettings.MusicMuted;
+    public bool IsSfxMuted => GameSettings.SfxMuted;
 
     private void Start()
     {
@@ -392,7 +410,7 @@ public class SoundManager : MonoBehaviour
             activeMusicSource.clip = currentMusic;
             activeMusicSource.loop = true;
             activeMusicSource.time = GetMusicLoopStart(currentMusic);
-            activeMusicSource.volume = masterVolume * musicVolume * Mathf.Clamp01(currentMusicTrackVolume);
+            activeMusicSource.volume = masterVolume * EffectiveMusicVolume * Mathf.Clamp01(currentMusicTrackVolume);
             activeMusicSource.Play();
         }
 
@@ -575,21 +593,25 @@ public class SoundManager : MonoBehaviour
         return pool;
     }
 
+    private float EffectiveMusicVolume => GameSettings.MusicMuted ? 0f : musicVolume;
+    private float EffectiveSfxVolume => GameSettings.SfxMuted ? 0f : sfxVolume;
+
     private void ApplyVolumes()
     {
         // Music volume is set per-track when playing.
+        float sfx = masterVolume * EffectiveSfxVolume;
         if (sfxSource != null)
-            sfxSource.volume = masterVolume * sfxVolume;
+            sfxSource.volume = sfx;
         if (pitchedSfxSource != null)
-            pitchedSfxSource.volume = masterVolume * sfxVolume;
+            pitchedSfxSource.volume = sfx;
         if (chargeLoopSource != null)
-            chargeLoopSource.volume = masterVolume * sfxVolume * activeChargeLoopVolume;
+            chargeLoopSource.volume = sfx * activeChargeLoopVolume;
         if (dialogueTypingSource != null)
-            dialogueTypingSource.volume = masterVolume * sfxVolume * dialogueTypingVolume;
+            dialogueTypingSource.volume = sfx * dialogueTypingVolume;
         if (harlieChargeKickSource != null)
-            harlieChargeKickSource.volume = masterVolume * sfxVolume * harlieChargeKickVolume;
+            harlieChargeKickSource.volume = sfx * harlieChargeKickVolume;
         if (grappleSource != null)
-            grappleSource.volume = masterVolume * sfxVolume * grappleVolume;
+            grappleSource.volume = sfx * grappleVolume;
     }
 
     private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -621,7 +643,16 @@ public class SoundManager : MonoBehaviour
         if (LevelOneBossEncounter.IsLevelOneScene(sceneName))
             return TryPlaySceneMusic(levelOneMusic, levelOneMusicVolume);
 
+        if (IsCityLevelScene(sceneName))
+            return TryPlaySceneMusic(cityLevelMusic, cityLevelMusicVolume);
+
         return false;
+    }
+
+    private static bool IsCityLevelScene(string sceneName)
+    {
+        return !string.IsNullOrEmpty(sceneName) &&
+               sceneName.IndexOf("City", StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
     private bool TryPlayExtraSceneMusic(string sceneName)
@@ -749,7 +780,7 @@ public class SoundManager : MonoBehaviour
             return;
 
         currentMusicTrackVolume = trackVolumeScale;
-        float targetVolume = masterVolume * musicVolume * Mathf.Clamp01(trackVolumeScale);
+        float targetVolume = masterVolume * EffectiveMusicVolume * Mathf.Clamp01(trackVolumeScale);
 
         if (!restartIfSame &&
             currentMusic == clip &&
@@ -984,7 +1015,7 @@ public class SoundManager : MonoBehaviour
             return;
 
         sfxSource.pitch = 1f;
-        sfxSource.PlayOneShot(clip, Mathf.Clamp01(masterVolume * sfxVolume * volumeScale));
+        sfxSource.PlayOneShot(clip, Mathf.Clamp01(masterVolume * EffectiveSfxVolume * volumeScale));
     }
 
     public void PlaySfxPitched(AudioClip clip, float pitch, float volumeScale = 1f)
@@ -994,7 +1025,7 @@ public class SoundManager : MonoBehaviour
             return;
 
         pitchedSfxSource.pitch = Mathf.Clamp(pitch, 0.25f, 3f);
-        pitchedSfxSource.PlayOneShot(clip, Mathf.Clamp01(masterVolume * sfxVolume * volumeScale));
+        pitchedSfxSource.PlayOneShot(clip, Mathf.Clamp01(masterVolume * EffectiveSfxVolume * volumeScale));
     }
 
     // --- Named gameplay helpers ---
@@ -1017,7 +1048,7 @@ public class SoundManager : MonoBehaviour
         chargeLoopSource.clip = clip;
         chargeLoopSource.loop = true;
         chargeLoopSource.pitch = pitch;
-        chargeLoopSource.volume = masterVolume * sfxVolume * volume;
+        chargeLoopSource.volume = masterVolume * EffectiveSfxVolume * volume;
         chargeLoopSource.Play();
     }
 
@@ -1084,7 +1115,7 @@ public class SoundManager : MonoBehaviour
         pitchedSfxSource.Stop();
         pitchedSfxSource.clip = clip;
         pitchedSfxSource.pitch = Mathf.Clamp(pitch, 0.25f, 3f);
-        pitchedSfxSource.volume = Mathf.Clamp01(masterVolume * sfxVolume * volumeScale);
+        pitchedSfxSource.volume = Mathf.Clamp01(masterVolume * EffectiveSfxVolume * volumeScale);
 
         float maxStart = Mathf.Max(0f, clip.length - 0.02f);
         pitchedSfxSource.time = Mathf.Clamp(startTime, 0f, maxStart);
@@ -1178,8 +1209,8 @@ public class SoundManager : MonoBehaviour
         EnsureAudioSources();
         EnsureKitRapidVoicePools();
 
-        float meowScale = Mathf.Clamp01(masterVolume * sfxVolume * kitRapidFireMeowVolume);
-        float laserScale = Mathf.Clamp01(masterVolume * sfxVolume * kitRapidFireLaserVolume);
+        float meowScale = Mathf.Clamp01(masterVolume * EffectiveSfxVolume * kitRapidFireMeowVolume);
+        float laserScale = Mathf.Clamp01(masterVolume * EffectiveSfxVolume * kitRapidFireLaserVolume);
 
         if (kitMeow != null && kitRapidMeowPool != null && kitRapidMeowPool.Length > 0)
         {
@@ -1194,19 +1225,33 @@ public class SoundManager : MonoBehaviour
             }
         }
 
+        PlayKitRapidLaserOnly(laserScale);
+    }
+
+    /// <summary>Bass Buster rapid-fire: soft laser only (no Kit meow).</summary>
+    public void PlayBassFireRapid()
+    {
+        EnsureAudioSources();
+        EnsureKitRapidVoicePools();
+        float laserScale = Mathf.Clamp01(masterVolume * EffectiveSfxVolume * kitRapidFireLaserVolume);
+        PlayKitRapidLaserOnly(laserScale);
+    }
+
+    private void PlayKitRapidLaserOnly(float laserScale)
+    {
         AudioClip laser = kitSoftLaser != null ? kitSoftLaser : kitWeirdLaser;
-        if (laser != null && kitRapidLaserPool != null && kitRapidLaserPool.Length > 0)
-        {
-            AudioSource laserSrc = kitRapidLaserPool[kitRapidLaserPoolIndex];
-            kitRapidLaserPoolIndex = (kitRapidLaserPoolIndex + 1) % kitRapidLaserPool.Length;
-            if (laserSrc != null)
-            {
-                laserSrc.Stop();
-                laserSrc.pitch = 1f;
-                laserSrc.volume = 1f;
-                laserSrc.PlayOneShot(laser, laserScale);
-            }
-        }
+        if (laser == null || kitRapidLaserPool == null || kitRapidLaserPool.Length == 0)
+            return;
+
+        AudioSource laserSrc = kitRapidLaserPool[kitRapidLaserPoolIndex];
+        kitRapidLaserPoolIndex = (kitRapidLaserPoolIndex + 1) % kitRapidLaserPool.Length;
+        if (laserSrc == null)
+            return;
+
+        laserSrc.Stop();
+        laserSrc.pitch = 1f;
+        laserSrc.volume = 1f;
+        laserSrc.PlayOneShot(laser, laserScale);
     }
 
     public void PlayBossKitFireRapid()
@@ -1214,9 +1259,9 @@ public class SoundManager : MonoBehaviour
         EnsureAudioSources();
         EnsureBossKitRapidVoicePools();
 
-        float meowScale = Mathf.Clamp01(masterVolume * sfxVolume *
+        float meowScale = Mathf.Clamp01(masterVolume * EffectiveSfxVolume *
             (bossKitMeow != null ? bossKitRapidFireMeowVolume : kitRapidFireMeowVolume));
-        float laserScale = Mathf.Clamp01(masterVolume * sfxVolume *
+        float laserScale = Mathf.Clamp01(masterVolume * EffectiveSfxVolume *
             (bossKitSoftLaser != null || bossKitWeirdLaser != null ? bossKitRapidFireLaserVolume : kitRapidFireLaserVolume));
 
         AudioClip meow = bossKitMeow != null ? bossKitMeow : kitMeow;
@@ -1269,8 +1314,8 @@ public class SoundManager : MonoBehaviour
         EnsureAudioSources();
         EnsureCountRapidVoicePools();
 
-        float meowScale = Mathf.Clamp01(masterVolume * sfxVolume * (countRapidFireMeowVolume > 0f ? countRapidFireMeowVolume : kitRapidFireMeowVolume));
-        float laserScale = Mathf.Clamp01(masterVolume * sfxVolume * (countRapidFireLaserVolume > 0f ? countRapidFireLaserVolume : kitRapidFireLaserVolume));
+        float meowScale = Mathf.Clamp01(masterVolume * EffectiveSfxVolume * (countRapidFireMeowVolume > 0f ? countRapidFireMeowVolume : kitRapidFireMeowVolume));
+        float laserScale = Mathf.Clamp01(masterVolume * EffectiveSfxVolume * (countRapidFireLaserVolume > 0f ? countRapidFireLaserVolume : kitRapidFireLaserVolume));
 
         AudioClip meow = countMeow != null ? countMeow : kitMeow;
         if (meow != null && countRapidMeowPool != null && countRapidMeowPool.Length > 0)
@@ -1336,7 +1381,7 @@ public class SoundManager : MonoBehaviour
         src.Stop();
         src.clip = harlieSwordSwing;
         src.pitch = 1f;
-        src.volume = Mathf.Clamp01(masterVolume * sfxVolume * harlieSwingVolume);
+        src.volume = Mathf.Clamp01(masterVolume * EffectiveSfxVolume * harlieSwingVolume);
         src.Play();
     }
 
@@ -1374,7 +1419,7 @@ public class SoundManager : MonoBehaviour
         harlieChargeKickSource.clip = harlieChargeKickLoop;
         harlieChargeKickSource.loop = true;
         harlieChargeKickSource.pitch = harlieChargeKickPitch;
-        harlieChargeKickSource.volume = masterVolume * sfxVolume * harlieChargeKickVolume;
+        harlieChargeKickSource.volume = masterVolume * EffectiveSfxVolume * harlieChargeKickVolume;
         harlieChargeKickSource.Play();
     }
 
@@ -1476,7 +1521,7 @@ public class SoundManager : MonoBehaviour
         grappleSource.Stop();
         grappleSource.clip = clip;
         grappleSource.pitch = Mathf.Clamp(pitch, 0.25f, 3f);
-        grappleSource.volume = Mathf.Clamp01(masterVolume * sfxVolume * volumeScale);
+        grappleSource.volume = Mathf.Clamp01(masterVolume * EffectiveSfxVolume * volumeScale);
 
         float maxStart = Mathf.Max(0f, clip.length - 0.02f);
         // Play() resets time — seek after so we actually skip the silent lead-in.
@@ -1640,7 +1685,7 @@ public class SoundManager : MonoBehaviour
         dialogueTypingSource.clip = dialogueTypingLoop;
         dialogueTypingSource.loop = true;
         dialogueTypingSource.pitch = 1f;
-        dialogueTypingSource.volume = masterVolume * sfxVolume * dialogueTypingVolume;
+        dialogueTypingSource.volume = masterVolume * EffectiveSfxVolume * dialogueTypingVolume;
         dialogueTypingSource.Play();
     }
 
@@ -1688,7 +1733,7 @@ public class SoundManager : MonoBehaviour
 
         clockworkTocSource.Stop();
         clockworkTocSource.clip = clockworkTocSfx;
-        clockworkTocSource.volume = Mathf.Clamp01(masterVolume * sfxVolume * clockworkVolume);
+        clockworkTocSource.volume = Mathf.Clamp01(masterVolume * EffectiveSfxVolume * clockworkVolume);
         clockworkTocSource.time = Mathf.Clamp(clockworkTocStartTime, 0f, Mathf.Max(0f, clockworkTocSfx.length - 0.02f));
 
         double now = AudioSettings.dspTime;
@@ -1748,7 +1793,7 @@ public class SoundManager : MonoBehaviour
         src.Stop();
         src.pitch = 1f;
         src.volume = 1f;
-        src.PlayOneShot(clip, Mathf.Clamp01(masterVolume * sfxVolume * volumeScale));
+        src.PlayOneShot(clip, Mathf.Clamp01(masterVolume * EffectiveSfxVolume * volumeScale));
     }
 
     public void SetMasterVolume(float value)
@@ -1767,7 +1812,7 @@ public class SoundManager : MonoBehaviour
     private void RefreshActiveMusicVolume()
     {
         if (activeMusicSource != null && currentMusic != null)
-            activeMusicSource.volume = masterVolume * musicVolume * Mathf.Clamp01(currentMusicTrackVolume);
+            activeMusicSource.volume = masterVolume * EffectiveMusicVolume * Mathf.Clamp01(currentMusicTrackVolume);
     }
 
     public void SetSfxVolume(float value)

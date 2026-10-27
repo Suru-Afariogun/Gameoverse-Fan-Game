@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -24,12 +25,17 @@ public class SilverSword : MonoBehaviour
     private bool ownerIsPlayer;
     private int damage;
     private bool armed;
+    private bool parried;
     private float spinDegreesPerSecond;
     private Color baseColor = Color.white;
 
     public SpriteRenderer Renderer => spriteRenderer;
     public bool Armed => armed;
+    public bool WasParried => parried;
     public Vector2 Position => transform.position;
+
+    /// <summary>Fired when a direct slash or slash wave parries this sword.</summary>
+    public event Action<SilverSword> OnParried;
 
     /// <summary>World direction the blade tip is pointing.</summary>
     public Vector2 TipDirection
@@ -97,6 +103,7 @@ public class SilverSword : MonoBehaviour
 
     public void Arm()
     {
+        parried = false;
         armed = true;
         hitIds.Clear();
     }
@@ -172,16 +179,57 @@ public class SilverSword : MonoBehaviour
             TryHit(Overlaps[i]);
     }
 
+    /// <summary>
+    /// Knocked back spinning by a slash / slash wave, then returns to formation early.
+    /// </summary>
+    public void ReceiveParry(float knockDirectionSign)
+    {
+        if (parried)
+            return;
+
+        parried = true;
+        Disarm();
+        SetSpin(900f);
+        GentleKnockback.Apply(this, knockDirectionSign, 2f, 0.14f, chainKill: false);
+        SoundManager.Instance?.PlayHarlieBigSwordClash();
+        OnParried?.Invoke(this);
+    }
+
     private void TryHit(Collider2D other)
     {
         if (other == null)
             return;
         if (owner != null && (other.transform == owner || other.transform.IsChildOf(owner)))
             return;
-        if (EnemyDetectionZone.IsDetectionOnlyCollider(other) || other.GetComponent<AttackHitbox>() != null)
+        if (EnemyDetectionZone.IsDetectionOnlyCollider(other))
             return;
-        if (other.GetComponentInParent<Projectile>() != null || other.GetComponentInParent<MaliceSlashProjectile>() != null ||
-            other.GetComponentInParent<SilverSword>() != null)
+
+        AttackHitbox box = other.GetComponent<AttackHitbox>();
+        if (box == null)
+            box = other.GetComponentInParent<AttackHitbox>();
+        if (box != null)
+        {
+            if (box.IsActive && IsSlashingHitbox(box))
+            {
+                float away = Mathf.Sign(transform.position.x - box.transform.position.x);
+                if (Mathf.Abs(away) < 0.01f)
+                    away = 1f;
+                ReceiveParry(away);
+            }
+            return;
+        }
+
+        MaliceSlashProjectile wave = other.GetComponentInParent<MaliceSlashProjectile>();
+        if (wave != null)
+        {
+            float away = Mathf.Sign(transform.position.x - wave.transform.position.x);
+            if (Mathf.Abs(away) < 0.01f)
+                away = 1f;
+            ReceiveParry(away);
+            return;
+        }
+
+        if (other.GetComponentInParent<Projectile>() != null || other.GetComponentInParent<SilverSword>() != null)
             return;
 
         if (!ownerIsPlayer)
@@ -223,6 +271,18 @@ public class SilverSword : MonoBehaviour
         if (damageable is Component damageableComponent && !damageable.IsDead &&
             hitIds.Add(damageableComponent.GetInstanceID()))
             damageable.TakeDamage(damage);
+    }
+
+    private static bool IsSlashingHitbox(AttackHitbox box)
+    {
+        if (box == null || !box.IsActive)
+            return false;
+
+        if (box.Owner is HarliePlayerController harlie)
+            return harlie.UsesSlashForCombat();
+        if (box.Owner is MalicePlayerController)
+            return true;
+        return box.OwnerBoss != null;
     }
 
 #if UNITY_EDITOR

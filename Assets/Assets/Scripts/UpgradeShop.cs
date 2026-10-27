@@ -112,7 +112,7 @@ public sealed class UpgradeShop : MonoBehaviour
     private void OnEnable()
     {
         if (controls == null)
-            controls = new InputActions();
+            controls = GameInput.Create();
 
         controls.PlayerControls.Enable();
         controls.PlayerControls.Up.performed += OnUpPerformed;
@@ -565,11 +565,18 @@ public sealed class UpgradeShop : MonoBehaviour
         return IsGearShop || PlayerUpgrades.IsAvailable(id, (UpgradeType)items[item]);
     }
 
-    private int MaxLevel => IsGearShop ? PlayerGear.MaxLevel : PlayerUpgrades.MaxLevel;
-
-    private int GetPrice(int level)
+    private int GetMaxLevelForItem(int item)
     {
-        return IsGearShop ? PlayerGear.GetPrice(level) : PlayerUpgrades.GetPrice(level);
+        if (!IsGearShop)
+            return PlayerUpgrades.MaxLevel;
+        return PlayerGear.GetMaxLevel((GearType)items[item]);
+    }
+
+    private int GetPrice(int item, int level)
+    {
+        if (IsGearShop)
+            return PlayerGear.GetPrice((GearType)items[item], level);
+        return PlayerUpgrades.GetPrice(level);
     }
 
     /// <summary>Not bought yet (or not available for this character) always reads as unequipped.</summary>
@@ -672,12 +679,13 @@ public sealed class UpgradeShop : MonoBehaviour
             return;
 
         int level = GetLevel(id, selectedItem);
+        int maxLv = GetMaxLevelForItem(selectedItem);
         if (!IsAvailable(id, selectedItem))
             crystalCostText.text = ": N/A";
-        else if (level >= MaxLevel)
+        else if (level >= maxLv)
             crystalCostText.text = ": MAX";
         else
-            crystalCostText.text = ": - " + GetPrice(level);
+            crystalCostText.text = ": - " + GetPrice(selectedItem, level);
     }
 
     private void RefreshInfoBox(string id)
@@ -690,10 +698,11 @@ public sealed class UpgradeShop : MonoBehaviour
         if (selectedItem >= 0 && selectedItem < items.Count)
         {
             int level = GetLevel(id, selectedItem);
+            int maxLv = GetMaxLevelForItem(selectedItem);
             string state = !IsAvailable(id, selectedItem) ? "Not for " + id
                 : level <= 0 ? "Not bought"
                 : IsShownEquipped(id, selectedItem) ? "Equipped" : "Unequipped";
-            title = GetItemName(selectedItem) + "  Lv " + level + "/" + MaxLevel + "  (" + state + ")";
+            title = GetItemName(selectedItem) + "  Lv " + level + "/" + maxLv + "  (" + state + ")";
             if (items.Count > slots.Count)
                 title += "  " + (selectedItem + 1) + "/" + items.Count;
             body = GetItemDescription(id, selectedItem);
@@ -705,7 +714,7 @@ public sealed class UpgradeShop : MonoBehaviour
             body = (IsGearShop
                        ? "Gear for " + id + ", paid in crystals. Gear is saved per character, and you can unequip it any time."
                        : "Upgrades for " + id + ", paid in crystals. Upgrades are saved per character, and you can unequip them any time.") +
-                   "\nEach level costs 100 more crystals than the last (max level " + MaxLevel + ").";
+                   "\nMost items cost 100 more crystals each level (max 5). Select an item to see its price and details.";
         }
 
         if (infoTitleText != null)

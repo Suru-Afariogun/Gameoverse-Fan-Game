@@ -12,9 +12,10 @@ public static class BossEncounter
     public const string BossIdHarlie = "Harlie";
     public const string BossIdHex = "Hex";
     public const string BossIdCount = "Count";
+    public const string BossIdBass = "Bass";
 
     /// <summary>Boss ids that currently have a fight ready in the project.</summary>
-    static readonly string[] ReadyBossIds = { BossIdMalice, BossIdKit, BossIdHarlie, BossIdHex, BossIdCount };
+    static readonly string[] ReadyBossIds = { BossIdMalice, BossIdKit, BossIdHarlie, BossIdHex, BossIdCount, BossIdBass };
 
     public static string SelectedBossId { get; private set; } = BossIdMalice;
 
@@ -81,6 +82,15 @@ public static class BossEncounter
             return true;
 
         if (boss is BossKit && string.Equals(id, BossIdKit, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (boss is BossCount && string.Equals(id, BossIdCount, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (boss is BossBass && string.Equals(id, BossIdBass, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (boss is BossHarlie && string.Equals(id, BossIdHarlie, StringComparison.OrdinalIgnoreCase))
             return true;
 
         return false;

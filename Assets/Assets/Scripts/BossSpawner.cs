@@ -5,18 +5,33 @@ using UnityEngine;
 /// <summary>
 /// In the boss scene: keep / spawn the boss matching <see cref="BossEncounter.SelectedBossId"/>.
 /// Unready bosses (e.g. Kit until BossKit exists) destroy scene bosses and return to HomeTown.
+/// Level scenes can choose Copy Bot vs main boss via <see cref="levelBossKind"/>.
 /// </summary>
 public class BossSpawner : MonoBehaviour
 {
+    public enum LevelBossKind
+    {
+        /// <summary>Copy Bot on Level one / Tutorial; main Kaboodle boss elsewhere.</summary>
+        Auto = 0,
+        /// <summary>Spawn the selected / scene main boss (Kaboodle pick, rival, etc.).</summary>
+        MainBoss = 1,
+        /// <summary>Spawn the gray Copy Bot of the current player (WARNING → intro → fight).</summary>
+        CopyBot = 2
+    }
+
     [Serializable]
     public class BossEntry
     {
-        [Tooltip("Matches Kaboodle boss buttons: Kit, Malice, …")]
+        [Tooltip("Matches Kaboodle boss buttons: Kit, Malice, Harlie, Hex, Count, Bass, …")]
         public string bossId = "Malice";
 
         [Tooltip("Optional. If null, a matching boss already placed in the scene is kept.")]
         public Boss prefab;
     }
+
+    [Header("Level Encounter")]
+    [Tooltip("Per-scene: Copy Bot (player clone) or a main boss. Auto keeps Level one / Tutorial on Copy Bot.")]
+    [SerializeField] private LevelBossKind levelBossKind = LevelBossKind.Auto;
 
     [Header("Bosses")]
     [SerializeField] private BossEntry[] bosses = new BossEntry[]
@@ -25,7 +40,8 @@ public class BossSpawner : MonoBehaviour
         new BossEntry { bossId = "Kit" },
         new BossEntry { bossId = "Harlie" },
         new BossEntry { bossId = "Hex" },
-        new BossEntry { bossId = "Count" }
+        new BossEntry { bossId = "Count" },
+        new BossEntry { bossId = "Bass" }
     };
 
     [Header("Spawn")]
@@ -36,6 +52,46 @@ public class BossSpawner : MonoBehaviour
 
     private bool pendingReturnHome;
     private bool autoSpawnDeferred;
+
+    /// <summary>Inspector setting for this scene's Boss Spawner.</summary>
+    public LevelBossKind LevelBossSpawnKind => levelBossKind;
+
+    /// <summary>True when this spawner should run the Copy Bot encounter pipeline.</summary>
+    public bool WantsCopyBotEncounter
+    {
+        get
+        {
+            if (levelBossKind == LevelBossKind.CopyBot)
+                return true;
+            if (levelBossKind == LevelBossKind.MainBoss)
+                return false;
+
+            return LevelOneBossEncounter.IsLegacyCopyBotSceneName(
+                UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
+        }
+    }
+
+    /// <summary>
+    /// Any loaded Boss Spawner that wants Copy Bot, or legacy Level one / Tutorial by scene name.
+    /// </summary>
+    public static bool SceneWantsCopyBotEncounter()
+    {
+        BossSpawner[] spawners = FindObjectsByType<BossSpawner>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+        if (spawners != null && spawners.Length > 0)
+        {
+            for (int i = 0; i < spawners.Length; i++)
+            {
+                if (spawners[i] != null && spawners[i].WantsCopyBotEncounter)
+                    return true;
+            }
+
+            // Explicit MainBoss on every spawner — do not fall back to scene name.
+            return false;
+        }
+
+        return LevelOneBossEncounter.IsLegacyCopyBotSceneName(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
+    }
 
     /// <summary>World position used for boss spawn / mid-fight retry resets.</summary>
     public Vector3 GetSpawnWorldPosition()
@@ -53,10 +109,10 @@ public class BossSpawner : MonoBehaviour
     private void Awake()
     {
         // Level gates: wait until the player passes a BossBattleStarter.
-        // Level one door encounter also defers until the room closes.
+        // Copy Bot encounters also defer until the room / starter fires.
         if (FindFirstObjectByType<BossBattleStarter>() != null)
             DeferAutoSpawn();
-        else if (LevelOneBossEncounter.IsCopyBotEncounterScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name))
+        else if (WantsCopyBotEncounter)
             DeferAutoSpawn();
 
         if (autoSpawnDeferred || !spawnOnAwake)
@@ -132,7 +188,8 @@ public class BossSpawner : MonoBehaviour
     }
 
     /// <summary>
-    /// Boss Fight Mode rival: Kit fights Malice, Harlie and Hex fight each other; everyone else fights Kit.
+    /// Boss Fight Mode rival after Copy Bot / level progress:
+    /// Kit↔Malice, Harlie↔Hex, Bass→Count (worthy sparring partner); everyone else→Kit.
     /// </summary>
     public static string GetBossFightOpponentBossId()
     {
@@ -143,6 +200,8 @@ public class BossSpawner : MonoBehaviour
             return BossEncounter.BossIdHex;
         if (string.Equals(playerId, BossEncounter.BossIdHex, StringComparison.OrdinalIgnoreCase))
             return BossEncounter.BossIdHarlie;
+        if (string.Equals(playerId, "Bass", StringComparison.OrdinalIgnoreCase))
+            return BossEncounter.BossIdCount;
 
         return BossEncounter.BossIdKit;
     }

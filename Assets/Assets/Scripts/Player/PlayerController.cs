@@ -63,6 +63,8 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
     [Tooltip("Seconds after leaving a ledge where the player is still treated as grounded and can jump.")]
     [SerializeField] protected float coyoteTime = 0.4f;
     [SerializeField] protected float fallMultiplier = 2.5f;
+    [Tooltip("Extra gravity while rising if Jump is released early (Mega Man short/medium jumps). 1 = no cut.")]
+    [SerializeField] protected float lowJumpMultiplier = 2.75f;
     [Tooltip("All character art faces LEFT by default. flipX turns on when facing right.")]
     [SerializeField] protected bool spriteFacesLeft = true;
 
@@ -178,7 +180,7 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
     public bool IsDashing => isDashing;
     public bool IsDashJumping => isDashJumping;
     /// <summary>True after a jump, dash-jump, or wall jump until the next landing.</summary>
-    public bool IsVoluntarilyAirborne { get; private set; }
+    public bool IsVoluntarilyAirborne { get; protected set; }
     /// <summary>True from a wall bounce / wall jump until the next landing.</summary>
     public bool IsInWallBounceArc { get; private set; }
     public bool IsStunned => isStunned;
@@ -187,6 +189,60 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
     public float NormalMoveSpeed => moveSpeed;
     public Vector2 Velocity => rb != null ? rb.linearVelocity : Vector2.zero;
     public Vector2 MoveInput => moveInput;
+
+    /// <summary>
+    /// True only while holding pure Up or pure Down for camera look-ahead:
+    /// no left/right, and no Jump / Attack / Dash / Use Item / menu buttons.
+    /// </summary>
+    public bool IsRequestingManualCameraLook()
+    {
+        return TryGetManualCameraLook(out _, out _);
+    }
+
+    /// <summary>
+    /// Manual vertical camera peek. Returns false if any other input is held so the view
+    /// does not drift during busy movement / combat.
+    /// </summary>
+    public bool TryGetManualCameraLook(out bool lookUp, out bool lookDown)
+    {
+        lookUp = false;
+        lookDown = false;
+
+        if (IsDead || inputLocked || isStunned)
+            return false;
+
+        const float horizontalDeadzone = 0.25f;
+        if (Mathf.Abs(moveInput.x) > horizontalDeadzone)
+            return false;
+
+        if (controls != null)
+        {
+            InputActions.PlayerControlsActions pc = controls.PlayerControls;
+            if (pc.Left.IsPressed() || pc.Right.IsPressed())
+                return false;
+            if (pc.Jump.IsPressed() || pc.Attack.IsPressed() || pc.Dash.IsPressed())
+                return false;
+            if (pc.UseItem.IsPressed() || pc.Pause.IsPressed() || pc.Start.IsPressed())
+                return false;
+            if (pc.Select.IsPressed() || pc.Confirm.IsPressed() || pc.QuitBack.IsPressed())
+                return false;
+        }
+
+        float thresh = Mathf.Max(0.2f, upAimThreshold);
+        if (moveInput.y >= thresh)
+        {
+            lookUp = true;
+            return true;
+        }
+
+        if (moveInput.y <= -thresh)
+        {
+            lookDown = true;
+            return true;
+        }
+
+        return false;
+    }
     public bool InputLocked => inputLocked;
     public LayerMask GroundLayers => groundLayers;
 
@@ -251,7 +307,9 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
 
         moveInput = Vector2.zero;
         jumpRequested = false;
+        jumpButtonHeld = false;
         dashRequested = false;
+        EndVariableJumpAscent();
         if (rb != null)
             rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
     }
@@ -421,7 +479,7 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
     protected virtual void OnTimeFrozenChanged(bool frozen) { }
 
     /// <summary>
-    /// Temporarily blocks dash (e.g. near Kaboodle so Confirm can be used without dashing).
+    /// Temporarily blocks dash (e.g. while Kaboodle's menu box is open).
     /// </summary>
     public void SetDashDisabled(bool disabled)
     {
@@ -443,6 +501,10 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
     protected Vector2 moveInput;
     protected bool isGrounded;
     protected bool jumpRequested;
+    /// <summary>True while the Jump action is held (press through release).</summary>
+    protected bool jumpButtonHeld;
+    /// <summary>True during a jump ascent that can be shortened by releasing Jump early.</summary>
+    protected bool variableJumpActive;
     protected bool dashRequested;
 
     protected bool isDashing;
@@ -500,13 +562,14 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
     {
         public float time;
         public Vector3 position;
+        public Quaternion rotation;
         public Sprite sprite;
         public bool flipX;
     }
 
     readonly System.Collections.Generic.List<PoseSample> poseHistory = new System.Collections.Generic.List<PoseSample>(64);
-    GameObject[] afterimageObjects;
-    SpriteRenderer[] afterimageRenderers;
+    protected GameObject[] afterimageObjects;
+    protected SpriteRenderer[] afterimageRenderers;
     protected float afterimagesVisibleUntil;
     protected bool afterimageFadeOutActive;
     protected float afterimageFadeOutStartTime;
@@ -524,7 +587,7 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
         if (animator == null)
             animator = GetComponent<Animator>();
 
-        controls = new InputActions();
+        controls = GameInput.Create();
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
 
         if (rb != null)
@@ -548,12 +611,13 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
         Active = this;
 
         if (controls == null)
-            controls = new InputActions();
+            controls = GameInput.Create();
 
         controls.PlayerControls.Enable();
         controls.PlayerControls.Movement.performed += OnMovement;
         controls.PlayerControls.Movement.canceled += OnMovement;
         controls.PlayerControls.Jump.performed += OnJumpPerformed;
+        controls.PlayerControls.Jump.canceled += OnJumpCanceled;
         controls.PlayerControls.Dash.performed += OnDashPerformed;
         controls.PlayerControls.Attack.started += OnAttackStarted;
         controls.PlayerControls.Attack.canceled += OnAttackCanceled;
@@ -573,6 +637,7 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
         controls.PlayerControls.Movement.performed -= OnMovement;
         controls.PlayerControls.Movement.canceled -= OnMovement;
         controls.PlayerControls.Jump.performed -= OnJumpPerformed;
+        controls.PlayerControls.Jump.canceled -= OnJumpCanceled;
         controls.PlayerControls.Dash.performed -= OnDashPerformed;
         controls.PlayerControls.Attack.started -= OnAttackStarted;
         controls.PlayerControls.Attack.canceled -= OnAttackCanceled;
@@ -604,8 +669,6 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
 
         RefreshMoveInputFromButtons();
         UpdateFacingFromInput();
-        RecordPoseHistory();
-        UpdateDashAfterimages();
 
         if (shootAnimTimer > 0f)
         {
@@ -618,6 +681,11 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
 
         UpdateAnimator();
         HandleCharacterUpdate();
+
+        // Record after character motion (e.g. spinning air slash) so trails copy pose + spin,
+        // then place afterimages in world space so they are not spun like clock hands.
+        RecordPoseHistory();
+        UpdateDashAfterimages();
 
         if (IsTimeFrozen && animator != null)
             animator.speed = 0f;
@@ -1203,7 +1271,32 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
             return;
 
         NotifyButtonSpriteDevice(context);
+        jumpButtonHeld = true;
         jumpRequested = true;
+    }
+
+    protected virtual void OnJumpCanceled(InputAction.CallbackContext context)
+    {
+        jumpButtonHeld = false;
+    }
+
+    /// <summary>True while Jump is held (Input System press, with held-flag backup).</summary>
+    protected bool IsJumpHeld()
+    {
+        if (controls != null && controls.PlayerControls.Jump.IsPressed())
+            return true;
+        return jumpButtonHeld;
+    }
+
+    /// <summary>Marks this ascent as variable-height (release Jump early to short-hop).</summary>
+    protected void BeginVariableJumpAscent()
+    {
+        variableJumpActive = true;
+    }
+
+    protected void EndVariableJumpAscent()
+    {
+        variableJumpActive = false;
     }
 
     protected virtual void OnDashPerformed(InputAction.CallbackContext context)
@@ -1365,6 +1458,7 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
         IsInWallBounceArc = false;
         dashJumpMomentumTimer = 0f;
         EndWallBounceCommit();
+        EndVariableJumpAscent();
     }
 
     protected virtual void ApplyHorizontalMove()
@@ -1423,10 +1517,20 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
         rb.linearVelocity = new Vector2(x, y);
     }
 
+    /// <summary>
+    /// True when Boss Count Midnight / Hyper (or Count Up-Hyper) is slowing the player
+    /// the same way playable Count feels during Up-Hyper.
+    /// </summary>
+    protected virtual bool ShouldApplyHyperWorldSlowToMovement() =>
+        HyperSpeedWorldSlow.IsActive && HyperSpeedWorldSlow.SlowsPlayer;
+
     /// <summary>Base move speed, or a character-specific boosted speed (e.g. Kit while charged).</summary>
     protected virtual float GetCurrentMoveSpeed()
     {
-        return moveSpeed;
+        float speed = moveSpeed;
+        if (ShouldApplyHyperWorldSlowToMovement())
+            speed *= HyperSpeedWorldSlow.WorldTimeScale;
+        return speed;
     }
 
     protected virtual void ApplyJump()
@@ -1476,6 +1580,7 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
 
         rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
         IsVoluntarilyAirborne = true;
+        BeginVariableJumpAscent();
         SoundManager.Instance?.PlayJump();
         ReportTutorialAction(TutorialAction.Jump);
     }
@@ -1491,6 +1596,7 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
         upgradeAirJumpsRemaining--;
         rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
         IsVoluntarilyAirborne = true;
+        BeginVariableJumpAscent();
         SoundManager.Instance?.PlayJump();
         ReportTutorialAction(TutorialAction.AirJump);
 
@@ -1512,10 +1618,16 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
         jumpRequested = false;
         CancelDash(keepHorizontalMomentum: true);
 
+        // Same as ApplyJump: leave ground immediately so animator IsInAir/IsJumping win
+        // over Idle (which still sees coyote IsGrounded for a frame otherwise).
+        coyoteTimer = 0f;
+        isGrounded = false;
+
         float jumpUp = dashJumpForce > 0f ? dashJumpForce : jumpForce;
         float jumpX = dashDirSign * GetDashJumpHorizontalSpeed();
         rb.linearVelocity = new Vector2(jumpX, jumpUp);
         IsVoluntarilyAirborne = true;
+        BeginVariableJumpAscent();
         SoundManager.Instance?.PlayJump();
 
         isDashJumping = true;
@@ -1525,8 +1637,23 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
 
         BeginDashAfterimageTrail(Mathf.Max(dashJumpMomentumDuration, GetMaxAfterimageDelay()));
 
-        if (animator != null)
-            animator.SetTrigger("Jump");
+        SyncAnimatorAfterDashJump();
+    }
+
+    /// <summary>
+    /// Push air/jump bools immediately so Any State Idle cannot win before the next Update.
+    /// </summary>
+    protected void SyncAnimatorAfterDashJump()
+    {
+        if (animator == null)
+            return;
+
+        animator.SetBool("IsDashing", false);
+        animator.SetBool("IsGrounded", false);
+        animator.SetBool("IsInAir", true);
+        animator.SetBool("IsJumping", true);
+        animator.SetBool("IsFalling", false);
+        animator.SetBool("IsMoving", false);
     }
 
     protected virtual float GetDashJumpHorizontalSpeed()
@@ -1585,9 +1712,31 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
         if (airHangActive || wallBounceCommitActive)
             return;
 
+        if (rb == null)
+            return;
+
+        float vy = rb.linearVelocity.y;
+
+        // Mega Man-style variable jump: releasing Jump early adds gravity while still rising,
+        // so tap / hold / in-between all map to different heights.
+        if (variableJumpActive)
+        {
+            if (vy <= 0.01f || isGrounded)
+            {
+                EndVariableJumpAscent();
+            }
+            else if (!IsJumpHeld() && lowJumpMultiplier > 1.01f)
+            {
+                rb.linearVelocity += Vector2.up * Physics2D.gravity.y * (lowJumpMultiplier - 1f) * Time.fixedDeltaTime;
+            }
+        }
+
         if (rb.linearVelocity.y < 0f)
         {
-            rb.linearVelocity += Vector2.up * Physics2D.gravity.y * (fallMultiplier - 1f) * Time.fixedDeltaTime;
+            float mult = fallMultiplier;
+            if (ShouldApplyHyperWorldSlowToMovement())
+                mult = HyperSpeedWorldSlow.ScaleFallMultiplier(fallMultiplier);
+            rb.linearVelocity += Vector2.up * Physics2D.gravity.y * (mult - 1f) * Time.fixedDeltaTime;
         }
     }
 
@@ -1798,7 +1947,16 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
     /// <summary>Full speed for most of the dash, then ease out near the end for a smoother finish.</summary>
     protected virtual float GetCurrentDashVelocityX()
     {
-        float peak = dashDirSign * dashSpeed;
+        // Prefer the speed baked at dash start (dashVelocityX) so temporary overrides
+        // (e.g. Bass Heat Dash) are not lost if dashSpeed is restored mid-dash.
+        float peakSpeed = Mathf.Abs(dashVelocityX);
+        if (peakSpeed < 0.01f)
+            peakSpeed = dashSpeed;
+
+        if (ShouldApplyHyperWorldSlowToMovement())
+            peakSpeed *= HyperSpeedWorldSlow.WorldTimeScale;
+
+        float peak = dashDirSign * peakSpeed;
         float stopWindow = Mathf.Min(dashSmoothStopDuration, dashDuration * 0.5f);
         if (stopWindow <= 0.0001f || dashTimer < dashDuration - stopWindow)
             return peak;
@@ -1806,7 +1964,7 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
         float t = Mathf.InverseLerp(dashDuration - stopWindow, dashDuration, dashTimer);
         // Smoothstep ease-out.
         t = t * t * (3f - 2f * t);
-        float end = dashDirSign * dashSpeed * dashEndSpeedMultiplier;
+        float end = dashDirSign * peakSpeed * dashEndSpeedMultiplier;
         return Mathf.Lerp(peak, end, t);
     }
 
@@ -2477,6 +2635,11 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
             VisualEffects.PlayHealed(healedEffectPrefab, this);
     }
 
+    /// <summary>Called when the player picks up a collectable crystal (currency shard).</summary>
+    public virtual void NotifyCollectableCrystalCollected()
+    {
+    }
+
     public virtual void SetCharacterId(string id)
     {
         if (string.IsNullOrWhiteSpace(id))
@@ -2520,10 +2683,11 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
         for (int i = 0; i < count; i++)
         {
             var go = new GameObject($"{name}_DashAfterimage_{i + 1}");
-            // Stay under the character Sorting Group so trails sort behind the body vs the world.
-            go.transform.SetParent(transform, false);
+            // World-space (unparented): trails the body center and copies sprite/spin, but is not
+            // rotated around the character like a clock hand when the body spins.
+            go.transform.SetParent(null, false);
             var sr = go.AddComponent<SpriteRenderer>();
-            CharacterEffectSorting.ApplyTrailBehindBody(sr, spriteRenderer, effectSortingGroup, i);
+            CharacterEffectSorting.ApplyDetachedEffectBehindHost(sr, effectSortingGroup, spriteRenderer, 1 + i);
 
             float t = count == 1 ? 0f : i / (float)(count - 1);
             Color c = dashAfterimageColor;
@@ -2581,11 +2745,15 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
         {
             time = Time.time,
             position = transform.position,
+            rotation = transform.rotation,
             sprite = spriteRenderer.sprite,
             flipX = spriteRenderer.flipX
         });
 
-        float keepFor = GetMaxAfterimageDelay() + 0.35f;
+        // Keep enough history for trail delay + full staggered fade so ghosts keep moving while fading.
+        float fadeKeep = AfterimageFadeStaggerSeconds * Mathf.Max(1, dashAfterimageCount)
+                         + AfterimageFadeDurationSeconds;
+        float keepFor = GetMaxAfterimageDelay() + 0.35f + Mathf.Max(0f, fadeKeep);
         float cutoff = Time.time - keepFor;
         while (poseHistory.Count > 0 && poseHistory[0].time < cutoff)
             poseHistory.RemoveAt(0);
@@ -2616,7 +2784,7 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
         if (!enableDashAfterimages || afterimageRenderers == null || spriteRenderer == null)
             return;
 
-        bool trailActive = isDashing || isDashJumping || Time.time <= afterimagesVisibleUntil;
+        bool trailActive = WantsAfterimageTrail();
         if (!trailActive)
         {
             if (TryUpdateAfterimageFadeOut())
@@ -2630,7 +2798,7 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
         afterimageFadeOutActive = false;
 
         // Keep trail alive while dash-jump momentum is carrying through the fall.
-        if (isDashJumping || isDashing)
+        if (isDashJumping || isDashing || ExtendsAfterimageTrailLifetime())
             afterimagesVisibleUntil = Mathf.Max(afterimagesVisibleUntil, Time.time + GetMaxAfterimageDelay() + dashAfterimageLifetimePadding);
 
         for (int i = 0; i < afterimageRenderers.Length; i++)
@@ -2643,20 +2811,32 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
             }
 
             afterimageObjects[i].SetActive(true);
-            afterimageObjects[i].transform.position = sample.position;
+            afterimageObjects[i].transform.SetPositionAndRotation(sample.position, sample.rotation);
             afterimageRenderers[i].sprite = sample.sprite != null ? sample.sprite : spriteRenderer.sprite;
             afterimageRenderers[i].flipX = sample.flipX;
-            CharacterEffectSorting.ApplyTrailBehindBody(
+            CharacterEffectSorting.ApplyDetachedEffectBehindHost(
                 afterimageRenderers[i],
-                spriteRenderer,
                 effectSortingGroup,
-                i);
+                spriteRenderer,
+                1 + i);
 
             float t = afterimageRenderers.Length == 1 ? 0f : i / (float)(afterimageRenderers.Length - 1);
             Color c = dashAfterimageColor;
             c.a = Mathf.Lerp(dashAfterimageAlphaStart, dashAfterimageAlphaEnd, t);
             afterimageRenderers[i].color = c;
         }
+    }
+
+    /// <summary>Dash / dash-jump / timed trail window. Override to keep trails during other moves.</summary>
+    protected virtual bool WantsAfterimageTrail()
+    {
+        return isDashing || isDashJumping || Time.time <= afterimagesVisibleUntil;
+    }
+
+    /// <summary>When true, keeps refreshing the trail lifetime each frame (e.g. spinning air slash).</summary>
+    protected virtual bool ExtendsAfterimageTrailLifetime()
+    {
+        return false;
     }
 
     private bool TryUpdateAfterimageFadeOut()
@@ -2713,6 +2893,16 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
                 continue;
 
             afterimageObjects[i].SetActive(true);
+
+            // Keep trailing the body until fully faded — don't freeze mid-fade.
+            float delay = GetAfterimageDelay(i);
+            if (TrySamplePose(delay, out PoseSample sample))
+            {
+                afterimageObjects[i].transform.SetPositionAndRotation(sample.position, sample.rotation);
+                afterimageRenderers[i].sprite = sample.sprite != null ? sample.sprite : spriteRenderer.sprite;
+                afterimageRenderers[i].flipX = sample.flipX;
+            }
+
             float baseAlpha = afterimageFadeBaseAlpha != null && i < afterimageFadeBaseAlpha.Length
                 ? afterimageFadeBaseAlpha[i]
                 : dashAfterimageAlphaEnd;
@@ -2753,6 +2943,8 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
         groundCheckRadius = Mathf.Max(0.01f, groundCheckRadius);
         moveSpeed = Mathf.Max(0f, moveSpeed);
         jumpForce = Mathf.Max(0f, jumpForce);
+        fallMultiplier = Mathf.Max(1f, fallMultiplier);
+        lowJumpMultiplier = Mathf.Max(1f, lowJumpMultiplier);
         coyoteTime = Mathf.Max(0f, coyoteTime);
         platformSeparationDistance = Mathf.Max(0f, platformSeparationDistance);
         platformTopNormalThreshold = Mathf.Clamp01(platformTopNormalThreshold);

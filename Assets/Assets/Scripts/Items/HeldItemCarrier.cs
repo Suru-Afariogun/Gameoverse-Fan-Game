@@ -128,7 +128,7 @@ public sealed class HeldItemCarrier : MonoBehaviour
     private void OnEnable()
     {
         if (controls == null)
-            controls = new InputActions();
+            controls = GameInput.Create();
 
         controls.PlayerControls.Enable();
         controls.PlayerControls.UseItem.performed += OnUseItemPerformed;

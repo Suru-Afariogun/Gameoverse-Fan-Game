@@ -14,7 +14,9 @@ public enum GearType
     Magnet = 6,
     ItemPouch = 7,
     AutoUse = 8,
-    ItemExtender = 9
+    ItemExtender = 9,
+    /// <summary>One-time buy: projectiles pass through walls and ceilings (not floors).</summary>
+    PiercingAttack = 10
 }
 
 /// <summary>
@@ -26,6 +28,8 @@ public static class PlayerGear
 {
     public const int MaxLevel = 5;
     public const int PricePerLevel = 100;
+    public const int PiercingAttackPrice = 300;
+    public const int PiercingAttackMaxLevel = 1;
 
     // ---------- Effect tuning ----------
     public const int LifeMaxHealthPerLevel = 1;
@@ -70,7 +74,7 @@ public static class PlayerGear
     {
         GearType.Life, GearType.Armor, GearType.Booster, GearType.Jump,
         GearType.Weapon, GearType.Repair, GearType.Magnet, GearType.ItemPouch,
-        GearType.AutoUse, GearType.ItemExtender
+        GearType.AutoUse, GearType.ItemExtender, GearType.PiercingAttack
     };
 
     // Queried every frame by the player controllers, so lookups must not allocate.
@@ -88,12 +92,15 @@ public static class PlayerGear
         var cacheKey = (NormalizeId(characterId), type);
         if (!Cache.TryGetValue(cacheKey, out int level))
         {
-            level = Mathf.Clamp(PlayerPrefs.GetInt(Key(characterId, type), 0), 0, MaxLevel);
+            level = Mathf.Clamp(PlayerPrefs.GetInt(Key(characterId, type), 0), 0, GetMaxLevel(type));
             Cache[cacheKey] = level;
         }
 
         return level;
     }
+
+    public static int GetMaxLevel(GearType type) =>
+        type == GearType.PiercingAttack ? PiercingAttackMaxLevel : MaxLevel;
 
     /// <summary>Level that applies in gameplay: the bought level while equipped, otherwise 0.</summary>
     public static int GetActiveLevel(PlayerController player, GearType type)
@@ -146,9 +153,17 @@ public static class PlayerGear
         return (Mathf.Clamp(currentLevel, 0, MaxLevel - 1) + 1) * PricePerLevel;
     }
 
+    public static int GetPrice(GearType type, int currentLevel)
+    {
+        if (type == GearType.PiercingAttack)
+            return currentLevel >= PiercingAttackMaxLevel ? 0 : PiercingAttackPrice;
+
+        return GetPrice(currentLevel);
+    }
+
     public static bool CanBuy(string characterId, GearType type)
     {
-        return GetLevel(characterId, type) < MaxLevel;
+        return GetLevel(characterId, type) < GetMaxLevel(type);
     }
 
     public static bool TryBuy(string characterId, GearType type)
@@ -158,7 +173,7 @@ public static class PlayerGear
 
         int level = GetLevel(characterId, type);
         PlayerInventory inventory = PlayerInventory.Instance;
-        if (inventory == null || !inventory.TrySpendCrystals(GetPrice(level)))
+        if (inventory == null || !inventory.TrySpendCrystals(GetPrice(type, level)))
             return false;
 
         SetLevel(characterId, type, level + 1);
@@ -169,7 +184,7 @@ public static class PlayerGear
 
     public static void SetLevel(string characterId, GearType type, int level)
     {
-        level = Mathf.Clamp(level, 0, MaxLevel);
+        level = Mathf.Clamp(level, 0, GetMaxLevel(type));
         Cache[(NormalizeId(characterId), type)] = level;
         PlayerPrefs.SetInt(Key(characterId, type), level);
         PlayerPrefs.Save();
@@ -252,6 +267,12 @@ public static class PlayerGear
     public static bool WeaponFinisher(PlayerController player)
     {
         return GetActiveLevel(player, GearType.Weapon) >= WeaponFinisherLevel;
+    }
+
+    /// <summary>Piercing Attack: projectiles pass through walls and ceilings (not floors).</summary>
+    public static bool PiercesWallsAndCeilings(PlayerController player)
+    {
+        return GetActiveLevel(player, GearType.PiercingAttack) > 0;
     }
 
     /// <summary>Seconds between 1 HP repairs, or 0 when Repair Gear is off.</summary>

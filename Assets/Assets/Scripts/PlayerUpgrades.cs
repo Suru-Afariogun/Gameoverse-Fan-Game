@@ -127,14 +127,14 @@ public static class PlayerUpgrades
         return (Mathf.Clamp(currentLevel, 0, MaxLevel - 1) + 1) * PricePerLevel;
     }
 
-    /// <summary>Kit, Malice, Harlie, Hex (Harlie's styles) and Count have Attack Style upgrades.</summary>
+    /// <summary>Kit, Malice, Harlie, Hex, Count and Bass have Attack Style upgrades.</summary>
     public static bool IsAvailable(string characterId, UpgradeType type)
     {
         if (type != UpgradeType.AttackStyle)
             return true;
 
         return Is(characterId, "Kit") || Is(characterId, "Malice") || Is(characterId, "Harlie") || Is(characterId, "Hex") ||
-               Is(characterId, "Count");
+               Is(characterId, "Count") || Is(characterId, "Bass");
     }
 
     public static bool CanBuy(string characterId, UpgradeType type)

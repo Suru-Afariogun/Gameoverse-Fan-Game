@@ -47,6 +47,12 @@ public class Boss : MonoBehaviour, IDamageable
     [SerializeField] protected int maxHealth = 100;
     [SerializeField] protected int currentHealth = 100;
 
+    [Header("Cinematic Death Explosions")]
+    [Tooltip("Cranky / Scrap / Tanker-style EnemyExplosionSmallPurple prefabs. Auto-resolved when empty.")]
+    [SerializeField] protected GameVisualEffect[] cinematicDeathExplosionPrefabs;
+    [Tooltip("Anchor for cinematic death explosion waves. Auto-finds Spark Spawner / Spark box when empty.")]
+    [SerializeField] protected Transform sparkSpawnPoint;
+
     protected Rigidbody2D rb;
     protected float facingSign = -1f;
     protected bool isGrounded;
@@ -61,6 +67,14 @@ public class Boss : MonoBehaviour, IDamageable
     protected bool wantsMoveAnim;
     protected SortingGroup effectSortingGroup;
     protected Collider2D bodyCollider;
+
+    /// <summary>Prefab-authored max HP before difficulty scaling.</summary>
+    protected int authoredMaxHealth = 100;
+    /// <summary>Prefab-authored walk speed before difficulty scaling.</summary>
+    protected float authoredMoveSpeed = 5f;
+    /// <summary>Prefab-authored hit i-frames before difficulty scaling.</summary>
+    protected float authoredHitInvincibility = 0.75f;
+    private bool difficultyAuthoredCaptured;
 
     // Crystal temporary boosts (set by Crystal.cs).
     protected float crystalMoveSpeedBonus;
@@ -78,15 +92,32 @@ public class Boss : MonoBehaviour, IDamageable
     private bool isCopyBot;
     private bool isMainCopyBot;
     private bool isCopyBotDecoy;
+    private bool nearDeathSaveActive;
+    private bool cinematicDeathActive;
+    private bool enrageLatched;
+    private bool signaturePhaseLatched;
+    private bool desperatePhaseLatched;
 
     public GameVisualEffect DeathEnergyBallPrefab => deathEnergyBallPrefab;
+
+    /// <summary>World origin for cinematic death explosion waves (Spark Spawner / Spark box when present).</summary>
+    public Transform DeathExplosionAnchor => ResolveSparkSpawnPoint();
 
     public string BossId => bossId;
     public int MaxHealth => maxHealth;
     public int CurrentHealth => currentHealth;
+    public int LifeBarCount => Mathf.Max(1, ResolveLifeBarCount());
+
+    /// <summary>Override when the boss authors a life-bar segment count (Harlie/Bass/Count/etc.).</summary>
+    protected virtual int ResolveLifeBarCount() => 10;
     public bool IsGrounded => isGrounded;
     public bool IsStunned => isStunned;
-    public bool IsInvincible => invincibilityTimer > 0f;
+    public bool IsInvincible => invincibilityTimer > 0f || nearDeathSaveActive;
+    public bool EnrageLatched => enrageLatched;
+    public bool SignaturePhaseLatched => signaturePhaseLatched;
+    public bool DesperatePhaseLatched => desperatePhaseLatched;
+    public bool IsNearDeathSaving => nearDeathSaveActive;
+    public bool IsCinematicDying => cinematicDeathActive;
     public bool HasActiveCrystalBoost =>
         crystalBoostRoutine != null &&
         (crystalMoveSpeedBonus > 0.001f || crystalAttackBonus > 0) &&
@@ -95,11 +126,29 @@ public class Boss : MonoBehaviour, IDamageable
     public bool IsCopyBot => isCopyBot;
     public bool IsMainCopyBot => isMainCopyBot;
     public bool IsCopyBotDecoy => isCopyBotDecoy;
-    public bool IsDead => currentHealth <= 0;
+    public bool IsDead => currentHealth <= 0 && !nearDeathSaveActive;
     public float FacingSign => facingSign;
     public Rigidbody2D Body => rb;
     public AttackHitbox AttackHitbox => attackHitbox;
     public SortingGroup EffectSortingGroup => effectSortingGroup;
+
+    /// <summary>Latch enrage / signature / desperate so full heals cannot clear them.</summary>
+    public void LatchCombatPhases(bool enraged, bool signaturePhase = false, bool desperatePhase = false)
+    {
+        if (enraged)
+            enrageLatched = true;
+        if (signaturePhase)
+            signaturePhaseLatched = true;
+        if (desperatePhase)
+            desperatePhaseLatched = true;
+    }
+
+    /// <summary>HP write used by cinematic heal (does not trigger death).</summary>
+    public void ApplyCinematicHealth(int value)
+    {
+        currentHealth = Mathf.Clamp(value, 0, Mathf.Max(1, maxHealth));
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+    }
 
     protected void SetBossId(string id)
     {
@@ -131,11 +180,13 @@ public class Boss : MonoBehaviour, IDamageable
         if (attackHitbox != null)
             attackHitbox.SetOwner(this);
 
+        CaptureAuthoredDifficultyStats();
         currentHealth = Mathf.Clamp(currentHealth, 0, Mathf.Max(1, maxHealth));
         ApplyFacingVisual();
         effectSortingGroup = CharacterEffectSorting.EnsureHostSortingGroup(this, spriteRenderer);
         DeferredEnemyPhaseRefresh.Request();
 
+        RefreshDifficulty();
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
         ApplyBossFightSpawnFacing();
     }
@@ -147,8 +198,48 @@ public class Boss : MonoBehaviour, IDamageable
         DeferredEnemyPhaseRefresh.Request();
     }
 
+    private void CaptureAuthoredDifficultyStats()
+    {
+        if (difficultyAuthoredCaptured)
+            return;
+
+        authoredMaxHealth = Mathf.Max(1, maxHealth);
+        authoredMoveSpeed = moveSpeed;
+        authoredHitInvincibility = hitInvincibilityDuration;
+        difficultyAuthoredCaptured = true;
+    }
+
+    /// <summary>Re-apply Easy/Normal/Hard/Balanced stats. Safe mid-battle (preserves HP ratio).</summary>
+    public virtual void RefreshDifficulty()
+    {
+        CaptureAuthoredDifficultyStats();
+
+        // Copy bots keep their encounter-configured HP until next configure call.
+        if (!isCopyBot)
+        {
+            int newMax = DifficultyTuning.ScaleBossHp(authoredMaxHealth);
+            DifficultyTuning.RetuneHealth(ref currentHealth, ref maxHealth, newMax, IsDead);
+            OnHealthChanged?.Invoke(currentHealth, maxHealth);
+        }
+
+        OnDifficultyRefreshed();
+    }
+
+    /// <summary>Subclass hook after HP/speed i-frame retune (tempo caches, etc.).</summary>
+    protected virtual void OnDifficultyRefreshed()
+    {
+    }
+
     protected virtual void Update()
     {
+        if (cinematicDeathActive || nearDeathSaveActive)
+        {
+            UpdateGrounded();
+            ApplyCinematicStunPose();
+            ClampToPlayableWorld();
+            return;
+        }
+
         if (IsDead)
             return;
 
@@ -173,6 +264,22 @@ public class Boss : MonoBehaviour, IDamageable
 
     protected virtual void FixedUpdate()
     {
+        if (cinematicDeathActive)
+        {
+            if (rb != null && !isGrounded)
+                ApplyFallMultiplier();
+            ClampToPlayableWorld();
+            return;
+        }
+
+        if (nearDeathSaveActive)
+        {
+            if (rb != null)
+                rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+            ClampToPlayableWorld();
+            return;
+        }
+
         if (IsDead || rb == null)
             return;
 
@@ -395,13 +502,16 @@ public class Boss : MonoBehaviour, IDamageable
     /// <summary>Base walk speed. Override for charge move bonuses (Boss Malice).</summary>
     protected virtual float GetMoveSpeed()
     {
-        return BossSpeed(moveSpeed + crystalMoveSpeedBonus);
+        float baseSpeed = DifficultyTuning.ScaleBossMoveSpeed(
+            difficultyAuthoredCaptured ? authoredMoveSpeed : moveSpeed);
+        return BossSpeed(baseSpeed + crystalMoveSpeedBonus);
     }
 
-    /// <summary>Outgoing attack damage after crystal (and subclass) bonuses.</summary>
+    /// <summary>Outgoing attack damage after crystal (and subclass) bonuses + difficulty.</summary>
     protected int ApplyCrystalAttackBonus(int baseDamage)
     {
-        return Mathf.Max(1, baseDamage + Mathf.Max(0, crystalAttackBonus));
+        int dmg = Mathf.Max(1, baseDamage + Mathf.Max(0, crystalAttackBonus));
+        return DifficultyTuning.ScaleBossDamage(dmg);
     }
 
     /// <summary>Copy Bot HP for this character (0 = use the encounter's default).</summary>
@@ -421,6 +531,8 @@ public class Boss : MonoBehaviour, IDamageable
 
         if (this is BossKit kitBoss)
             kitBoss.EnableCopyBotMode();
+        else if (this is BossBass bassBoss)
+            bassBoss.EnableCopyBotMode();
 
         RefreshPhaseCollisionsWithCopyBots();
     }
@@ -439,6 +551,8 @@ public class Boss : MonoBehaviour, IDamageable
 
         if (this is BossKit kitBoss)
             kitBoss.EnableCopyBotDecoyMode();
+        else if (this is BossBass bassBoss)
+            bassBoss.EnableCopyBotDecoyMode();
 
         RefreshPhaseCollisionsWithCopyBots();
     }
@@ -480,15 +594,23 @@ public class Boss : MonoBehaviour, IDamageable
     }
 
     /// <summary>
-    /// HP loss from crystal being attacked (no stun / invuln). Every 20 crystal HP → 30 boss HP.
-    /// Always routes through SetHealth so BossLifeBar / OnHealthChanged stay in sync.
+    /// HP loss from crystal being attacked (no stun / invuln). Pierces hit i-frames.
+    /// Lethal amounts go through the crystal-save / cinematic-death path (never silent HP=0).
     /// </summary>
     public void ApplyLinkedCrystalDamage(int amount)
     {
-        if (amount <= 0 || IsDead)
+        if (amount <= 0 || IsDead || nearDeathSaveActive || cinematicDeathActive)
             return;
 
-        SetHealth(currentHealth - amount);
+        int healthBefore = currentHealth;
+        int proposed = currentHealth - amount;
+        if (proposed <= 0)
+        {
+            HandleLethalBlow(healthBefore, fromBigShot: false);
+            return;
+        }
+
+        SetHealth(proposed);
     }
 
     /// <summary>
@@ -718,15 +840,20 @@ public class Boss : MonoBehaviour, IDamageable
 
     public virtual void SetHealth(int value)
     {
+        // Lethal hits must go through the crystal-save / cinematic-death pipeline — never silent HP=0.
         int clamped = Mathf.Clamp(value, 0, Mathf.Max(1, maxHealth));
+        if (clamped <= 0 && !nearDeathSaveActive && !cinematicDeathActive)
+        {
+            if (currentHealth > 0)
+                HandleLethalBlow(currentHealth, fromBigShot: false);
+            return;
+        }
+
         if (clamped == currentHealth)
             return;
 
         currentHealth = clamped;
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
-
-        if (currentHealth <= 0)
-            Die();
     }
 
     /// <summary>
@@ -752,29 +879,273 @@ public class Boss : MonoBehaviour, IDamageable
 
     /// <summary>
     /// Shared damage path. Subclasses override <see cref="ShouldEnterHitStun"/> to customize stun rules.
+    /// Lethal hits are intercepted for crystal near-death saves or the cinematic defeat sequence.
     /// </summary>
     protected void ApplyIncomingDamage(int amount, bool? stunOverride, bool fromBigShot)
     {
-        if (amount <= 0 || IsDead || invincibilityTimer > 0f)
+        if (amount <= 0 || IsDead || invincibilityTimer > 0f || nearDeathSaveActive || cinematicDeathActive)
             return;
 
         int healthBefore = currentHealth;
-        SetHealth(currentHealth - amount);
+        int proposed = currentHealth - amount;
 
-        int applied = healthBefore - currentHealth;
-        if (applied > 0 && Crystal.Instance != null)
-            Crystal.Instance.NotifyBossDamageDealt(applied);
+        if (proposed <= 0)
+        {
+            // Do not chip the crystal here — NotifyBossDamageDealt before the save check could
+            // empty the crystal and falsely deny a near-death heal. The 250 defeat tax covers it.
+            if (healthBefore > 0)
+                SoundManager.Instance?.PlayBossHit();
 
-        if (applied > 0)
-            SoundManager.Instance?.PlayBossHit();
-
-        if (currentHealth <= 0)
+            HandleLethalBlow(healthBefore, fromBigShot);
             return;
+        }
+
+        SetHealth(proposed);
+
+        int dealt = healthBefore - currentHealth;
+        if (dealt > 0 && Crystal.Instance != null)
+            Crystal.Instance.NotifyBossDamageDealt(dealt);
+
+        if (dealt > 0)
+            SoundManager.Instance?.PlayBossHit();
 
         bool shouldStun = stunOverride ?? ShouldEnterHitStun(healthBefore, currentHealth, fromBigShot);
         OnDamageApplied(healthBefore, currentHealth, shouldStun, fromBigShot);
         if (shouldStun)
             BeginHitReaction();
+    }
+
+    /// <summary>
+    /// Crystal still alive (any HP) → cinematic full heal (pays the 250 defeat tax).
+    /// Otherwise → Mega Man 11-style defeat (Copy Bots always take this path).
+    /// </summary>
+    private void HandleLethalBlow(int healthBefore, bool fromBigShot)
+    {
+        if (nearDeathSaveActive || cinematicDeathActive)
+            return;
+
+        OnNearDeathPhasesSnapshot();
+
+        bool crystalCanSave = !isCopyBot
+                              && Crystal.Instance != null
+                              && Crystal.Instance.TryPreventBossDeath(this);
+
+        if (crystalCanSave)
+        {
+            // Latch immediately so a same-frame follow-up hit cannot skip the save / zero HP.
+            nearDeathSaveActive = true;
+            currentHealth = Mathf.Max(1, healthBefore > 0 ? healthBefore : 1);
+            OnHealthChanged?.Invoke(currentHealth, maxHealth);
+            StartCoroutine(NearDeathSaveRoutine());
+            return;
+        }
+
+        cinematicDeathActive = true;
+        currentHealth = 0;
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+        StartCoroutine(CinematicDeathRoutine());
+    }
+
+    /// <summary>Subclass snapshots enrage / signature / desperate so they latch through the heal.</summary>
+    protected virtual void OnNearDeathPhasesSnapshot()
+    {
+    }
+
+    private IEnumerator NearDeathSaveRoutine()
+    {
+        nearDeathSaveActive = true;
+        SetCombatPaused(true);
+        isStunned = true;
+        stunTimer = 999f;
+        invincibilityTimer = 999f;
+        isAttacking = false;
+        isDashing = false;
+        isCharging = false;
+
+        if (attackHitbox != null)
+            attackHitbox.Deactivate();
+        if (rb != null)
+            rb.linearVelocity = Vector2.zero;
+        if (animator != null)
+            animator.speed = 1f;
+        ApplyCinematicStunPose();
+
+        VisualEffects.PlayStunned(stunnedEffectPrefab, this);
+        OnNearDeathSaveStarted();
+
+        try
+        {
+            yield return BossCinematics.NearDeathFullHeal(this, LifeBarCount);
+        }
+        finally
+        {
+            VisualEffects.StopStunned(this);
+            isStunned = false;
+            stunTimer = 0f;
+            invincibilityTimer = 0.35f;
+            combatPaused = false;
+            nearDeathSaveActive = false;
+            ClearCinematicStunPose();
+        }
+
+        OnNearDeathSaveFinished();
+        OnRevived();
+    }
+
+    protected virtual void OnNearDeathSaveStarted()
+    {
+    }
+
+    protected virtual void OnNearDeathSaveFinished()
+    {
+    }
+
+    private IEnumerator CinematicDeathRoutine()
+    {
+        cinematicDeathActive = true;
+        nearDeathSaveActive = false;
+        SetCombatPaused(true);
+        isStunned = true;
+        stunTimer = 999f;
+        invincibilityTimer = 999f;
+        isAttacking = false;
+        isDashing = false;
+        isCharging = false;
+
+        if (attackHitbox != null)
+            attackHitbox.Deactivate();
+        if (rb != null)
+            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+        if (animator != null)
+            animator.speed = 1f;
+        ApplyCinematicStunPose();
+
+        VisualEffects.PlayStunned(stunnedEffectPrefab, this);
+        OnCinematicDeathStarted();
+
+        GameVisualEffect[] fx = ResolveCinematicDeathExplosions();
+        yield return BossCinematics.MegaManStyleDeath(this, fx);
+
+        VisualEffects.StopStunned(this);
+        OnDied?.Invoke();
+        AnyBossDied?.Invoke(this);
+        OnBossDefeated();
+        cinematicDeathActive = false;
+    }
+
+    /// <summary>
+    /// Fires the moment defeat cinema begins: clear afterimages, bullets, screen FX, backup weapons.
+    /// Subclasses should call base and then wipe their own residue.
+    /// </summary>
+    protected virtual void OnCinematicDeathStarted()
+    {
+        ClearSharedDefeatResidue();
+    }
+
+    /// <summary>Shared wipe: world-slow layers owned by this boss, all owned projectiles / slash waves / bombs.</summary>
+    protected void ClearSharedDefeatResidue()
+    {
+        HyperSpeedWorldSlow.End(this);
+        Projectile.DestroyOwnedBy(transform);
+        MaliceSlashProjectile.DestroyOwnedBy(transform);
+        BassCrashBomb.DestroyOwnedBy(transform);
+
+        HexSparkEmitter emitter = GetComponent<HexSparkEmitter>();
+        if (emitter != null)
+            emitter.StopImmediate();
+    }
+
+    /// <summary>Default: IsStunned. Harlie/Hex override to Jump (no stun clip).</summary>
+    protected virtual void ApplyCinematicStunPose()
+    {
+        if (animator == null)
+            return;
+        animator.SetBool("IsStunned", true);
+    }
+
+    protected virtual void ClearCinematicStunPose()
+    {
+        if (animator == null)
+            return;
+        animator.SetBool("IsStunned", false);
+    }
+
+    private GameVisualEffect[] ResolveCinematicDeathExplosions()
+    {
+        if (cinematicDeathExplosionPrefabs != null && cinematicDeathExplosionPrefabs.Length > 0)
+        {
+            int valid = 0;
+            for (int i = 0; i < cinematicDeathExplosionPrefabs.Length; i++)
+            {
+                if (cinematicDeathExplosionPrefabs[i] != null)
+                    valid++;
+            }
+
+            if (valid > 0)
+                return cinematicDeathExplosionPrefabs;
+        }
+
+        GameVisualEffect[] resolved = VisualEffects.ResolveEnemyExplosionSmallPurplePrefabs();
+        if (resolved != null && resolved.Length > 0)
+        {
+            cinematicDeathExplosionPrefabs = resolved;
+            return resolved;
+        }
+
+        return System.Array.Empty<GameVisualEffect>();
+    }
+
+    /// <summary>
+    /// Prefers the authored Spark Spawner / Spark box so death explosions erupt from the spark origin.
+    /// </summary>
+    public Transform ResolveSparkSpawnPoint()
+    {
+        if (sparkSpawnPoint != null)
+            return sparkSpawnPoint;
+
+        HexSparkEmitter emitter = GetComponent<HexSparkEmitter>();
+        if (emitter != null && emitter.SparkBox != null)
+        {
+            sparkSpawnPoint = emitter.SparkBox;
+            return sparkSpawnPoint;
+        }
+
+        sparkSpawnPoint = FindChildNamedTrimmed(transform, "Spark Spawner");
+        if (sparkSpawnPoint == null)
+            sparkSpawnPoint = FindChildNamedTrimmed(transform, "Spark box");
+        if (sparkSpawnPoint == null)
+            sparkSpawnPoint = FindChildNamedTrimmed(transform, "Spark Spawn Box");
+
+        return sparkSpawnPoint != null ? sparkSpawnPoint : transform;
+    }
+
+    private static Transform FindChildNamedTrimmed(Transform root, string targetName)
+    {
+        if (root == null || string.IsNullOrEmpty(targetName))
+            return null;
+
+        string want = targetName.Trim();
+        Transform direct = root.Find(targetName);
+        if (direct != null)
+            return direct;
+        direct = root.Find(targetName + " ");
+        if (direct != null)
+            return direct;
+
+        for (int i = 0; i < root.childCount; i++)
+        {
+            Transform child = root.GetChild(i);
+            if (child == null)
+                continue;
+            if (child.name != null && child.name.Trim() == want)
+                return child;
+
+            Transform nested = FindChildNamedTrimmed(child, targetName);
+            if (nested != null)
+                return nested;
+        }
+
+        return null;
     }
 
     /// <summary>
@@ -807,7 +1178,8 @@ public class Boss : MonoBehaviour, IDamageable
     {
         isStunned = true;
         stunTimer = Mathf.Max(0f, hitStunDuration);
-        invincibilityTimer = Mathf.Max(0f, hitInvincibilityDuration);
+        float authoredIframes = difficultyAuthoredCaptured ? authoredHitInvincibility : hitInvincibilityDuration;
+        invincibilityTimer = Mathf.Max(0f, DifficultyTuning.BossHitIFrames(authoredIframes));
 
         if (rb != null)
             rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
@@ -852,23 +1224,19 @@ public class Boss : MonoBehaviour, IDamageable
         VisualEffects.StopStunned(this);
     }
 
+    /// <summary>
+    /// Legacy entry: routes through the cinematic defeat sequence (no crystal save).
+    /// Prefer lethal damage via <see cref="ApplyIncomingDamage"/>.
+    /// </summary>
     protected virtual void Die()
     {
-        isStunned = false;
-        stunTimer = 0f;
-        isAttacking = false;
-        VisualEffects.StopStunned(this);
-        VisualEffects.PlayDeathEnergyBalls(deathEnergyBallPrefab, this, hideHost: true);
+        if (cinematicDeathActive || nearDeathSaveActive)
+            return;
 
-        if (attackHitbox != null)
-            attackHitbox.Deactivate();
-
-        if (rb != null)
-            rb.linearVelocity = Vector2.zero;
-
-        OnDied?.Invoke();
-        AnyBossDied?.Invoke(this);
-        OnBossDefeated();
+        cinematicDeathActive = true;
+        currentHealth = 0;
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+        StartCoroutine(CinematicDeathRoutine());
     }
 
     protected virtual void OnBossDefeated()

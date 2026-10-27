@@ -416,6 +416,24 @@ public class BossKit : Boss
         base.Die();
     }
 
+    protected override void OnCinematicDeathStarted()
+    {
+        base.OnCinematicDeathStarted();
+        CancelAttackImmediate();
+        EndBossHover();
+        SetChargeAuraVisible(false);
+        SetDashAfterimagesActive(false);
+        SoundManager.Instance?.StopChargeLoopImmediate();
+
+        for (int i = liveProjectiles.Count - 1; i >= 0; i--)
+        {
+            if (liveProjectiles[i] != null)
+                Destroy(liveProjectiles[i].gameObject);
+        }
+
+        liveProjectiles.Clear();
+    }
+
     protected override void OnCombatPaused()
     {
         SoundManager.Instance?.StopChargeLoopImmediate();
@@ -644,15 +662,24 @@ public class BossKit : Boss
 
     private bool IsEnraged()
     {
-        return maxHealth > 0 && (float)currentHealth / maxHealth <= enrageHpFraction;
+        if (EnrageLatched)
+            return true;
+        return maxHealth > 0 &&
+               (float)currentHealth / maxHealth <= DifficultyTuning.BossEnrageThreshold(enrageHpFraction);
+    }
+
+    protected override void OnNearDeathPhasesSnapshot()
+    {
+        LatchCombatPhases(IsEnraged(), signaturePhase: false, desperatePhase: false);
     }
 
     private float CurrentDecideInterval()
     {
-        if (IsEnraged())
-            return enrageDecideInterval;
-        return Mathf.Lerp(decideIntervalLowHp, decideIntervalFullHp,
-            (float)currentHealth / Mathf.Max(1, maxHealth));
+        float interval = IsEnraged()
+            ? enrageDecideInterval
+            : Mathf.Lerp(decideIntervalLowHp, decideIntervalFullHp,
+                (float)currentHealth / Mathf.Max(1, maxHealth));
+        return DifficultyTuning.ScaleBossRecover(interval);
     }
 
     private void TickChase(PlayerController player)
@@ -1121,8 +1148,12 @@ public class BossKit : Boss
             dir = RotateDirection(dir, angleOffset);
 
         Projectile shot = Instantiate(prefab, origin, Quaternion.identity);
-        float shotSpeed = prefab.Speed * Mathf.Clamp(projectileSpeedMultiplier, 0.4f, 1f);
-        shot.Launch(dir, shotSpeed, prefab.Damage, transform);
+        float shotSpeed = prefab.Speed * Mathf.Clamp(projectileSpeedMultiplier, 0.4f, 1f)
+                          * DifficultyTuning.BossMoveSpeedMul();
+        // Projectile.Damage is float (fractional HP); apply the same difficulty mul/flat as int boss hits.
+        float shotDamage = Mathf.Max(0.1f,
+            prefab.Damage * DifficultyTuning.BossDamageMul() + DifficultyTuning.BossDamageFlat());
+        shot.Launch(dir, shotSpeed, shotDamage, transform);
         liveProjectiles.Add(shot);
 
         Transform muzzle = firePoint != null ? firePoint : transform;
@@ -2218,9 +2249,9 @@ public class BossKit : Boss
         shotsFiredInCurrentGroup = 0;
         float minBreak = Mathf.Min(attackBreakMinSeconds, attackBreakMaxSeconds);
         float maxBreak = Mathf.Max(attackBreakMinSeconds, attackBreakMaxSeconds);
-        recoverTimer = Random.Range(minBreak, maxBreak);
+        recoverTimer = DifficultyTuning.ScaleBossRecover(Random.Range(minBreak, maxBreak));
         if (IsEnraged())
-            recoverTimer = Mathf.Min(recoverTimer, recoverDurationEnraged);
+            recoverTimer = Mathf.Min(recoverTimer, DifficultyTuning.ScaleBossRecover(recoverDurationEnraged));
         StopHorizontal();
     }
 

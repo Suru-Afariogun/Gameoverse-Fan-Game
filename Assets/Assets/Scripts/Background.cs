@@ -4,15 +4,19 @@ using UnityEngine;
 /// Parallax background layer. Put this on each background GameObject.
 /// Lower layer = faster camera follow. Higher layer = slower follow.
 /// Tracks the camera directly (no catch-up lag) so when the camera stops, layers stop too.
+///
+/// Safe with nesting: if a parent and its children both have <see cref="Background"/>,
+/// only the child layers move. A parent that also moved would drag children after their
+/// own LateUpdate and cancel parallax (common on City "Backgrounds" group roots).
 /// </summary>
 [DefaultExecutionOrder(100)]
 public class Background : MonoBehaviour
 {
     [Header("Layer")]
-    [Tooltip("Lower numbers follow the camera faster. Higher numbers follow slower.")]
+    [Tooltip("Parallax speed index. Lower = follows camera more (closer). Higher = drifts more (farther). Put Background only on each layer piece — not on an empty parent that holds mixed layers.")]
     [SerializeField] private int layerOrder;
-    [Tooltip("If enabled, uses this object's SpriteRenderer sorting order as the layer.")]
-    [SerializeField] private bool useSpriteSortingOrder = true;
+    [Tooltip("If enabled, overwrites Layer Order from this object's SpriteRenderer sorting order when that order is 0–20. Turn OFF to use the Layer Order you set in the Inspector.")]
+    [SerializeField] private bool useSpriteSortingOrder = false;
 
     [Header("Parallax")]
     [SerializeField] private Transform cameraTransform;
@@ -26,9 +30,12 @@ public class Background : MonoBehaviour
     private Vector3 startPosition;
     private Vector3 startCameraPosition;
     private bool hasCachedStartPositions;
+    /// <summary>False when a child also has Background — that child drives its own transform.</summary>
+    private bool drivesOwnTransform = true;
 
     private void Awake()
     {
+        drivesOwnTransform = !HasBackgroundOnDescendant();
         ResolveCamera();
         ResolveLayerOrder();
         parallaxFactor = CalculateParallaxFactor(layerOrder);
@@ -43,17 +50,30 @@ public class Background : MonoBehaviour
 
     /// <summary>
     /// Factory / sky segments must scroll vertically with the camera or the view exposes clear color.
+    /// City building / cloud props intentionally keep followY off (set by City setup).
     /// </summary>
     private void EnsureStageBackdropFollowsY()
     {
         if (followY)
             return;
 
+        // City building art should stay planted on the Y axis even if parent folders match below.
+        if (IsCityBuildingOrCloudPropName(gameObject.name))
+            return;
+
         Transform node = transform;
         while (node != null)
         {
-            if (string.Equals(node.name, "Sky Background", System.StringComparison.OrdinalIgnoreCase)
-                || node.name.StartsWith("Factory Background", System.StringComparison.Ordinal))
+            string n = node.name;
+            if (string.IsNullOrEmpty(n))
+            {
+                node = node.parent;
+                continue;
+            }
+
+            if (string.Equals(n, "Sky Background", System.StringComparison.OrdinalIgnoreCase)
+                || n.StartsWith("Factory Background", System.StringComparison.Ordinal)
+                || n.StartsWith("City Sky", System.StringComparison.OrdinalIgnoreCase))
             {
                 followY = true;
                 return;
@@ -63,8 +83,30 @@ public class Background : MonoBehaviour
         }
     }
 
+    private static bool IsCityBuildingOrCloudPropName(string objectName)
+    {
+        if (string.IsNullOrEmpty(objectName))
+            return false;
+
+        if (objectName.IndexOf("Cloud", System.StringComparison.OrdinalIgnoreCase) >= 0)
+            return true;
+        if (objectName.IndexOf("Background parts", System.StringComparison.OrdinalIgnoreCase) >= 0)
+            return true;
+        if (objectName.IndexOf("Building", System.StringComparison.OrdinalIgnoreCase) >= 0 &&
+            objectName.IndexOf("grey", System.StringComparison.OrdinalIgnoreCase) >= 0)
+            return true;
+        if (objectName.IndexOf("light grey blue", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+            objectName.IndexOf("light gray blue", System.StringComparison.OrdinalIgnoreCase) >= 0)
+            return true;
+
+        return false;
+    }
+
     private void LateUpdate()
     {
+        if (!drivesOwnTransform)
+            return;
+
         if (cameraTransform == null)
         {
             ResolveCamera();
@@ -90,6 +132,18 @@ public class Background : MonoBehaviour
         transform.position = targetPosition;
     }
 
+    private bool HasBackgroundOnDescendant()
+    {
+        Background[] nested = GetComponentsInChildren<Background>(true);
+        for (int i = 0; i < nested.Length; i++)
+        {
+            if (nested[i] != null && nested[i] != this)
+                return true;
+        }
+
+        return false;
+    }
+
     private void ResolveCamera()
     {
         if (cameraTransform != null)
@@ -111,8 +165,15 @@ public class Background : MonoBehaviour
             return;
 
         SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
-        if (spriteRenderer != null)
-            layerOrder = spriteRenderer.sortingOrder;
+        if (spriteRenderer == null)
+            return;
+
+        // Draw-order sorting can be large or negative (City building art). Those values are
+        // not parallax layer indices — adopting them makes every piece lock to the camera
+        // or clamp to the minimum factor. Only trust small non-negative orders (Level one style).
+        int sort = spriteRenderer.sortingOrder;
+        if (sort >= 0 && sort <= 20)
+            layerOrder = sort;
     }
 
     private void CacheStartPositions()
@@ -130,6 +191,35 @@ public class Background : MonoBehaviour
         int safeOrder = Mathf.Max(0, order);
         float factor = 1f - (safeOrder * factorPerLayer);
         return Mathf.Clamp(factor, minimumParallaxFactor, 1f);
+    }
+
+    /// <summary>
+    /// Sets parallax depth at runtime (lower = closer / follows camera more).
+    /// Used by City layer cleanup so Inspector mistakes can be corrected safely.
+    /// </summary>
+    public void ApplyParallaxLayer(
+        int order,
+        bool useSortingOrder = false,
+        bool followHorizontal = true,
+        bool followVertical = true)
+    {
+        layerOrder = Mathf.Max(0, order);
+        useSpriteSortingOrder = useSortingOrder;
+        if (useSpriteSortingOrder)
+            ResolveLayerOrder();
+
+        followX = followHorizontal;
+        followY = followVertical;
+        parallaxFactor = CalculateParallaxFactor(layerOrder);
+        drivesOwnTransform = !HasBackgroundOnDescendant();
+        hasCachedStartPositions = false;
+    }
+
+    /// <summary>Stops vertical parallax (e.g. City buildings should not rise with jump camera).</summary>
+    public void SetFollowAxes(bool horizontal, bool vertical)
+    {
+        followX = horizontal;
+        followY = vertical;
     }
 
 #if UNITY_EDITOR

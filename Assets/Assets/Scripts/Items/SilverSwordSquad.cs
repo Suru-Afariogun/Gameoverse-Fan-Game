@@ -309,12 +309,30 @@ public class SilverSwordSquad : MonoBehaviour
                 sword.Init(owner, settings.swordDamage, group, host);
                 sword.PointAt(Vector2.down);
                 sword.SetAlpha(0f);
+                sword.OnParried += HandleSwordParried;
                 slots.Add(new Slot { sword = sword, offset = offset });
             }
         }
 
         summonTimer = 0f;
         SoundManager.Instance?.PlayHarlieSwordSwing();
+    }
+
+    private void HandleSwordParried(SilverSword sword)
+    {
+        if (sword == null)
+            return;
+
+        for (int i = 0; i < slots.Count; i++)
+        {
+            Slot slot = slots[i];
+            if (slot.sword != sword)
+                continue;
+
+            slot.busy = false;
+            slot.home = false;
+            return;
+        }
     }
 
     // ---------- Lifecycle ----------
@@ -464,7 +482,10 @@ public class SilverSwordSquad : MonoBehaviour
         for (int i = 0; i < slots.Count; i++)
         {
             if (slots[i].sword != null)
+            {
+                slots[i].sword.OnParried -= HandleSwordParried;
                 Destroy(slots[i].sword.gameObject);
+            }
         }
 
         slots.Clear();
@@ -633,7 +654,7 @@ public class SilverSwordSquad : MonoBehaviour
         sword.PointAt(Vector2.down);
         sword.Arm();
         yield return FlyStraight(sword, Vector2.down, settings.plungeSpeed, travel);
-        if (sword == null)
+        if (sword == null || sword.WasParried)
             yield break;
 
         sword.Disarm();
@@ -883,7 +904,7 @@ public class SilverSwordSquad : MonoBehaviour
         sword.Arm();
         SoundManager.Instance?.PlayHarlieSwordSwing();
         yield return FlyStraight(sword, dir, speed, travel);
-        if (sword == null)
+        if (sword == null || sword.WasParried)
             yield break;
 
         sword.Disarm();
@@ -1000,7 +1021,7 @@ public class SilverSwordSquad : MonoBehaviour
         SoundManager.Instance?.PlayHarlieSwordSwing();
         float t = 0f;
         float duration = b.boomerangLoopSeconds;
-        while (sword != null)
+        while (sword != null && !sword.WasParried)
         {
             t += Dt;
             float u = Mathf.Clamp01(t / duration);
@@ -1012,7 +1033,7 @@ public class SilverSwordSquad : MonoBehaviour
             yield return null;
         }
 
-        if (sword != null)
+        if (sword != null && !sword.WasParried)
             sword.Disarm();
     }
 
@@ -1129,7 +1150,7 @@ public class SilverSwordSquad : MonoBehaviour
         sword.Arm();
         SoundManager.Instance?.PlayHarlieSwordSwing();
         float t = 0f;
-        while (sword != null)
+        while (sword != null && !sword.WasParried)
         {
             t += Dt;
             float u = Mathf.Clamp01(t / b.sweepSeconds);
@@ -1141,7 +1162,7 @@ public class SilverSwordSquad : MonoBehaviour
             yield return null;
         }
 
-        if (sword != null)
+        if (sword != null && !sword.WasParried)
             sword.Disarm();
     }
 
@@ -1236,7 +1257,7 @@ public class SilverSwordSquad : MonoBehaviour
     private IEnumerator FlyStraight(SilverSword sword, Vector2 dir, float speed, float distance)
     {
         float remaining = Mathf.Max(0f, distance);
-        while (remaining > 0.0001f && sword != null)
+        while (remaining > 0.0001f && sword != null && !sword.WasParried)
         {
             float step = Mathf.Min(remaining, speed * Dt);
             sword.transform.position += (Vector3)(dir * step);

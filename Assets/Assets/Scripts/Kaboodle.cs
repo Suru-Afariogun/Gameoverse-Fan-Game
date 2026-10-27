@@ -8,8 +8,8 @@ using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 /// <summary>
-/// Kaboodle NPC hub: interact prompt in range, then a box with menu pages
-/// (Tutorial, Item Shop, Character Select, Boss Fight).
+/// Kaboodle NPC hub: same Up / stick-up interact as Town NPCs (shared Interactable Symbol),
+/// then a box with menu pages (Tutorial, Item Shop, Character Select, Boss Fight).
 /// Menu supports full 2D navigation (rows + columns). Selected/hovered buttons
 /// scale up and show an outline.
 /// </summary>
@@ -26,19 +26,18 @@ public class Kaboodle : MonoBehaviour
     }
 
     [Header("Range")]
-    [Tooltip("How close the player must be (world units) to see the interact prompt.")]
+    [Tooltip("How close the player must be (world units) to see the interact symbol.")]
     [SerializeField] private float interactRadius = 2f;
 
-    [Header("UI - Prompt")]
-    [Tooltip("Shown only while the player is in range and the box is closed.")]
+    [Header("Interact Symbol (same as Town NPCs)")]
+    [Tooltip("Anchor for the bobbing Interactable Symbol. Auto-finds \"Interactble Symbol box\" if empty.")]
+    [SerializeField] private Transform interactableSymbolBox;
+    [Tooltip("Interactable Symbol GameVisualEffect prefab (type InteractableSymbol).")]
+    [SerializeField] private GameVisualEffect interactSymbolPrefab;
+    [SerializeField] private GameVisualEffect interactSymbolInstance;
+    [Tooltip("Legacy Confirm-glyph prompt — hidden and unused (kept so old scene refs do not break).")]
     [SerializeField] private GameObject interactPrompt;
-    [Tooltip("Scale multiplier for PlayStation / Xbox / Switch Confirm glyphs (not Keyboard or Default).")]
-    [SerializeField] private float controllerPromptScaleMultiplier = 2f;
 
-    private SpriteRenderer interactPromptRenderer;
-    private Sprite interactPromptFallbackSprite;
-    private Vector3 interactPromptBaseScale = Vector3.one;
-    private bool interactPromptBaseScaleCached;
     private bool subscribedToButtonSprites;
 
     [Header("UI - Kaboodle Box")]
@@ -71,6 +70,7 @@ public class Kaboodle : MonoBehaviour
     [SerializeField] private Button harlieCharacterButton;
     [SerializeField] private Button countCharacterButton;
     [SerializeField] private Button hexCharacterButton;
+    [SerializeField] private Button bassCharacterButton;
     [Tooltip("How many character buttons per row (usually 2: Kit | Malice).")]
     [SerializeField] private int characterSelectColumns = 2;
     [Tooltip("Solid blue character-shaped highlight behind the portrait when hovered/selected.")]
@@ -91,6 +91,8 @@ public class Kaboodle : MonoBehaviour
     [SerializeField] private Button hexBossButton;
     [Tooltip("Spawns Boss Count (BossCount prefab via the Boss Spawner's \"Count\" entry).")]
     [SerializeField] private Button countBossButton;
+    [Tooltip("Spawns Boss Bass (BossBass prefab via the Boss Spawner's \"Bass\" entry).")]
+    [SerializeField] private Button bassBossButton;
     [SerializeField] private int bossSelectColumns = 2;
 
     [Header("UI - Item Shop")]
@@ -179,13 +181,15 @@ public class Kaboodle : MonoBehaviour
 
     private void Awake()
     {
-        controls = new InputActions();
+        controls = GameInput.Create();
         CacheMenuButtons();
         CacheCharacterButtons();
         CacheBossButtons();
         CacheShopButtons();
         CacheButtonVisualDefaults();
-        CacheInteractPrompt();
+        CacheInteractSymbolAnchor();
+        HideLegacyConfirmPrompt();
+        EnsureInteractSymbol();
         HookPointerHover();
         HookCharacterPointerHover();
         HookBossPointerHover();
@@ -193,14 +197,14 @@ public class Kaboodle : MonoBehaviour
         EnsureCharacterHighlightShapes();
         EnsureBossHighlightShapes();
         ButtonSpriteManager.EnsureExists();
-        SetPromptVisible(false);
+        SetSymbolVisible(false);
         CloseBox(unlockPlayer: false);
     }
 
     private void OnEnable()
     {
         if (controls == null)
-            controls = new InputActions();
+            controls = GameInput.Create();
 
         controls.PlayerControls.Enable();
         controls.PlayerControls.Up.performed += OnUpPerformed;
@@ -292,15 +296,18 @@ public class Kaboodle : MonoBehaviour
             countCharacterButton = FindNamedButtonUnder(characterSelectPage, "Count");
         if (hexCharacterButton == null)
             hexCharacterButton = FindNamedButtonUnder(characterSelectPage, "Hex");
+        if (bassCharacterButton == null)
+            bassCharacterButton = FindNamedButtonUnder(characterSelectPage, "Bass");
 
         AddCharacterButton(kitCharacterButton, "Kit");
         AddCharacterButton(maliceCharacterButton, "Malice");
         AddCharacterButton(harlieCharacterButton, "Harlie");
         AddCharacterButton(countCharacterButton, "Count");
         AddCharacterButton(hexCharacterButton, "Hex");
+        AddCharacterButton(bassCharacterButton, "Bass");
 
         if (validCharacterButtons.Count == 0)
-            Debug.LogWarning("[Kaboodle] Character Select has no Kit/Malice/Harlie/Count/Hex buttons assigned.");
+            Debug.LogWarning("[Kaboodle] Character Select has no character buttons assigned.");
     }
 
     private void CacheBossButtons()
@@ -318,16 +325,19 @@ public class Kaboodle : MonoBehaviour
             hexBossButton = FindNamedButtonUnder(bossFightPage, "Hex");
         if (countBossButton == null)
             countBossButton = FindNamedButtonUnder(bossFightPage, "Count");
+        if (bassBossButton == null)
+            bassBossButton = FindNamedButtonUnder(bossFightPage, "Bass");
 
         AddBossButton(kitBossButton, BossEncounter.BossIdKit);
         AddBossButton(maliceBossButton, BossEncounter.BossIdMalice);
         AddBossButton(harlieBossButton, BossEncounter.BossIdHarlie);
         AddBossButton(hexBossButton, BossEncounter.BossIdHex);
         AddBossButton(countBossButton, BossEncounter.BossIdCount);
+        AddBossButton(bassBossButton, BossEncounter.BossIdBass);
 
         if (validBossButtons.Count == 0)
             Debug.LogWarning(
-                "[Kaboodle] Boss Fight page has no Kit/Malice/Harlie/Hex buttons. " +
+                "[Kaboodle] Boss Fight page has no Kit/Malice/Harlie/Hex/Count/Bass buttons. " +
                 "Parent the same buttons under Boss Fight Page (or assign the Boss Button refs).");
     }
 
@@ -948,17 +958,14 @@ public class Kaboodle : MonoBehaviour
     private void UpdateRangeState()
     {
         PlayerController player = FindNearestPlayer();
-        bool inRange = player != null &&
+        bool inRange = player != null && !player.IsDead &&
                        Vector2.Distance(transform.position, player.transform.position) <= interactRadius;
 
         if (inRange == playerInRange && player == rangedPlayer)
         {
-            if (playerInRange && !boxOpen && player != null)
-                player.SetDashDisabled(true);
+            SetSymbolVisible(playerInRange && !boxOpen);
             return;
         }
-
-        PlayerController previous = rangedPlayer;
 
         playerInRange = inRange;
         rangedPlayer = inRange ? player : null;
@@ -966,21 +973,7 @@ public class Kaboodle : MonoBehaviour
         if (!inRange && boxOpen)
             CloseBox(unlockPlayer: true);
 
-        if (playerInRange)
-        {
-            if (!boxOpen)
-            {
-                SetPromptVisible(true);
-                if (rangedPlayer != null)
-                    rangedPlayer.SetDashDisabled(true);
-            }
-        }
-        else
-        {
-            SetPromptVisible(false);
-            if (previous != null)
-                previous.SetDashDisabled(false);
-        }
+        SetSymbolVisible(playerInRange && !boxOpen);
     }
 
     private PlayerController FindNearestPlayer()
@@ -1010,6 +1003,7 @@ public class Kaboodle : MonoBehaviour
         BindClick(harlieBossButton, OnHarlieBossButtonClicked, bind);
         BindClick(hexBossButton, OnHexBossButtonClicked, bind);
         BindClick(countBossButton, OnCountBossButtonClicked, bind);
+        BindClick(bassBossButton, OnBassBossButtonClicked, bind);
     }
 
     private void WireShopButtonClicks(bool bind)
@@ -1056,6 +1050,13 @@ public class Kaboodle : MonoBehaviour
         ConfirmBossSelection();
     }
 
+    /// <summary>Inspector / UI OnClick → pick Bass boss and load Boss Fight Mode.</summary>
+    public void OnBassBossButtonClicked()
+    {
+        SelectBossIndexById(BossEncounter.BossIdBass);
+        ConfirmBossSelection();
+    }
+
     private void SelectBossIndexById(string bossId)
     {
         CacheBossButtons();
@@ -1084,6 +1085,8 @@ public class Kaboodle : MonoBehaviour
     {
         if (!context.performed || !CanAcceptMenuInput())
             return;
+
+        NotifyControlDevice(context);
 
         if (!boxOpen)
         {
@@ -1154,15 +1157,9 @@ public class Kaboodle : MonoBehaviour
 
         NotifyControlDevice(context);
 
+        // Confirm only drives the open menu — opening Kaboodle is Up / stick up (same as Town NPCs).
         if (!boxOpen)
-        {
-            if (playerInRange)
-            {
-                SoundManager.Instance?.PlayUiConfirm();
-                OpenBox();
-            }
             return;
-        }
 
         SoundManager.Instance?.PlayUiConfirm();
 
@@ -1392,7 +1389,7 @@ public class Kaboodle : MonoBehaviour
             return;
 
         boxOpen = true;
-        SetPromptVisible(false);
+        SetSymbolVisible(false);
 
         if (kaboodleBox != null)
             kaboodleBox.SetActive(true);
@@ -1431,11 +1428,11 @@ public class Kaboodle : MonoBehaviour
             if (player != null)
             {
                 player.SetInputLocked(false);
-                player.SetDashDisabled(playerInRange);
+                player.SetDashDisabled(false);
             }
         }
 
-        SetPromptVisible(playerInRange && !boxOpen);
+        SetSymbolVisible(playerInRange && !boxOpen);
         RefreshNavigationHintText();
 
         if (wasOpen)
@@ -1840,32 +1837,90 @@ public class Kaboodle : MonoBehaviour
         navigationHintText.gameObject.SetActive(true);
     }
 
-    private void SetPromptVisible(bool visible)
+    private void HideLegacyConfirmPrompt()
     {
-        if (visible)
-            RefreshInteractPromptSprite();
-
         if (interactPrompt != null)
-            interactPrompt.SetActive(visible);
+            interactPrompt.SetActive(false);
     }
 
-    private void CacheInteractPrompt()
+    private void CacheInteractSymbolAnchor()
     {
-        if (interactPrompt == null)
+        if (interactableSymbolBox != null)
             return;
 
-        interactPromptRenderer = interactPrompt.GetComponent<SpriteRenderer>();
-        if (interactPromptRenderer == null)
-            interactPromptRenderer = interactPrompt.GetComponentInChildren<SpriteRenderer>(true);
+        interactableSymbolBox =
+            FindChildNamed(transform, "Interactble Symbol box") ??
+            FindChildNamed(transform, "Interactable Symbol box") ??
+            FindChildNamed(transform, "Interactable symbol box");
+    }
 
-        if (interactPromptRenderer != null)
-            interactPromptFallbackSprite = interactPromptRenderer.sprite;
+    private void EnsureInteractSymbol()
+    {
+        if (interactSymbolInstance != null)
+            return;
 
-        if (!interactPromptBaseScaleCached)
+        CacheInteractSymbolAnchor();
+        if (interactableSymbolBox == null)
         {
-            interactPromptBaseScale = interactPrompt.transform.localScale;
-            interactPromptBaseScaleCached = true;
+            // Fall back to a local anchor above Kaboodle so the symbol still appears.
+            GameObject anchor = new GameObject("Interactble Symbol box");
+            anchor.transform.SetParent(transform, false);
+            anchor.transform.localPosition = new Vector3(0f, 1.35f, 0f);
+            interactableSymbolBox = anchor.transform;
         }
+
+        if (interactSymbolPrefab == null)
+            interactSymbolPrefab = NPC.FindInteractSymbolPrefab();
+
+        if (interactSymbolPrefab == null)
+        {
+            Debug.LogWarning("[Kaboodle] No Interactable Symbol prefab found — assign the same one Town NPCs use.", this);
+            return;
+        }
+
+        GameVisualEffect spawned = Instantiate(interactSymbolPrefab, interactableSymbolBox);
+        spawned.name = "Interactble Symbol";
+        spawned.transform.localPosition = Vector3.zero;
+        spawned.transform.localRotation = Quaternion.identity;
+        spawned.transform.localScale = Vector3.one;
+        spawned.ResetInteractableBobBase();
+        interactSymbolInstance = spawned;
+        interactSymbolInstance.gameObject.SetActive(false);
+    }
+
+    private void SetSymbolVisible(bool visible)
+    {
+        if (interactSymbolInstance == null)
+            EnsureInteractSymbol();
+
+        if (interactSymbolInstance == null)
+            return;
+
+        if (visible && !interactSymbolInstance.gameObject.activeSelf)
+        {
+            interactSymbolInstance.transform.localPosition = Vector3.zero;
+            interactSymbolInstance.ResetInteractableBobBase();
+        }
+
+        interactSymbolInstance.gameObject.SetActive(visible);
+    }
+
+    private static Transform FindChildNamed(Transform root, string childName)
+    {
+        if (root == null || string.IsNullOrEmpty(childName))
+            return null;
+
+        if (string.Equals(root.name, childName, StringComparison.OrdinalIgnoreCase))
+            return root;
+
+        for (int i = 0; i < root.childCount; i++)
+        {
+            Transform found = FindChildNamed(root.GetChild(i), childName);
+            if (found != null)
+                return found;
+        }
+
+        return null;
     }
 
     private static void NotifyControlDevice(InputAction.CallbackContext context)
@@ -1890,7 +1945,6 @@ public class Kaboodle : MonoBehaviour
                 return;
             manager.DeviceChanged += OnControlDeviceChanged;
             subscribedToButtonSprites = true;
-            RefreshInteractPromptSprite();
         }
         else
         {
@@ -1903,37 +1957,10 @@ public class Kaboodle : MonoBehaviour
 
     private void OnControlDeviceChanged(ButtonSpriteManager.ControlDeviceKind device)
     {
-        RefreshInteractPromptSprite();
         RefreshNavigationHintText();
 
         if (boxOpen && currentPage == BoxPage.Tutorial)
             RebuildTutorialKeepingPage();
-    }
-
-    private void RefreshInteractPromptSprite()
-    {
-        if (interactPromptRenderer == null)
-            CacheInteractPrompt();
-        if (interactPromptRenderer == null)
-            return;
-
-        if (!interactPromptBaseScaleCached && interactPrompt != null)
-        {
-            interactPromptBaseScale = interactPrompt.transform.localScale;
-            interactPromptBaseScaleCached = true;
-        }
-
-        ButtonSpriteManager manager = ButtonSpriteManager.Instance ?? ButtonSpriteManager.EnsureExists();
-        bool enlarge = false;
-        Sprite sprite = null;
-        if (manager != null)
-            manager.GetSprite("Confirm", manager.CurrentDevice, out sprite, out enlarge);
-
-        interactPromptRenderer.sprite = sprite != null ? sprite : interactPromptFallbackSprite;
-
-        float mult = enlarge ? Mathf.Max(1f, controllerPromptScaleMultiplier) : 1f;
-        if (interactPrompt != null)
-            interactPrompt.transform.localScale = interactPromptBaseScale * mult;
     }
 
     private void RebuildTutorialKeepingPage()

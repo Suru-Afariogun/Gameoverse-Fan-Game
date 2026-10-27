@@ -89,6 +89,10 @@ public class HexPlayerController : HarliePlayerController
     protected override string HarlieCharacterId => "Hex";
     protected override bool SilverSwordsAllowed => false;
     protected override int JumpAttackDamage => isDiving ? ScaleOutgoingDamage(diveDamage) : base.JumpAttackDamage;
+    protected override float SpinningAirSlashDegreesPerSecond => 36000f;
+    protected override int SpinningAirSlashDamageMultiplier => 2;
+    /// <summary>Hex's air-slash pose reads opposite Harlie's under flipX, so invert the tumble.</summary>
+    protected override float SpinningAirSlashZSign => 1f;
     private bool IsSlamming => slamTimer > 0f;
 
     public override bool WantsExtraCameraSmoothing => base.WantsExtraCameraSmoothing || isDiving;
@@ -138,7 +142,55 @@ public class HexPlayerController : HarliePlayerController
 
     protected override bool CanPogoNow()
     {
-        return !isDiving && base.CanPogoNow();
+        // Dive pierces normal enemies; boss hits can bounce (filtered in NotifyMeleeContact).
+        if (isDiving)
+            return !isGrounded && rb != null && rb.linearVelocity.y <= 0.05f && isJumpAttackActive;
+        return base.CanPogoNow();
+    }
+
+    public override void NotifyMeleeContact(Collider2D other, bool bossAttackTool)
+    {
+        if (isDiving)
+        {
+            Boss boss = ResolveBossFromContact(other, bossAttackTool);
+            if (boss != null && !boss.IsDead)
+            {
+                if (ShouldApplyAttackKnockback())
+                    PushTargetOnHit(other);
+
+                FireSlamFanWaves();
+                BurstSlamSparks();
+                BounceOffTarget(other);
+                MeleeHitbox?.ForgetHitInstance(boss.GetInstanceID());
+                EndDive();
+                return;
+            }
+
+            // Non-boss dive hits keep piercing — knockback only, no bounce.
+            if (UsesSlashForCombat())
+                PlaySlashClashSound();
+            if (ShouldApplyAttackKnockback())
+                PushTargetOnHit(other);
+            return;
+        }
+
+        base.NotifyMeleeContact(other, bossAttackTool);
+    }
+
+    private static Boss ResolveBossFromContact(Collider2D other, bool bossAttackTool)
+    {
+        if (other == null)
+            return null;
+
+        Boss boss = other.GetComponentInParent<Boss>();
+        if (boss != null)
+            return boss;
+
+        if (!bossAttackTool)
+            return null;
+
+        AttackHitbox tool = other.GetComponentInParent<AttackHitbox>();
+        return tool != null ? tool.OwnerBoss : null;
     }
 
     protected override void OnHitStunStarted()
@@ -295,6 +347,15 @@ public class HexPlayerController : HarliePlayerController
             animator.Play("slash 3", 0, 0f);
         }
 
+        FireSlamFanWaves();
+        SoundManager.Instance?.PlayHarlieBigSwordClash();
+        SoundManager.Instance?.PlayHarlieSwordSwing();
+        BurstSlamSparks();
+    }
+
+    /// <summary>5-wave upward fan used by landing slam and boss-pogo bounce.</summary>
+    private void FireSlamFanWaves()
+    {
         Vector3 origin = bodyCollider != null ? bodyCollider.bounds.center : transform.position;
         int hyper = ActiveHyperLevel;
         int damage = ScaleOutgoingDamage(slamWaveDamage + Mathf.Max(0, hyperSlamDamagePerLevel) * hyper);
@@ -309,16 +370,18 @@ public class HexPlayerController : HarliePlayerController
             if (wave != null && hyper > 0)
                 wave.SetGrowOverTravel(hyperSlamGrowMultiplier);
         }
+    }
 
-        SoundManager.Instance?.PlayHarlieBigSwordClash();
-        SoundManager.Instance?.PlayHarlieSwordSwing();
-        if (sparkEmitter != null)
-        {
-            Vector3 feet = bodyCollider != null
-                ? new Vector3(origin.x, bodyCollider.bounds.min.y, 0f)
-                : transform.position;
-            sparkEmitter.Burst(feet);
-        }
+    private void BurstSlamSparks()
+    {
+        if (sparkEmitter == null)
+            return;
+
+        Vector3 origin = bodyCollider != null ? bodyCollider.bounds.center : transform.position;
+        Vector3 feet = bodyCollider != null
+            ? new Vector3(origin.x, bodyCollider.bounds.min.y, 0f)
+            : transform.position;
+        sparkEmitter.Burst(feet);
     }
 
     // ---------- V-Bots ----------

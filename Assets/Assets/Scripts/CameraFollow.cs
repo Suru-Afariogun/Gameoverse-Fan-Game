@@ -96,9 +96,11 @@ public class CameraFollow : MonoBehaviour
     [SerializeField] private float landingApproachFallLookAheadDecayTime = 0.05f;
 
     [Header("Manual Vertical Look-Ahead (Up/Down Hold)")]
-    [SerializeField] private float manualLookAheadHoldDelay = 1f;
+    [Tooltip("How long pure Up/Down must be held before the camera peeks (lower = faster).")]
+    [SerializeField] private float manualLookAheadHoldDelay = 0.28f;
     [SerializeField] private float manualLookAheadMax = 5f;
-    [SerializeField] private float manualLookAheadSmoothTime = 0.12f;
+    [Tooltip("How quickly the camera eases into / out of the peek (lower = snappier).")]
+    [SerializeField] private float manualLookAheadSmoothTime = 0.055f;
     [SerializeField] private float verticalInputThreshold = 0.35f;
 
     [Header("Bounds (optional)")]
@@ -226,8 +228,12 @@ public class CameraFollow : MonoBehaviour
         if (cam != null)
             cam.aspect = baseAspect;
 
-        bool holdingDown = IsPlayerHoldingDown(player);
-        bool holdingUp = IsPlayerHoldingUp(player);
+        // Only pure Up or pure Down — any other button / left-right cancels look-ahead.
+        bool lookUp = false;
+        bool lookDown = false;
+        bool pureLook = player != null && player.TryGetManualCameraLook(out lookUp, out lookDown);
+        bool holdingDown = pureLook && lookDown;
+        bool holdingUp = pureLook && lookUp;
 
         downHoldTime = holdingDown && !holdingUp ? downHoldTime + dt : 0f;
         upHoldTime = holdingUp && !holdingDown ? upHoldTime + dt : 0f;
@@ -242,7 +248,7 @@ public class CameraFollow : MonoBehaviour
             manualLookAheadY,
             targetManual,
             ref manualLookAheadYVelocity,
-            manualLookAheadSmoothTime,
+            Mathf.Max(0.01f, manualLookAheadSmoothTime),
             Mathf.Infinity,
             dt);
     }
@@ -270,22 +276,6 @@ public class CameraFollow : MonoBehaviour
 
         float roomUp = maxCenterY - baseY;
         return Mathf.Clamp(roomUp, 0f, manualLookAheadMax);
-    }
-
-    private bool IsPlayerHoldingDown(PlayerController player)
-    {
-        if (player == null || player.IsDead)
-            return false;
-
-        return player.MoveInput.y <= -verticalInputThreshold;
-    }
-
-    private bool IsPlayerHoldingUp(PlayerController player)
-    {
-        if (player == null || player.IsDead)
-            return false;
-
-        return player.MoveInput.y >= verticalInputThreshold;
     }
 
     private bool IsLandingReturnEase() => landingReturnTimer > 0f;
@@ -1390,7 +1380,10 @@ public class CameraFollow : MonoBehaviour
 
         return string.Equals(objectName, "Background", System.StringComparison.OrdinalIgnoreCase)
             || objectName.StartsWith("Factory Background", System.StringComparison.Ordinal)
-            || string.Equals(objectName, "Sky Background", System.StringComparison.OrdinalIgnoreCase);
+            || string.Equals(objectName, "Sky Background", System.StringComparison.OrdinalIgnoreCase)
+            || objectName.StartsWith("City Background", System.StringComparison.OrdinalIgnoreCase)
+            || objectName.StartsWith("City Sky", System.StringComparison.OrdinalIgnoreCase)
+            || objectName.StartsWith("Backgrounds", System.StringComparison.OrdinalIgnoreCase);
     }
 
     private void ResolveArenaBackground()
@@ -1399,31 +1392,79 @@ public class CameraFollow : MonoBehaviour
         stageBackgroundRenderers = null;
 
         if (background == null && autoFindBackground)
+            TryAssignArenaBackgroundSprite();
+
+        CacheBounds();
+    }
+
+    private static bool IsCityStageScene()
+    {
+        string sceneName = SceneManager.GetActiveScene().name;
+        return !string.IsNullOrEmpty(sceneName) &&
+               sceneName.IndexOf("City", System.StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
+    /// <summary>
+    /// Arena (non-Level-one) stages: pick a large backdrop sprite when possible.
+    /// City must not bind camera bounds to a tiny "City Backgrounds" prop / first parallax piece —
+    /// that freezes follow and shows clear-color outside the sky.
+    /// </summary>
+    private void TryAssignArenaBackgroundSprite()
+    {
+        if (IsCityStageScene())
         {
-            GameObject found = GameObject.Find(backgroundObjectName);
-            if (found != null)
-                background = found.GetComponent<SpriteRenderer>();
-
-            if (background == null)
+            // Prefer the large sky sprite as a reference; City playable box uses Scene Edges below.
+            SpriteRenderer sky = FindSpriteOnNamedObject("City Sky Background");
+            if (sky != null)
             {
-                Background[] layers = Object.FindObjectsByType<Background>(FindObjectsSortMode.None);
-                for (int i = 0; i < layers.Length; i++)
-                {
-                    Background layer = layers[i];
-                    if (layer == null)
-                        continue;
+                background = sky;
+                return;
+            }
 
-                    SpriteRenderer renderer = layer.GetComponent<SpriteRenderer>();
-                    if (renderer != null)
-                    {
-                        background = renderer;
-                        break;
-                    }
-                }
+            // Do not fall through to a random Background piece.
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(backgroundObjectName))
+        {
+            SpriteRenderer named = FindSpriteOnNamedObject(backgroundObjectName);
+            if (named != null)
+            {
+                background = named;
+                return;
             }
         }
 
-        CacheBounds();
+        Background[] layers = Object.FindObjectsByType<Background>(FindObjectsSortMode.None);
+        for (int i = 0; i < layers.Length; i++)
+        {
+            Background layer = layers[i];
+            if (layer == null)
+                continue;
+
+            SpriteRenderer renderer = layer.GetComponent<SpriteRenderer>();
+            if (renderer != null)
+            {
+                background = renderer;
+                return;
+            }
+        }
+    }
+
+    private static SpriteRenderer FindSpriteOnNamedObject(string objectName)
+    {
+        if (string.IsNullOrWhiteSpace(objectName))
+            return null;
+
+        GameObject found = GameObject.Find(objectName);
+        if (found == null)
+            return null;
+
+        SpriteRenderer self = found.GetComponent<SpriteRenderer>();
+        if (self != null)
+            return self;
+
+        return found.GetComponentInChildren<SpriteRenderer>(true);
     }
 
     private void CacheBounds()
@@ -1474,6 +1515,16 @@ public class CameraFollow : MonoBehaviour
     {
         hasBounds = false;
         stageBackgroundRenderers = null;
+
+        // City: Scene Edges define the playable camera box. Using a single building sprite
+        // (old auto-find) clamped the camera in place after parallax pieces got Background.
+        if (IsCityStageScene() && SceneEdge.TryBuildFallbackBounds(out Bounds cityEdges))
+        {
+            bounds = cityEdges;
+            hasBounds = true;
+            CacheLevelLowestPlatformTop();
+            return;
+        }
 
         if (background != null)
         {

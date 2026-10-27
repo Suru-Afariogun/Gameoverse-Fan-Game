@@ -84,10 +84,16 @@ public class CrankyClanky : MonoBehaviour, ICommonEnemy, IEnemyCrystalBoostable,
     private int enemyCrystalAttackBonus;
     private PlayerController targetPlayer;
     private float spawnTime;
+    private int authoredMaxHealth;
+    private int authoredContactDamage;
+    private float authoredDetectionRadius;
+    private float authoredMaxHopSpeed;
+    private bool difficultyCaptured;
 
     public int CurrentHealth => currentHealth;
     public int MaxHealth => maxHealth;
     public int ContactDamage => contactDamage;
+    public GameVisualEffect DeathExplosionPrefab => deathExplosionPrefab;
     public bool IsDead => currentHealth <= 0;
     public bool IsChasing => isChasing;
     public bool IsStunned => isStunned;
@@ -105,6 +111,7 @@ public class CrankyClanky : MonoBehaviour, ICommonEnemy, IEnemyCrystalBoostable,
         CacheChildReferences();
         ConfigureUtilityColliders();
         ConfigureAttackHitbox();
+        CaptureDifficultyAuthored();
 
         currentHealth = Mathf.Max(1, maxHealth);
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
@@ -119,6 +126,31 @@ public class CrankyClanky : MonoBehaviour, ICommonEnemy, IEnemyCrystalBoostable,
             enemyCrystalBoostAura = gameObject.AddComponent<OrangePowerBoostAura>();
         if (enemyCrystalBoostAura != null && spriteRenderer != null)
             enemyCrystalBoostAura.Bind(spriteRenderer);
+
+        RefreshDifficulty();
+    }
+
+    private void CaptureDifficultyAuthored()
+    {
+        if (difficultyCaptured)
+            return;
+        authoredMaxHealth = Mathf.Max(1, maxHealth);
+        authoredContactDamage = contactDamage;
+        authoredDetectionRadius = detectionRadius;
+        authoredMaxHopSpeed = maxHopSpeed;
+        difficultyCaptured = true;
+    }
+
+    public void RefreshDifficulty()
+    {
+        CaptureDifficultyAuthored();
+        int newMax = DifficultyTuning.ScaleEnemyHp(authoredMaxHealth);
+        DifficultyTuning.RetuneHealth(ref currentHealth, ref maxHealth, newMax, IsDead);
+        contactDamage = DifficultyTuning.ScaleEnemyDamage(authoredContactDamage);
+        maxHopSpeed = DifficultyTuning.ScaleEnemySpeed(authoredMaxHopSpeed);
+        detectionRadius = DifficultyTuning.ScaleEnemyDetect(authoredDetectionRadius);
+        if (detectionCollider != null)
+            detectionCollider.radius = detectionRadius;
     }
 
     private void Start()

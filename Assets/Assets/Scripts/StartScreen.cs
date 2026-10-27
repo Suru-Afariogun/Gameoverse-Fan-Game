@@ -37,7 +37,7 @@ public class StartScreen : MonoBehaviour
 
         EnsureEventSystem();
 
-        controls = new InputActions();
+        controls = GameInput.Create();
         controls.PlayerControls.Enable();
         controls.PlayerControls.Start.performed += OnStartPerformed;
         controls.PlayerControls.Select.performed += OnSelectPerformed;

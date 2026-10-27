@@ -105,7 +105,7 @@ public class PauseBInventory : MonoBehaviour
     private void Awake()
     {
         Instance = this;
-        controls = new InputActions();
+        controls = GameInput.Create();
         AutoBindIfNeeded();
         FixPauseCanvasSetup();
         EnsureHighlights();
@@ -118,8 +118,8 @@ public class PauseBInventory : MonoBehaviour
     }
 
     /// <summary>
-    /// Pause Canvas B was saved as Screen Space Camera with no camera and scale 0,
-    /// which makes the inventory invisible even when Inventory Box is active.
+    /// Pause Canvas B was saved as Screen Space Camera with scale 0 / camera-tied plane.
+    /// Changing Main Camera Size (or near clip 0) can cull it; rebind via HudCanvasCameraSync.
     /// </summary>
     private void FixPauseCanvasSetup()
     {
@@ -130,26 +130,23 @@ public class PauseBInventory : MonoBehaviour
         if (canvas == null)
             return;
 
-        if (canvas.renderMode == RenderMode.ScreenSpaceCamera && canvas.worldCamera == null)
-        {
-            if (Camera.main != null)
-                canvas.worldCamera = Camera.main;
-            else
-                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        }
+        Camera main = Camera.main;
+        if (main != null)
+            HudCanvasCameraSync.BindCanvasToCamera(canvas, main);
+        else if (canvas.renderMode == RenderMode.ScreenSpaceCamera && canvas.worldCamera == null)
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
 
         // SpriteRenderer inventory art needs to draw above gameplay; keep canvas sorting high.
         if (canvas.sortingOrder < 50)
             canvas.sortingOrder = 55;
 
-        // Force a canvas rebuild once the camera is valid (fixes scale staying at 0).
         Canvas.ForceUpdateCanvases();
     }
 
     private void OnEnable()
     {
         if (controls == null)
-            controls = new InputActions();
+            controls = GameInput.Create();
 
         controls.PlayerControls.Enable();
         controls.PlayerControls.Pause.performed += OnPauseOrStart;
@@ -521,6 +518,9 @@ public class PauseBInventory : MonoBehaviour
         if (KaboodleIsBlocking())
             return;
         if (PauseA.Instance != null && PauseA.Instance.IsOpen)
+            return;
+
+        if (RocketDestinationMenu.IsOpen)
             return;
 
         // Real pause replaces any shop peek.

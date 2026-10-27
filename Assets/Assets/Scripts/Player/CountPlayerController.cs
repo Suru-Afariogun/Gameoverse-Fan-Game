@@ -373,20 +373,25 @@ public class CountPlayerController : PlayerController
         TickPendingShot();
     }
 
+    protected override bool ShouldApplyHyperWorldSlowToMovement()
+    {
+        // Down-Hyper: Count keeps full speed even though the world crawls.
+        if (HyperSpeedCountMovesNormal)
+            return false;
+
+        // Up-Hyper OR any Boss Midnight/Hyper that sets SlowsPlayer.
+        return base.ShouldApplyHyperWorldSlowToMovement() || CountSlowsWithHyperWorld();
+    }
+
     protected override float GetCurrentMoveSpeed()
     {
+        // Base already applies HyperWorld slow when SlowsPlayer / Up-Hyper.
         float speed = base.GetCurrentMoveSpeed();
 
-        if (HyperSpeedCountMovesNormal)
-            return speed + chargeMoveSpeedBonus;
-
-        if (CountSlowsWithHyperWorld())
-            speed *= HyperSpeedWorldSlow.WorldTimeScale;
-
-        if (!IsChargeAuraActive())
+        if (!IsChargeAuraActive() && !HyperSpeedCountMovesNormal)
             return speed;
 
-        if (GetCurrentChargeSeconds() >= GetActiveFullChargeSeconds())
+        if (GetCurrentChargeSeconds() >= GetActiveFullChargeSeconds() || HyperSpeedCountMovesNormal)
             return speed + chargeMoveSpeedBonus;
 
         return speed;
@@ -394,9 +399,10 @@ public class CountPlayerController : PlayerController
 
     protected override float GetCurrentDashVelocityX()
     {
-        if (!CountSlowsWithHyperWorld())
+        if (!ShouldApplyHyperWorldSlowToMovement())
             return base.GetCurrentDashVelocityX();
 
+        // Extra Up-Hyper crawl on top of the shared world slow (Count's signature sluggish dash).
         float scale = HyperSpeedWorldSlow.WorldTimeScale * Mathf.Clamp(hyperUpDashSpeedFactor, 0.15f, 1f);
         float peakSpeed = dashSpeed * scale;
         float peak = dashDirSign * peakSpeed;
@@ -416,10 +422,10 @@ public class CountPlayerController : PlayerController
     protected override void OnDashStarted()
     {
         base.OnDashStarted();
-        if (!CountSlowsWithHyperWorld())
+        if (!ShouldApplyHyperWorldSlowToMovement())
             return;
 
-        // Slightly longer travel at slowed Up-hyper dash speed.
+        // Slightly longer travel at slowed Up-hyper / Boss-Midnight dash speed.
         float scale = HyperSpeedWorldSlow.WorldTimeScale * Mathf.Clamp(hyperUpDashSpeedFactor, 0.15f, 1f);
         float slowSpeed = Mathf.Max(0.1f, dashSpeed * scale);
         float travel = dashDistance + Mathf.Max(0f, hyperUpDashDistanceBonus);
@@ -430,7 +436,7 @@ public class CountPlayerController : PlayerController
     protected override float GetDashJumpHorizontalSpeed()
     {
         float speed = base.GetDashJumpHorizontalSpeed();
-        if (!CountSlowsWithHyperWorld())
+        if (!ShouldApplyHyperWorldSlowToMovement())
             return speed;
 
         return speed * HyperSpeedWorldSlow.WorldTimeScale * Mathf.Clamp(hyperUpDashSpeedFactor, 0.15f, 1f);
@@ -756,9 +762,13 @@ public class CountPlayerController : PlayerController
         jumpRequested = false;
         CancelDash(keepHorizontalMomentum: true);
 
+        coyoteTimer = 0f;
+        isGrounded = false;
+
         float jumpUp = dashJumpForce > 0f ? dashJumpForce : jumpForce;
         float jumpX = dashDirSign * GetDashJumpHorizontalSpeed();
         rb.linearVelocity = new Vector2(jumpX, jumpUp);
+        IsVoluntarilyAirborne = true;
         SoundManager.Instance?.PlayCountJump();
 
         isDashJumping = true;
@@ -768,8 +778,7 @@ public class CountPlayerController : PlayerController
 
         BeginDashAfterimageTrail(Mathf.Max(dashJumpMomentumDuration, GetMaxAfterimageDelay()));
 
-        if (animator != null)
-            animator.SetTrigger("Jump");
+        SyncAnimatorAfterDashJump();
     }
 
     protected override void ApplyFallMultiplier()
@@ -786,7 +795,7 @@ public class CountPlayerController : PlayerController
         }
 
         float mult = fallMultiplier;
-        if (CountSlowsWithHyperWorld())
+        if (ShouldApplyHyperWorldSlowToMovement())
             mult = HyperSpeedWorldSlow.ScaleFallMultiplier(fallMultiplier);
 
         rb.linearVelocity += Vector2.up * Physics2D.gravity.y * (mult - 1f) * Time.fixedDeltaTime;
@@ -1289,7 +1298,7 @@ public class CountPlayerController : PlayerController
 
         bool chargedHit = longHand || IsFullyChargedForHealthDrop();
         shot.SetCountChargedHit(chargedHit);
-        int damage = prefab.Damage + HyperBonusLevel * Mathf.Max(0, hyperDamagePerLevel);
+        float damage = prefab.Damage + HyperBonusLevel * Mathf.Max(0, hyperDamagePerLevel);
         shot.Launch(dir, prefab.Speed, damage, transform);
         shot.BeginSpawnBehindOwnerUntilClear(spriteRenderer, EffectSortingGroup, bodyCollider, firePoint, facingSign);
 
@@ -1503,7 +1512,7 @@ public class CountPlayerController : PlayerController
         hyperSpeedActive = true;
         hyperSpeedHoldTimer = 0f;
         hyperSpeedCancelGraceRemaining = hyperSpeedHoldSeconds + 0.05f;
-        HyperSpeedWorldSlow.Begin(hyperSpeedWorldTimeScale, slowPlayer: pressingUp);
+        HyperSpeedWorldSlow.Begin(this, hyperSpeedWorldTimeScale, slowPlayer: pressingUp);
 
         if (animator != null && !string.IsNullOrWhiteSpace(clockActivationTrigger) && !IsInShootAnimation())
             animator.SetTrigger(clockActivationTrigger);
@@ -1591,7 +1600,7 @@ public class CountPlayerController : PlayerController
         // Early cancel keeps hyperSpeedRemaining for the next activation.
 
         if (wasActive || force)
-            HyperSpeedWorldSlow.End();
+            HyperSpeedWorldSlow.End(this);
 
         if (Time.timeScale != 1f)
             Time.timeScale = 1f;

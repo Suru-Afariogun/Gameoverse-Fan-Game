@@ -582,7 +582,7 @@ MonoBehaviour:
   hitKnockbackDistance: 3
   hitKnockbackDuration: 0.6
   stunnedEffectPrefab: {fileID: 5972615910273634524, guid: e1f5bd233756cb441a4a41ad336d286b, type: 3}
-  deathEnergyBallPrefab: {fileID: 1951241975811156007, guid: 7eed46c1c08f7fd4781b3fb7cfd83e9e, type: 3}
+  deathEnergyBallPrefab: {fileID: 5968641805536287327, guid: c3d4e5f6478990abcdef1234567890aa, type: 3}
   healedEffectPrefab: {fileID: 1455924060657617027, guid: ec3167a989d4308448e773e2f7a690b6, type: 3}
   maxHealth: 8
   currentHealth: 8

@@ -17,6 +17,8 @@ public class HexSpark : MonoBehaviour
     private Vector2 velocity;
     private float age;
     private float startAlpha = 1f;
+    private bool useUnscaledTime;
+    private bool velocityOverride;
 
     public SpriteRenderer Renderer => spriteRenderer;
 
@@ -26,12 +28,21 @@ public class HexSpark : MonoBehaviour
         if (spriteRenderer != null)
             startAlpha = spriteRenderer.color.a;
 
-        velocity = new Vector2(Random.Range(speedMin.x, speedMax.x), Random.Range(speedMin.y, speedMax.y));
+        if (!velocityOverride)
+            velocity = new Vector2(Random.Range(speedMin.x, speedMax.x), Random.Range(speedMin.y, speedMax.y));
+    }
+
+    /// <summary>Override the random pop velocity (e.g. boss death sparks flying outward).</summary>
+    public void LaunchOutward(Vector2 outwardVelocity, bool unscaledTime = false)
+    {
+        velocityOverride = true;
+        velocity = outwardVelocity;
+        useUnscaledTime = unscaledTime;
     }
 
     private void Update()
     {
-        float dt = Time.deltaTime;
+        float dt = useUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime;
         age += dt;
         velocity.y -= gravity * dt;
         transform.position += (Vector3)(velocity * dt);

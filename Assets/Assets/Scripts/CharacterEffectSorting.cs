@@ -100,6 +100,7 @@ public static class CharacterEffectSorting
 
     /// <summary>
     /// World-space FX detached from the character: match host depth on the sorting plane.
+    /// Positive <paramref name="worldOrderOffset"/> draws in front of the host SortingGroup.
     /// </summary>
     public static void ApplyDetachedEffectNearHost(SpriteRenderer effect, SortingGroup group, SpriteRenderer body, int worldOrderOffset = 5)
     {
@@ -118,6 +119,15 @@ public static class CharacterEffectSorting
 
         effect.sortingLayerID = body.sortingLayerID;
         effect.sortingOrder = body.sortingOrder + worldOrderOffset;
+    }
+
+    /// <summary>
+    /// Detached Bass Dual VFX (Heat Dash Flare, Crash Bomb, etc.): same sorting layer as Bass,
+    /// but behind his SortingGroup so Bass always draws on top.
+    /// </summary>
+    public static void ApplyDetachedEffectBehindHost(SpriteRenderer effect, SortingGroup group, SpriteRenderer body, int behindSteps = 1)
+    {
+        ApplyDetachedEffectNearHost(effect, group, body, -Mathf.Max(1, behindSteps));
     }
 
     /// <summary>

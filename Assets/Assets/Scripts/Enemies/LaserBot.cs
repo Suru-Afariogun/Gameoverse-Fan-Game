@@ -63,6 +63,12 @@ public sealed class LaserBot : MonoBehaviour, ICommonEnemy
     private int lastDamageFrame = -1;
     private int currentAnimStateHash;
     private PlayerController targetPlayer;
+    private int authoredMaxHealth;
+    private int authoredBulletDamage;
+    private float authoredFireInterval;
+    private float authoredDetectRadius;
+    private Vector2 authoredDetectBoxSize;
+    private bool difficultyCaptured;
 
     public int CurrentHealth => currentHealth;
     public int MaxHealth => maxHealth;
@@ -83,8 +89,34 @@ public sealed class LaserBot : MonoBehaviour, ICommonEnemy
         ConfigureUtilityColliders();
         ConfigureAttackHitbox();
         AimFirePointWorldDown();
+        CaptureDifficultyAuthored();
 
         currentHealth = Mathf.Max(1, maxHealth);
+        RefreshDifficulty();
+    }
+
+    private void CaptureDifficultyAuthored()
+    {
+        if (difficultyCaptured)
+            return;
+        authoredMaxHealth = Mathf.Max(1, maxHealth);
+        authoredBulletDamage = bulletDamage;
+        authoredFireInterval = fireInterval;
+        if (detectionCollider is CircleCollider2D circle)
+            authoredDetectRadius = circle.radius;
+        else if (detectionCollider is BoxCollider2D box)
+            authoredDetectBoxSize = box.size;
+        difficultyCaptured = true;
+    }
+
+    public void RefreshDifficulty()
+    {
+        CaptureDifficultyAuthored();
+        int newMax = DifficultyTuning.ScaleEnemyHp(authoredMaxHealth);
+        DifficultyTuning.RetuneHealth(ref currentHealth, ref maxHealth, newMax, IsDead);
+        bulletDamage = Mathf.Max(1, DifficultyTuning.ScaleEnemyDamage(authoredBulletDamage));
+        fireInterval = DifficultyTuning.ScaleEnemyInterval(authoredFireInterval);
+        DifficultyTuning.ApplyDetectionCollider(detectionCollider, authoredDetectRadius, authoredDetectBoxSize);
     }
 
     private void Start()

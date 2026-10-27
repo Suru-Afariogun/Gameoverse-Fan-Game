@@ -41,6 +41,19 @@ public static class PlayerAttackStyle
             }
         }
 
+        if (IsBassSelected())
+        {
+            switch (style)
+            {
+                case AttackStyleId.SpreadShot:
+                    return "Dual System";
+                case AttackStyleId.MachineGun:
+                    return "Double Gear";
+                default:
+                    return "Normal";
+            }
+        }
+
         bool malice = IsMaliceSelected();
         switch (style)
         {
@@ -51,6 +64,15 @@ public static class PlayerAttackStyle
             default:
                 return "Normal";
         }
+    }
+
+    public static bool IsBassSelected()
+    {
+        if (PlayerController.Active != null &&
+            string.Equals(PlayerController.Active.CharacterId, "Bass", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return string.Equals(PlayerSpawner.SelectedCharacterId, "Bass", StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>Harlie or Hex (Hex shares Harlie's Speed / Heavy Style).</summary>

@@ -420,7 +420,7 @@ public sealed class KitRocketShip : MonoBehaviour
     private void OnEnable()
     {
         if (controls == null)
-            controls = new InputActions();
+            controls = GameInput.Create();
 
         controls.PlayerControls.Enable();
         controls.PlayerControls.Up.performed += OnUpPerformed;
@@ -519,6 +519,7 @@ public sealed class KitRocketShip : MonoBehaviour
         bool showPrompt = inRange &&
                           !player.InputLocked &&
                           (DialogueBox.Instance == null || !DialogueBox.Instance.IsOpen) &&
+                          !RocketDestinationMenu.IsOpen &&
                           !ScreenFade.IsBusy;
         SetSymbolVisible(showPrompt);
     }
@@ -580,10 +581,45 @@ public sealed class KitRocketShip : MonoBehaviour
         if (DialogueBox.Instance != null && DialogueBox.Instance.IsOpen)
             return;
 
-        if (ScreenFade.IsBusy || WarningText.BlocksGameplay || !CanLoadDestination())
+        if (ScreenFade.IsBusy || WarningText.BlocksGameplay || RocketDestinationMenu.IsOpen)
+            return;
+
+        // Hometown parked ship: choose a playable destination first, then run the usual launch.
+        if (!destinationLocked && RocketDestinationMenu.IsHomeTownScene())
+        {
+            if (RocketDestinationMenu.TryOpen(this, player))
+                return;
+        }
+
+        if (!CanLoadDestination())
             return;
 
         StartCoroutine(BoardAndLaunchRoutine(player));
+    }
+
+    /// <summary>
+    /// Hometown destination popup confirmed: set the scene and run the normal board / take-off / load sequence.
+    /// </summary>
+    public bool TryBeginTravelFromMenu(PlayerController player, string destination)
+    {
+        if (player == null || player.IsDead || state == ShipState.Busy)
+            return false;
+
+        if (string.IsNullOrWhiteSpace(destination))
+            return false;
+
+        string previous = destinationScene;
+        destinationScene = destination.Trim();
+        if (!CanLoadDestination())
+        {
+            destinationScene = previous;
+            return false;
+        }
+
+        destinationLocked = true;
+        playerInRange = player;
+        StartCoroutine(BoardAndLaunchRoutine(player));
+        return true;
     }
 
     private bool CanLoadDestination()

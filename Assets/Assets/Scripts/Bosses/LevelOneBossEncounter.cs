@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 
 /// <summary>
 /// Level one / Tutorial copy-bot encounter:
-/// Level one: door close → WARNING → copy-bot spawn → HP bar fill → fight.
+/// Level one: door close → WARNING → copy-bot spawn → intro banter → HP bar fill → fight.
 /// Tutorial: Boss Battle Starter pass → same spawn pipeline.
 /// </summary>
 [DefaultExecutionOrder(-900)]
@@ -80,10 +80,30 @@ public class LevelOneBossEncounter : MonoBehaviour
                sceneName.IndexOf("Tutorial", StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
-    /// <summary>Level one and Tutorial use the Copy Bot encounter pipeline.</summary>
-    public static bool IsCopyBotEncounterScene(string sceneName)
+    /// <summary>
+    /// Legacy name heuristic used by <see cref="BossSpawner.LevelBossKind.Auto"/>.
+    /// Prefer setting Boss Spawner → Level Boss Kind to Copy Bot / Main Boss in the Inspector.
+    /// </summary>
+    public static bool IsLegacyCopyBotSceneName(string sceneName)
     {
         return IsLevelOneScene(sceneName) || IsTutorialScene(sceneName);
+    }
+
+    /// <summary>
+    /// True when this scene should run the Copy Bot pipeline.
+    /// Driven by Boss Spawner → Level Boss Kind (Copy Bot / Auto on Level one &amp; Tutorial).
+    /// </summary>
+    public static bool IsCopyBotEncounterScene(string sceneName)
+    {
+        // Prefer the scene's Boss Spawner inspector flag when present.
+        if (BossSpawner.SceneWantsCopyBotEncounter())
+            return true;
+
+        // No spawner yet (bootstrap) — fall back to legacy scene names.
+        if (FindFirstObjectByType<BossSpawner>() == null)
+            return IsLegacyCopyBotSceneName(sceneName);
+
+        return false;
     }
 
     /// <summary>
@@ -558,6 +578,12 @@ public class LevelOneBossEncounter : MonoBehaviour
         VisualEffects.SetHostSpritesVisible(copyBoss.gameObject, true);
         copyBoss.SetCombatPaused(true);
 
+        // Walk into camera range, Powered Up–style banter, then the classic life-bar fill.
+        yield return CopyBotIntroDialogue.PlayForActivePlayer(copyBoss);
+
+        LockPlayerInput(true);
+        copyBoss.SetCombatPaused(true);
+
         SetBossHealthUiVisible(true);
         if (bossLifeBar != null)
         {
@@ -633,7 +659,8 @@ public class LevelOneBossEncounter : MonoBehaviour
                 yield break;
         }
 
-        if (IsLevelOneScene(SceneManager.GetActiveScene().name) && SpawnFallbackCrystal(crystalPosition))
+        // Any Copy Bot level (Level one, City, etc.) can drop the spawner crystal if the ship is busy.
+        if (SpawnFallbackCrystal(crystalPosition))
             yield break;
 
         string target = copyBotRocketDestination != null ? copyBotRocketDestination.Trim() : string.Empty;

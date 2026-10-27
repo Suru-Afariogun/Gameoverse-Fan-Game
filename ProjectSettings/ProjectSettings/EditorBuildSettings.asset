@@ -35,6 +35,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Bonus Level 0.unity
     guid: 2fd542127461d2e499ddb1a11b368cee
+  - enabled: 1
+    path: Assets/Scenes/The City level.unity
+    guid: 2401001e4c99bd448aa97a959f759ec3
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0

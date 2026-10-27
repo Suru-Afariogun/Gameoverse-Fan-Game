@@ -29,6 +29,7 @@ public static class ShopDescriptions
             case GearType.Magnet: return "Magnet Gear";
             case GearType.ItemPouch: return "Item Pouch";
             case GearType.AutoUse: return "Auto Use Gear";
+            case GearType.PiercingAttack: return "Piercing Attack";
             default: return "Item Extender";
         }
     }
@@ -42,7 +43,26 @@ public static class ShopDescriptions
         if (Is(characterId, "Hex")) return Hex(type);
         if (Is(characterId, "Harlie")) return Harlie(type);
         if (Is(characterId, "Count")) return Count(type);
+        if (Is(characterId, "Bass")) return Bass(type);
         return Generic(type);
+    }
+
+    private static string Bass(UpgradeType type)
+    {
+        switch (type)
+        {
+            case UpgradeType.AerialAction:
+                return "Each level: +1 air jump (on top of Bass's base double jump).";
+            case UpgradeType.HyperAbility:
+                return "Each level: +2 max health.\n" +
+                       "At full health you can run Double Gear and a Dual System ability at the same time " +
+                       "(controls depend on your Attack Style). While Hyper is equipped, shared use weakens " +
+                       "Double Gear duration and/or Dual ammo (50% on Normal, 30% Dual ammo on Double Gear style, " +
+                       "30% Double Gear duration on Dual System style). Caps stay until you unequip Hyper.";
+            default:
+                return "Each level: +2 seconds of Double Gear duration and +100 Dual ability ammo.\n" +
+                       "Level 5: all Dual ability damage and Double Gear shots deal double damage.";
+        }
     }
 
     private static string Kit(UpgradeType type)
@@ -177,6 +197,9 @@ public static class ShopDescriptions
             case GearType.AutoUse:
                 return "When a hit would defeat you, your front item is used automatically and the hit is blocked. " +
                        "Recharges in 20s at level 1, then 15s, 12s, 9s, and 6s at level 5.";
+            case GearType.PiercingAttack:
+                return "One-time buy (300 crystals). Your projectiles pass through walls and ceilings.\n" +
+                       "Does not pierce floors. Crash Bomb / Crash Bomb Plus are unaffected.";
             default:
                 return "Super Candy and Scouter last 20% longer per level (twice as long at level 5).\n" +
                        "Bomb, Banana Phone and Silver Swords get +1 use per level before they're gone (6 uses at level 5).";
@@ -186,9 +209,11 @@ public static class ShopDescriptions
     private static string WeaponGear(string characterId)
     {
         const string damage = "+1 damage at levels 1-2, +2 at 3-4, +3 at 5";
-        if (Is(characterId, "Kit") || Is(characterId, "Count"))
+        if (Is(characterId, "Kit") || Is(characterId, "Count") || Is(characterId, "Bass"))
         {
-            string shots = Is(characterId, "Count") ? "Short and Long Hand shots (Time Clones too)" : "Buster shots";
+            string shots = Is(characterId, "Count") ? "Short and Long Hand shots (Time Clones too)"
+                : Is(characterId, "Bass") ? "Buster and Double Gear shots"
+                : "Buster shots";
             return shots + ": " + damage + ", and 10% faster, farther shots each level.\n" +
                    "Level 5: a shot that defeats a common enemy keeps flying.";
         }

@@ -46,6 +46,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 642b275eb32e72445967e83cc7c68d02, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossSpawner
+  levelBossKind: 0
   bosses:
   - bossId: Malice
     prefab: {fileID: 6231144415895922472, guid: d551dcf1c478deb469f6d53da0a8a8e3, type: 3}
@@ -57,6 +58,8 @@ MonoBehaviour:
     prefab: {fileID: 4817002000000000001, guid: 7860434ddabe4f89868b1e6fe3532385, type: 3}
   - bossId: Count
     prefab: {fileID: 3672412826225818953, guid: 9d4b2f6a8c1e3a5b7d9f1c3e5a7b2d46, type: 3}
+  - bossId: Bass
+    prefab: {fileID: 3672412826225818953, guid: 7c2e9a41d5b64f08a1e3c6b9d0f2a4e8, type: 3}
   spawnPoint: {fileID: 5805629488484123955}
   destroyMismatchedBossesOnStart: 1
   homeTownSceneName: HomeTown

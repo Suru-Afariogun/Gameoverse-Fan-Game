@@ -32,6 +32,9 @@ public sealed class NPC : MonoBehaviour
     [Tooltip("Shown when talking to Hex. Leave empty to fall back to Harlie, then Kit/default.")]
     [TextArea(2, 6)]
     [SerializeField] private string[] dialoguePagesHex;
+    [Tooltip("Shown when talking to Bass. Leave empty to use built-in Bass lines for this speaker.")]
+    [TextArea(2, 6)]
+    [SerializeField] private string[] dialoguePagesBass;
 
     [Header("Interact")]
     [SerializeField] private Transform interactRadius;
@@ -104,7 +107,7 @@ public sealed class NPC : MonoBehaviour
     private void OnEnable()
     {
         if (controls == null)
-            controls = new InputActions();
+            controls = GameInput.Create();
 
         controls.PlayerControls.Enable();
         controls.PlayerControls.Up.performed += OnUpPerformed;
@@ -540,6 +543,13 @@ public sealed class NPC : MonoBehaviour
                            string.Equals(id, "Hex", System.StringComparison.OrdinalIgnoreCase);
         if (harlieStyle && dialoguePagesHarlie != null && dialoguePagesHarlie.Length > 0)
             return dialoguePagesHarlie;
+
+        if (string.Equals(id, "Bass", System.StringComparison.OrdinalIgnoreCase))
+        {
+            if (dialoguePagesBass != null && dialoguePagesBass.Length > 0)
+                return dialoguePagesBass;
+            return BassNpcDialogue.PagesFor(speakerName);
+        }
 
         // Kit and any unknown / unset character use the default pages.
         return dialoguePages;

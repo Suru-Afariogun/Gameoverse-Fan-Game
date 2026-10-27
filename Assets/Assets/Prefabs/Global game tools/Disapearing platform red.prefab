@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 6872539959335391306}
   - component: {fileID: 4831271350029078336}
   - component: {fileID: 5109935984986367075}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Disapearing platform red
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -148,7 +148,7 @@ Rigidbody2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8712683133109572608}
-  m_BodyType: 0
+  m_BodyType: 2
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0

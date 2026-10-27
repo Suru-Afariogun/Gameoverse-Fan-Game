@@ -1,17 +1,57 @@
+using System;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 /// <summary>
-/// Pause A system menu on Pause Canvas A (Resume / Return to Home Town / Quit Game).
+/// Pause A system menu on Pause Canvas A (Resume / Options / Return to Home Town / Quit Game).
+/// Options uses Kaboodle-style pages: hub → Audio / Display / Gameplay / Controls.
 /// Open with Select (Tab / gamepad Select). Pause B keeps Start / Pause for inventory.
 /// Navigation matches Kaboodle / Pause B: d-pad, stick, Confirm, Quit/Back.
 /// </summary>
 public class PauseA : MonoBehaviour
 {
     public static PauseA Instance { get; private set; }
+
+    private enum Page
+    {
+        Main = 0,
+        OptionsHub = 1,
+        Audio = 2,
+        Display = 3,
+        Gameplay = 4,
+        Controls = 5
+    }
+
+    private enum OptionKind
+    {
+        OpenPage,
+        Back,
+        Resume,
+        ReturnHome,
+        Quit,
+        MusicVolume,
+        MuteMusic,
+        SfxVolume,
+        MuteSfx,
+        Fullscreen,
+        Resolution,
+        Difficulty,
+        RebindAction,
+        ResetControls
+    }
+
+    private sealed class MenuEntry
+    {
+        public Button button;
+        public OptionKind kind;
+        public Page targetPage;
+        public string actionName;
+        public Func<string> label;
+    }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void EnsureExistsInScene()
@@ -33,7 +73,6 @@ public class PauseA : MonoBehaviour
         if (canvas != null)
             return canvas;
 
-        // Typo-safe fallback for the object as authored in HomeTown.
         return GameObject.Find("Paue Canvas A");
     }
 
@@ -46,6 +85,7 @@ public class PauseA : MonoBehaviour
     [SerializeField] private Button resumeButton;
     [SerializeField] private Button returnHomeTownButton;
     [SerializeField] private Button quitGameButton;
+    [SerializeField] private Button optionsButton;
 
     [Header("Scenes")]
     [SerializeField] private string homeTownSceneName = "HomeTown";
@@ -53,6 +93,7 @@ public class PauseA : MonoBehaviour
     [Header("Input")]
     [SerializeField] [Range(0.1f, 1f)] private float stickThreshold = 0.5f;
     [SerializeField] private float menuInputCooldown = 0.18f;
+    [SerializeField] [Range(0.01f, 0.25f)] private float volumeStep = 0.05f;
 
     [Header("Selection Look")]
     [SerializeField] private Color normalButtonColor = new Color(0.907585f, 0.93962264f, 0.515906f, 1f);
@@ -76,33 +117,47 @@ public class PauseA : MonoBehaviour
     private float savedTimeScale = 1f;
     private float lastToggleUnscaledTime = -999f;
     private bool loadingScene;
-    private readonly List<Button> menuButtons = new List<Button>(3);
+    private Page currentPage = Page.Main;
+    private bool pagesBuilt;
+    private bool waitingForRebind;
+    private InputActionRebindingExtensions.RebindingOperation rebindOperation;
+    private string rebindingActionName;
+    private Resolution[] resolutionList = Array.Empty<Resolution>();
+    private int resolutionIndex;
+    private Transform pauseBox;
+    private readonly List<MenuEntry> activeEntries = new List<MenuEntry>(16);
+    private readonly List<MenuEntry> mainEntries = new List<MenuEntry>(4);
+    private readonly List<MenuEntry> optionsHubEntries = new List<MenuEntry>(4);
+    private readonly List<MenuEntry> audioEntries = new List<MenuEntry>(6);
+    private readonly List<MenuEntry> displayEntries = new List<MenuEntry>(4);
+    private readonly List<MenuEntry> gameplayEntries = new List<MenuEntry>(4);
+    private readonly List<MenuEntry> controlsEntries = new List<MenuEntry>(16);
     private readonly Dictionary<Button, Vector3> buttonBaseScales = new Dictionary<Button, Vector3>();
+    private readonly List<GameObject> generatedRoots = new List<GameObject>(8);
 
     public bool IsOpen => isOpen;
 
     private void Awake()
     {
         Instance = this;
-        controls = new InputActions();
+        controls = GameInput.Create();
         AutoBindIfNeeded();
         FixPauseCanvasSetup();
+        EnsureOptionsUi();
         FixButtonDrawOrder();
-        CacheButtons();
-        WireButtonClicks();
         EnsureEventSystem();
 
         if (menuRoot != null)
             menuRoot.SetActive(false);
 
         isOpen = false;
-        RefreshMenuHighlight();
+        ShowPage(Page.Main, refreshHighlight: false);
     }
 
     private void OnEnable()
     {
         if (controls == null)
-            controls = new InputActions();
+            controls = GameInput.Create();
 
         controls.PlayerControls.Enable();
         controls.PlayerControls.Select.performed += OnSelectPerformed;
@@ -118,6 +173,8 @@ public class PauseA : MonoBehaviour
 
     private void OnDisable()
     {
+        CancelRebind(silent: true);
+
         if (controls != null)
         {
             controls.PlayerControls.Select.performed -= OnSelectPerformed;
@@ -138,10 +195,12 @@ public class PauseA : MonoBehaviour
 
     private void OnDestroy()
     {
+        CancelRebind(silent: true);
+
         if (Instance == this)
             Instance = null;
 
-        UnwireButtonClicks();
+        UnwireAllGeneratedClicks();
 
         if (controls != null)
         {
@@ -150,10 +209,6 @@ public class PauseA : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Canvas was Screen Space Camera with scale 0. Sprite art on Pause A box/container
-    /// used sortingOrder 80–81 while the Canvas was also 80, so UI buttons drew underneath.
-    /// </summary>
     private void FixPauseCanvasSetup()
     {
         Canvas canvas = GetComponent<Canvas>();
@@ -162,13 +217,13 @@ public class PauseA : MonoBehaviour
         if (canvas == null)
             return;
 
-        if (canvas.renderMode == RenderMode.ScreenSpaceCamera && canvas.worldCamera == null)
-        {
-            if (Camera.main != null)
-                canvas.worldCamera = Camera.main;
-            else
-                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        }
+        // Same root cause as player/boss HUD: Screen Space - Camera tied to Main Camera
+        // Size / clip planes. Rebind so pause stays visible when ortho size changes.
+        Camera main = Camera.main;
+        if (main != null)
+            HudCanvasCameraSync.BindCanvasToCamera(canvas, main);
+        else if (canvas.renderMode == RenderMode.ScreenSpaceCamera && canvas.worldCamera == null)
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
 
         if (canvas.sortingOrder < 100)
             canvas.sortingOrder = 100;
@@ -178,9 +233,18 @@ public class PauseA : MonoBehaviour
 
     private void FixButtonDrawOrder()
     {
-        BringButtonInFront(resumeButton);
-        BringButtonInFront(returnHomeTownButton);
-        BringButtonInFront(quitGameButton);
+        for (int i = 0; i < mainEntries.Count; i++)
+            BringButtonInFront(mainEntries[i].button);
+        for (int i = 0; i < optionsHubEntries.Count; i++)
+            BringButtonInFront(optionsHubEntries[i].button);
+        for (int i = 0; i < audioEntries.Count; i++)
+            BringButtonInFront(audioEntries[i].button);
+        for (int i = 0; i < displayEntries.Count; i++)
+            BringButtonInFront(displayEntries[i].button);
+        for (int i = 0; i < gameplayEntries.Count; i++)
+            BringButtonInFront(gameplayEntries[i].button);
+        for (int i = 0; i < controlsEntries.Count; i++)
+            BringButtonInFront(controlsEntries[i].button);
     }
 
     private static void BringButtonInFront(Button button)
@@ -198,7 +262,6 @@ public class PauseA : MonoBehaviour
 
         button.transform.SetAsLastSibling();
 
-        // We drive selection ourselves (same as Kaboodle).
         Navigation nav = button.navigation;
         nav.mode = Navigation.Mode.None;
         button.navigation = nav;
@@ -243,45 +306,408 @@ public class PauseA : MonoBehaviour
             if (t != null)
                 quitGameButton = t.GetComponent<Button>();
         }
+
+        if (optionsButton == null)
+        {
+            Transform t = FindDeep(transform, "Options Button");
+            if (t != null)
+                optionsButton = t.GetComponent<Button>();
+        }
+
+        pauseBox = FindDeep(transform, "Pause A box");
     }
 
-    private void CacheButtons()
+    private void EnsureOptionsUi()
     {
-        menuButtons.Clear();
-        buttonBaseScales.Clear();
-
-        AddMenuButton(resumeButton);
-        AddMenuButton(returnHomeTownButton);
-        AddMenuButton(quitGameButton);
-    }
-
-    private void AddMenuButton(Button button)
-    {
-        if (button == null || menuButtons.Contains(button))
+        if (pagesBuilt || resumeButton == null || pauseBox == null)
             return;
 
-        menuButtons.Add(button);
+        pagesBuilt = true;
+        LayoutMainButtons();
+        BuildMainEntries();
+        BuildOptionsHubPage();
+        BuildAudioPage();
+        BuildDisplayPage();
+        BuildGameplayPage();
+        BuildControlsPage();
+        RefreshAllDynamicLabels();
+    }
+
+    private void LayoutMainButtons()
+    {
+        if (optionsButton == null)
+            optionsButton = CloneButton(resumeButton, "Options Button", "Options");
+
+        PlaceButton(resumeButton, 1.15f);
+        PlaceButton(optionsButton, 0.38f);
+        PlaceButton(returnHomeTownButton, -0.39f);
+        PlaceButton(quitGameButton, -1.16f);
+    }
+
+    private void BuildMainEntries()
+    {
+        mainEntries.Clear();
+        AddEntry(mainEntries, resumeButton, OptionKind.Resume, () => "Resume");
+        AddEntry(mainEntries, optionsButton, OptionKind.OpenPage, () => "Options", Page.OptionsHub);
+        AddEntry(mainEntries, returnHomeTownButton, OptionKind.ReturnHome, () => "Return to Home Town");
+        AddEntry(mainEntries, quitGameButton, OptionKind.Quit, () => "Quit Game");
+        WireEntries(mainEntries);
+    }
+
+    private void BuildOptionsHubPage()
+    {
+        optionsHubEntries.Clear();
+        Button audio = MakePageButton("Options Audio Button", "Audio", 1.15f, 36f);
+        Button display = MakePageButton("Options Display Button", "Display", 0.45f, 36f);
+        Button gameplay = MakePageButton("Options Gameplay Button", "Gameplay", -0.25f, 36f);
+        Button controlsBtn = MakePageButton("Options Controls Button", "Controls", -0.95f, 36f);
+        Button back = MakePageButton("Options Hub Back Button", "Back", -1.55f, 36f);
+
+        AddEntry(optionsHubEntries, audio, OptionKind.OpenPage, () => "Audio", Page.Audio);
+        AddEntry(optionsHubEntries, display, OptionKind.OpenPage, () => "Display", Page.Display);
+        AddEntry(optionsHubEntries, gameplay, OptionKind.OpenPage, () => "Gameplay", Page.Gameplay);
+        AddEntry(optionsHubEntries, controlsBtn, OptionKind.OpenPage, () => "Controls", Page.Controls);
+        AddEntry(optionsHubEntries, back, OptionKind.Back, () => "Back", Page.Main);
+        WireEntries(optionsHubEntries);
+        SetEntriesActive(optionsHubEntries, false);
+    }
+
+    private void BuildGameplayPage()
+    {
+        gameplayEntries.Clear();
+        Button difficulty = MakePageButton("Difficulty Button", "Difficulty", 0.35f, 34f);
+        Button back = MakePageButton("Gameplay Back Button", "Back", -0.55f, 34f);
+
+        AddEntry(gameplayEntries, difficulty, OptionKind.Difficulty, DifficultyLabel);
+        AddEntry(gameplayEntries, back, OptionKind.Back, () => "Back", Page.OptionsHub);
+        WireEntries(gameplayEntries);
+        SetEntriesActive(gameplayEntries, false);
+    }
+
+    private void BuildAudioPage()
+    {
+        audioEntries.Clear();
+        float y = 1.2f;
+        float step = 0.48f;
+        Button musicVol = MakePageButton("Music Volume Button", "Music Volume", y, 32f);
+        y -= step;
+        Button musicMute = MakePageButton("Music Mute Button", "Mute Music", y, 32f);
+        y -= step;
+        Button sfxVol = MakePageButton("SFX Volume Button", "SFX Volume", y, 32f);
+        y -= step;
+        Button sfxMute = MakePageButton("SFX Mute Button", "Mute SFX", y, 32f);
+        y -= step;
+        Button back = MakePageButton("Audio Back Button", "Back", y, 32f);
+
+        AddEntry(audioEntries, musicVol, OptionKind.MusicVolume, MusicVolumeLabel);
+        AddEntry(audioEntries, musicMute, OptionKind.MuteMusic, MuteMusicLabel);
+        AddEntry(audioEntries, sfxVol, OptionKind.SfxVolume, SfxVolumeLabel);
+        AddEntry(audioEntries, sfxMute, OptionKind.MuteSfx, MuteSfxLabel);
+        AddEntry(audioEntries, back, OptionKind.Back, () => "Back", Page.OptionsHub);
+        WireEntries(audioEntries);
+        SetEntriesActive(audioEntries, false);
+    }
+
+    private void BuildDisplayPage()
+    {
+        displayEntries.Clear();
+        resolutionList = GameSettings.SupportsResolutionList
+            ? GameSettings.GetSortedResolutions()
+            : Array.Empty<Resolution>();
+        resolutionIndex = GameSettings.FindClosestResolutionIndex(resolutionList);
+
+        float y = 0.7f;
+        Button fullscreen = MakePageButton("Fullscreen Button", "Fullscreen", y, 34f);
+        y -= 0.7f;
+        Button resolution = null;
+        if (GameSettings.SupportsResolutionList)
+        {
+            resolution = MakePageButton("Resolution Button", "Resolution", y, 30f);
+            y -= 0.7f;
+        }
+
+        Button back = MakePageButton("Display Back Button", "Back", y, 34f);
+
+        AddEntry(displayEntries, fullscreen, OptionKind.Fullscreen, FullscreenLabel);
+        if (resolution != null)
+            AddEntry(displayEntries, resolution, OptionKind.Resolution, ResolutionLabel);
+        AddEntry(displayEntries, back, OptionKind.Back, () => "Back", Page.OptionsHub);
+        WireEntries(displayEntries);
+        SetEntriesActive(displayEntries, false);
+    }
+
+    private void BuildControlsPage()
+    {
+        controlsEntries.Clear();
+        float top = 1.35f;
+        float bottom = -1.35f;
+        int rows = GameInput.RemappableActionNames.Length + 2;
+        float step = (top - bottom) / Mathf.Max(1, rows - 1);
+
+        for (int i = 0; i < GameInput.RemappableActionNames.Length; i++)
+        {
+            string actionName = GameInput.RemappableActionNames[i];
+            float y = top - step * i;
+            Button button = MakePageButton("Rebind " + actionName, actionName, y, 26f);
+            string captured = actionName;
+            AddEntry(controlsEntries, button, OptionKind.RebindAction,
+                () => RebindLabel(captured), Page.Main, captured);
+        }
+
+        Button reset = MakePageButton("Reset Controls Button", "Reset Controls",
+            top - step * GameInput.RemappableActionNames.Length, 26f);
+        Button back = MakePageButton("Controls Back Button", "Back", bottom, 26f);
+        AddEntry(controlsEntries, reset, OptionKind.ResetControls, () => "Reset Controls");
+        AddEntry(controlsEntries, back, OptionKind.Back, () => "Back", Page.OptionsHub);
+        WireEntries(controlsEntries);
+        SetEntriesActive(controlsEntries, false);
+    }
+
+    private Button MakePageButton(string objectName, string label, float localY, float fontSize)
+    {
+        Button button = CloneButton(resumeButton, objectName, label);
+        PlaceButton(button, localY);
+        SetButtonFontSize(button, fontSize);
+        button.gameObject.SetActive(false);
+        generatedRoots.Add(button.gameObject);
+        return button;
+    }
+
+    private Button CloneButton(Button template, string objectName, string label)
+    {
+        GameObject clone = Instantiate(template.gameObject, template.transform.parent);
+        clone.name = objectName;
+        clone.SetActive(true);
+
+        Button button = clone.GetComponent<Button>();
+        button.onClick = new Button.ButtonClickedEvent();
+
+        Outline outline = clone.GetComponent<Outline>();
+        if (outline != null)
+            outline.enabled = false;
+
+        SetButtonLabel(button, label);
         buttonBaseScales[button] = button.transform.localScale;
+        BringButtonInFront(button);
+        return button;
     }
 
-    private void WireButtonClicks()
+    private static void PlaceButton(Button button, float localY)
     {
-        if (resumeButton != null)
-            resumeButton.onClick.AddListener(OnResumeClicked);
-        if (returnHomeTownButton != null)
-            returnHomeTownButton.onClick.AddListener(OnReturnHomeTownClicked);
-        if (quitGameButton != null)
-            quitGameButton.onClick.AddListener(OnQuitGameClicked);
+        if (button == null)
+            return;
+
+        RectTransform rt = button.transform as RectTransform;
+        if (rt == null)
+            return;
+
+        Vector2 pos = rt.anchoredPosition;
+        pos.y = localY;
+        rt.anchoredPosition = pos;
     }
 
-    private void UnwireButtonClicks()
+    private static void SetButtonFontSize(Button button, float size)
     {
-        if (resumeButton != null)
-            resumeButton.onClick.RemoveListener(OnResumeClicked);
-        if (returnHomeTownButton != null)
-            returnHomeTownButton.onClick.RemoveListener(OnReturnHomeTownClicked);
-        if (quitGameButton != null)
-            quitGameButton.onClick.RemoveListener(OnQuitGameClicked);
+        TMP_Text tmp = button != null ? button.GetComponentInChildren<TMP_Text>(true) : null;
+        if (tmp == null)
+            return;
+
+        tmp.fontSize = size;
+        tmp.enableAutoSizing = size <= 28f;
+        if (tmp.enableAutoSizing)
+        {
+            tmp.fontSizeMin = 18f;
+            tmp.fontSizeMax = size;
+        }
+    }
+
+    private static void SetButtonLabel(Button button, string text)
+    {
+        if (button == null)
+            return;
+
+        TMP_Text tmp = button.GetComponentInChildren<TMP_Text>(true);
+        if (tmp != null)
+        {
+            tmp.text = text ?? string.Empty;
+            return;
+        }
+
+        Text legacy = button.GetComponentInChildren<Text>(true);
+        if (legacy != null)
+            legacy.text = text ?? string.Empty;
+    }
+
+    private void AddEntry(List<MenuEntry> list, Button button, OptionKind kind, Func<string> label,
+        Page targetPage = Page.Main, string actionName = null)
+    {
+        if (button == null || list == null)
+            return;
+
+        list.Add(new MenuEntry
+        {
+            button = button,
+            kind = kind,
+            targetPage = targetPage,
+            actionName = actionName,
+            label = label
+        });
+
+        if (!buttonBaseScales.ContainsKey(button))
+            buttonBaseScales[button] = button.transform.localScale;
+    }
+
+    private void WireEntries(List<MenuEntry> list)
+    {
+        for (int i = 0; i < list.Count; i++)
+        {
+            MenuEntry entry = list[i];
+            if (entry.button == null)
+                continue;
+
+            entry.button.onClick.RemoveAllListeners();
+            MenuEntry captured = entry;
+            entry.button.onClick.AddListener(() => ActivateEntry(captured));
+        }
+    }
+
+    private void UnwireAllGeneratedClicks()
+    {
+        UnwireList(mainEntries);
+        UnwireList(optionsHubEntries);
+        UnwireList(audioEntries);
+        UnwireList(displayEntries);
+        UnwireList(gameplayEntries);
+        UnwireList(controlsEntries);
+    }
+
+    private static void UnwireList(List<MenuEntry> list)
+    {
+        for (int i = 0; i < list.Count; i++)
+        {
+            if (list[i].button != null)
+                list[i].button.onClick.RemoveAllListeners();
+        }
+    }
+
+    private static void SetEntriesActive(List<MenuEntry> list, bool active)
+    {
+        for (int i = 0; i < list.Count; i++)
+        {
+            if (list[i].button != null)
+                list[i].button.gameObject.SetActive(active);
+        }
+    }
+
+    private void ShowPage(Page page, bool refreshHighlight = true)
+    {
+        CancelRebind(silent: true);
+        currentPage = page;
+
+        SetEntriesActive(mainEntries, page == Page.Main);
+        SetEntriesActive(optionsHubEntries, page == Page.OptionsHub);
+        SetEntriesActive(audioEntries, page == Page.Audio);
+        SetEntriesActive(displayEntries, page == Page.Display);
+        SetEntriesActive(gameplayEntries, page == Page.Gameplay);
+        SetEntriesActive(controlsEntries, page == Page.Controls);
+
+        activeEntries.Clear();
+        List<MenuEntry> source = page switch
+        {
+            Page.OptionsHub => optionsHubEntries,
+            Page.Audio => audioEntries,
+            Page.Display => displayEntries,
+            Page.Gameplay => gameplayEntries,
+            Page.Controls => controlsEntries,
+            _ => mainEntries
+        };
+
+        for (int i = 0; i < source.Count; i++)
+        {
+            if (source[i].button != null && source[i].button.gameObject.activeInHierarchy)
+                activeEntries.Add(source[i]);
+        }
+
+        selectedIndex = 0;
+        RefreshAllDynamicLabels();
+        if (refreshHighlight)
+            RefreshMenuHighlight();
+    }
+
+    private string MusicVolumeLabel() =>
+        "Music Volume: " + Mathf.RoundToInt(GameSettings.MusicVolume * 100f) + "%";
+
+    private string SfxVolumeLabel() =>
+        "SFX Volume: " + Mathf.RoundToInt(GameSettings.SfxVolume * 100f) + "%";
+
+    private string MuteMusicLabel() =>
+        "Mute Music: " + (GameSettings.MusicMuted ? "On" : "Off");
+
+    private string MuteSfxLabel() =>
+        "Mute SFX: " + (GameSettings.SfxMuted ? "On" : "Off");
+
+    private string FullscreenLabel() =>
+        "Fullscreen: " + (GameSettings.Fullscreen ? "On" : "Off");
+
+    private string DifficultyLabel() =>
+        "Difficulty: " + GameSettings.DifficultyDisplayName(GameSettings.Difficulty);
+
+    private string ResolutionLabel()
+    {
+        if (resolutionList == null || resolutionList.Length == 0)
+            return "Resolution: —";
+
+        resolutionIndex = Mathf.Clamp(resolutionIndex, 0, resolutionList.Length - 1);
+        Resolution r = resolutionList[resolutionIndex];
+        int hz = Mathf.RoundToInt((float)r.refreshRateRatio.value);
+        return hz > 0
+            ? $"Resolution: {r.width}x{r.height} @{hz}Hz"
+            : $"Resolution: {r.width}x{r.height}";
+    }
+
+    private string RebindLabel(string actionName)
+    {
+        if (waitingForRebind && rebindingActionName == actionName)
+            return actionName + ": press a key / button...";
+
+        return actionName + ": " + GameInput.FormatBindingLabel(FindRemapAction(actionName));
+    }
+
+    private InputAction FindRemapAction(string actionName)
+    {
+        if (controls == null || string.IsNullOrEmpty(actionName))
+            return null;
+
+        InputActionMap map = controls.asset.FindActionMap("PlayerControls", throwIfNotFound: false);
+        if (map != null)
+        {
+            InputAction fromMap = map.FindAction(actionName, throwIfNotFound: false);
+            if (fromMap != null)
+                return fromMap;
+        }
+
+        return controls.asset.FindAction(actionName, throwIfNotFound: false);
+    }
+
+    private void RefreshAllDynamicLabels()
+    {
+        RefreshListLabels(mainEntries);
+        RefreshListLabels(optionsHubEntries);
+        RefreshListLabels(audioEntries);
+        RefreshListLabels(displayEntries);
+        RefreshListLabels(gameplayEntries);
+        RefreshListLabels(controlsEntries);
+    }
+
+    private static void RefreshListLabels(List<MenuEntry> list)
+    {
+        for (int i = 0; i < list.Count; i++)
+        {
+            MenuEntry entry = list[i];
+            if (entry.button == null || entry.label == null)
+                continue;
+            SetButtonLabel(entry.button, entry.label());
+        }
     }
 
     private static Transform FindDeep(Transform parent, string name)
@@ -314,7 +740,7 @@ public class PauseA : MonoBehaviour
 
     private void OnSelectPerformed(InputAction.CallbackContext context)
     {
-        if (!context.performed || loadingScene)
+        if (!context.performed || loadingScene || waitingForRebind)
             return;
 
         if (Time.unscaledTime - lastToggleUnscaledTime < 0.12f)
@@ -338,53 +764,59 @@ public class PauseA : MonoBehaviour
         if (!context.performed || !isOpen || loadingScene || !CanAcceptMenuInput())
             return;
 
+        if (waitingForRebind)
+        {
+            CancelRebind(silent: false);
+            return;
+        }
+
         SoundManager.Instance?.PlayUiBack();
         ConsumeMenuInputCooldown();
-        Close();
+        HandleBack();
     }
 
     private void OnConfirmPerformed(InputAction.CallbackContext context)
     {
-        if (!context.performed || !isOpen || loadingScene || !CanAcceptMenuInput())
+        if (!context.performed || !isOpen || loadingScene || waitingForRebind || !CanAcceptMenuInput())
             return;
 
-        ActivateSelectedButton();
+        ActivateSelectedEntry();
         ConsumeMenuInputCooldown();
     }
 
     private void OnUpPerformed(InputAction.CallbackContext context)
     {
-        if (!context.performed || !isOpen || !CanAcceptMenuInput())
+        if (!context.performed || !isOpen || waitingForRebind || !CanAcceptMenuInput())
             return;
         MoveSelection(0, -1);
     }
 
     private void OnDownPerformed(InputAction.CallbackContext context)
     {
-        if (!context.performed || !isOpen || !CanAcceptMenuInput())
+        if (!context.performed || !isOpen || waitingForRebind || !CanAcceptMenuInput())
             return;
         MoveSelection(0, 1);
     }
 
     private void OnLeftPerformed(InputAction.CallbackContext context)
     {
-        if (!context.performed || !isOpen || !CanAcceptMenuInput())
+        if (!context.performed || !isOpen || waitingForRebind || !CanAcceptMenuInput())
             return;
-        MoveSelection(-1, 0);
+        HandleHorizontal(-1);
     }
 
     private void OnRightPerformed(InputAction.CallbackContext context)
     {
-        if (!context.performed || !isOpen || !CanAcceptMenuInput())
+        if (!context.performed || !isOpen || waitingForRebind || !CanAcceptMenuInput())
             return;
-        MoveSelection(1, 0);
+        HandleHorizontal(1);
     }
 
     private void OnMovementPerformed(InputAction.CallbackContext context)
     {
         Vector2 value = context.ReadValue<Vector2>();
 
-        if (!isOpen)
+        if (!isOpen || waitingForRebind)
         {
             UpdateStickHeldFlags(value);
             return;
@@ -427,7 +859,7 @@ public class PauseA : MonoBehaviour
             if (!moveLeftHeld)
             {
                 moveLeftHeld = true;
-                MoveSelection(-1, 0);
+                HandleHorizontal(-1);
             }
         }
         else
@@ -440,7 +872,7 @@ public class PauseA : MonoBehaviour
             if (!moveRightHeld)
             {
                 moveRightHeld = true;
-                MoveSelection(1, 0);
+                HandleHorizontal(1);
             }
         }
         else
@@ -475,40 +907,70 @@ public class PauseA : MonoBehaviour
         nextMenuInputTime = Time.unscaledTime + Mathf.Max(0.05f, menuInputCooldown);
     }
 
-    /// <summary>
-    /// Same spatial nav as Kaboodle. Falls back to wrap cycling so a vertical button
-    /// column still responds to Left/Right (Pause B style free movement).
-    /// </summary>
-    private void MoveSelection(int deltaX, int deltaY)
+    private void HandleHorizontal(int dir)
     {
-        if (menuButtons.Count == 0 || (deltaX == 0 && deltaY == 0))
+        if (activeEntries.Count == 0)
             return;
 
-        if (MoveSpatialSelection(menuButtons, ref selectedIndex, deltaX, deltaY))
+        selectedIndex = Mathf.Clamp(selectedIndex, 0, activeEntries.Count - 1);
+        MenuEntry entry = activeEntries[selectedIndex];
+        switch (entry.kind)
+        {
+            case OptionKind.MusicVolume:
+                AdjustMusicVolume(dir);
+                ConsumeMenuInputCooldown();
+                return;
+            case OptionKind.SfxVolume:
+                AdjustSfxVolume(dir);
+                ConsumeMenuInputCooldown();
+                return;
+            case OptionKind.Resolution:
+                CycleResolution(dir);
+                ConsumeMenuInputCooldown();
+                return;
+            case OptionKind.Difficulty:
+                CycleDifficulty(dir);
+                ConsumeMenuInputCooldown();
+                return;
+            default:
+                MoveSelection(dir, 0);
+                return;
+        }
+    }
+
+    private void CycleDifficulty(int dir)
+    {
+        GameSettings.CycleDifficulty(dir >= 0 ? 1 : -1);
+        SoundManager.Instance?.PlayUiConfirm();
+        RefreshAllDynamicLabels();
+        RefreshMenuHighlight();
+    }
+
+    private void MoveSelection(int deltaX, int deltaY)
+    {
+        if (activeEntries.Count == 0 || (deltaX == 0 && deltaY == 0))
+            return;
+
+        List<Button> buttons = new List<Button>(activeEntries.Count);
+        for (int i = 0; i < activeEntries.Count; i++)
+            buttons.Add(activeEntries[i].button);
+
+        if (MoveSpatialSelection(buttons, ref selectedIndex, deltaX, deltaY))
         {
             RefreshMenuHighlight();
             ConsumeMenuInputCooldown();
             return;
         }
 
-        int step = 0;
-        if (deltaY != 0)
-            step = deltaY;
-        else if (deltaX != 0)
-            step = deltaX;
-
+        int step = deltaY != 0 ? deltaY : deltaX;
         if (step == 0)
             return;
 
-        selectedIndex = (selectedIndex + step + menuButtons.Count) % menuButtons.Count;
+        selectedIndex = (selectedIndex + step + activeEntries.Count) % activeEntries.Count;
         RefreshMenuHighlight();
         ConsumeMenuInputCooldown();
     }
 
-    /// <summary>
-    /// Move selection to the nearest button in the input direction using on-screen positions.
-    /// Copied pattern from Kaboodle so Pause A feels identical.
-    /// </summary>
     private static bool MoveSpatialSelection(List<Button> buttons, ref int currentIndex, int deltaX, int deltaY)
     {
         if (buttons == null || buttons.Count <= 1)
@@ -521,7 +983,6 @@ public class PauseA : MonoBehaviour
         if (!TryGetButtonWorldPosition(buttons[currentIndex], out Vector2 from))
             return false;
 
-        // Up on stick maps to deltaY = -1; screen Y increases upward in UI world space.
         Vector2 dir = new Vector2(deltaX, -deltaY);
         if (dir.sqrMagnitude < 0.0001f)
             return false;
@@ -586,26 +1047,226 @@ public class PauseA : MonoBehaviour
         return true;
     }
 
-    private void ActivateSelectedButton()
+    private void ActivateSelectedEntry()
     {
-        if (menuButtons.Count == 0)
+        if (activeEntries.Count == 0)
             return;
 
-        selectedIndex = Mathf.Clamp(selectedIndex, 0, menuButtons.Count - 1);
-        Button button = menuButtons[selectedIndex];
-        if (button != null)
-            button.onClick.Invoke();
+        selectedIndex = Mathf.Clamp(selectedIndex, 0, activeEntries.Count - 1);
+        ActivateEntry(activeEntries[selectedIndex]);
+    }
+
+    private void ActivateEntry(MenuEntry entry)
+    {
+        if (entry == null || entry.button == null || loadingScene || waitingForRebind)
+            return;
+
+        int index = activeEntries.IndexOf(entry);
+        if (index >= 0)
+            selectedIndex = index;
+
+        switch (entry.kind)
+        {
+            case OptionKind.Resume:
+                SoundManager.Instance?.PlayUiConfirm();
+                Close();
+                break;
+            case OptionKind.ReturnHome:
+                OnReturnHomeTownClicked();
+                break;
+            case OptionKind.Quit:
+                OnQuitGameClicked();
+                break;
+            case OptionKind.OpenPage:
+                SoundManager.Instance?.PlayUiConfirm();
+                ShowPage(entry.targetPage);
+                break;
+            case OptionKind.Back:
+                SoundManager.Instance?.PlayUiBack();
+                ShowPage(entry.targetPage);
+                break;
+            case OptionKind.MusicVolume:
+                AdjustMusicVolume(1);
+                break;
+            case OptionKind.SfxVolume:
+                AdjustSfxVolume(1);
+                break;
+            case OptionKind.MuteMusic:
+                GameSettings.ToggleMusicMuted();
+                SoundManager.Instance?.PlayUiConfirm();
+                RefreshAllDynamicLabels();
+                RefreshMenuHighlight();
+                break;
+            case OptionKind.MuteSfx:
+                GameSettings.ToggleSfxMuted();
+                SoundManager.Instance?.PlayUiConfirm();
+                RefreshAllDynamicLabels();
+                RefreshMenuHighlight();
+                break;
+            case OptionKind.Fullscreen:
+                GameSettings.ToggleFullscreen();
+                SoundManager.Instance?.PlayUiConfirm();
+                RefreshAllDynamicLabels();
+                RefreshMenuHighlight();
+                break;
+            case OptionKind.Resolution:
+                CycleResolution(1);
+                break;
+            case OptionKind.Difficulty:
+                CycleDifficulty(1);
+                break;
+            case OptionKind.RebindAction:
+                BeginRebind(entry.actionName);
+                break;
+            case OptionKind.ResetControls:
+                GameInput.ResetAllBindings(controls != null ? controls.asset : null);
+                SoundManager.Instance?.PlayUiConfirm();
+                RefreshAllDynamicLabels();
+                RefreshMenuHighlight();
+                break;
+        }
+    }
+
+    private void HandleBack()
+    {
+        switch (currentPage)
+        {
+            case Page.Main:
+                Close();
+                break;
+            case Page.Audio:
+            case Page.Display:
+            case Page.Gameplay:
+            case Page.Controls:
+                ShowPage(Page.OptionsHub);
+                break;
+            default:
+                ShowPage(Page.Main);
+                break;
+        }
+    }
+
+    private void AdjustMusicVolume(int dir)
+    {
+        float next = Mathf.Clamp01(GameSettings.MusicVolume + dir * volumeStep);
+        GameSettings.SetMusicVolume(next);
+        SoundManager.Instance?.PlayUiConfirm();
+        RefreshAllDynamicLabels();
+        RefreshMenuHighlight();
+    }
+
+    private void AdjustSfxVolume(int dir)
+    {
+        float next = Mathf.Clamp01(GameSettings.SfxVolume + dir * volumeStep);
+        GameSettings.SetSfxVolume(next);
+        SoundManager.Instance?.PlayUiConfirm();
+        RefreshAllDynamicLabels();
+        RefreshMenuHighlight();
+    }
+
+    private void CycleResolution(int dir)
+    {
+        if (!GameSettings.SupportsResolutionList || resolutionList == null || resolutionList.Length == 0)
+            return;
+
+        resolutionIndex = (resolutionIndex + dir + resolutionList.Length) % resolutionList.Length;
+        Resolution r = resolutionList[resolutionIndex];
+        int hz = Mathf.RoundToInt((float)r.refreshRateRatio.value);
+        GameSettings.SetResolution(r.width, r.height, hz);
+        SoundManager.Instance?.PlayUiConfirm();
+        RefreshAllDynamicLabels();
+        RefreshMenuHighlight();
+    }
+
+    private void BeginRebind(string actionName)
+    {
+        if (controls == null || string.IsNullOrEmpty(actionName) || waitingForRebind)
+            return;
+
+        InputAction action = FindRemapAction(actionName);
+        if (action == null)
+            return;
+
+        CancelRebind(silent: true);
+        waitingForRebind = true;
+        rebindingActionName = actionName;
+        RefreshAllDynamicLabels();
+        RefreshMenuHighlight();
+        SoundManager.Instance?.PlayUiConfirm();
+
+        action.Disable();
+        rebindOperation = action.PerformInteractiveRebinding()
+            .WithControlsExcluding("<Mouse>")
+            .WithControlsExcluding("<Pointer>")
+            .WithCancelingThrough("<Keyboard>/escape")
+            .OnMatchWaitForAnother(0.15f)
+            .OnComplete(op =>
+            {
+                action.Enable();
+                GameInput.SaveOverridesFrom(controls.asset);
+                FinishRebind();
+            })
+            .OnCancel(op =>
+            {
+                action.Enable();
+                FinishRebind();
+            })
+            .Start();
+    }
+
+    private void FinishRebind()
+    {
+        if (rebindOperation != null)
+        {
+            rebindOperation.Dispose();
+            rebindOperation = null;
+        }
+
+        waitingForRebind = false;
+        rebindingActionName = null;
+        RefreshAllDynamicLabels();
+        RefreshMenuHighlight();
+        ConsumeMenuInputCooldown();
+    }
+
+    private void CancelRebind(bool silent)
+    {
+        if (!waitingForRebind && rebindOperation == null)
+            return;
+
+        if (rebindOperation != null)
+        {
+            try
+            {
+                rebindOperation.Cancel();
+            }
+            catch
+            {
+                // ignored — operation may already be disposed
+            }
+
+            rebindOperation.Dispose();
+            rebindOperation = null;
+        }
+
+        waitingForRebind = false;
+        rebindingActionName = null;
+        if (!silent)
+            SoundManager.Instance?.PlayUiBack();
+        RefreshAllDynamicLabels();
+        RefreshMenuHighlight();
+        ConsumeMenuInputCooldown();
     }
 
     private void RefreshMenuHighlight()
     {
-        for (int i = 0; i < menuButtons.Count; i++)
-            SetButtonHighlighted(menuButtons[i], i == selectedIndex && isOpen);
+        for (int i = 0; i < activeEntries.Count; i++)
+            SetButtonHighlighted(activeEntries[i].button, i == selectedIndex && isOpen);
 
-        if (!isOpen || menuButtons.Count == 0)
+        if (!isOpen || activeEntries.Count == 0)
             return;
 
-        Button selected = menuButtons[Mathf.Clamp(selectedIndex, 0, menuButtons.Count - 1)];
+        Button selected = activeEntries[Mathf.Clamp(selectedIndex, 0, activeEntries.Count - 1)].button;
         EventSystem es = EventSystem.current;
         if (es != null && selected != null)
             es.SetSelectedGameObject(selected.gameObject);
@@ -646,18 +1307,18 @@ public class PauseA : MonoBehaviour
 
     private void ResetAllButtonVisuals()
     {
-        for (int i = 0; i < menuButtons.Count; i++)
-            SetButtonHighlighted(menuButtons[i], false);
+        ResetListVisuals(mainEntries);
+        ResetListVisuals(optionsHubEntries);
+        ResetListVisuals(audioEntries);
+        ResetListVisuals(displayEntries);
+        ResetListVisuals(gameplayEntries);
+        ResetListVisuals(controlsEntries);
     }
 
-    private void SelectButtonByReference(Button button)
+    private void ResetListVisuals(List<MenuEntry> list)
     {
-        int index = menuButtons.IndexOf(button);
-        if (index < 0)
-            return;
-
-        selectedIndex = index;
-        RefreshMenuHighlight();
+        for (int i = 0; i < list.Count; i++)
+            SetButtonHighlighted(list[i].button, false);
     }
 
     public void Open()
@@ -671,14 +1332,17 @@ public class PauseA : MonoBehaviour
         if (PauseBInventory.Instance != null && PauseBInventory.Instance.IsOpen)
             return;
 
+        if (RocketDestinationMenu.IsOpen)
+            return;
+
+        EnsureOptionsUi();
         isOpen = true;
-        selectedIndex = 0;
 
         if (menuRoot != null)
             menuRoot.SetActive(true);
 
         FixButtonDrawOrder();
-        CacheButtons();
+        ShowPage(Page.Main);
 
         if (freezeTimeWhileOpen)
         {
@@ -704,7 +1368,9 @@ public class PauseA : MonoBehaviour
 
     private void ForceClose()
     {
+        CancelRebind(silent: true);
         isOpen = false;
+        ShowPage(Page.Main, refreshHighlight: false);
 
         if (menuRoot != null)
             menuRoot.SetActive(false);
@@ -727,25 +1393,25 @@ public class PauseA : MonoBehaviour
         if (selected == null)
             return false;
 
-        for (int i = 0; i < menuButtons.Count; i++)
+        return IsInList(mainEntries, selected) ||
+               IsInList(optionsHubEntries, selected) ||
+               IsInList(audioEntries, selected) ||
+               IsInList(displayEntries, selected) ||
+               IsInList(gameplayEntries, selected) ||
+               IsInList(controlsEntries, selected);
+    }
+
+    private static bool IsInList(List<MenuEntry> list, GameObject selected)
+    {
+        for (int i = 0; i < list.Count; i++)
         {
-            if (menuButtons[i] != null &&
-                (selected == menuButtons[i].gameObject ||
-                 selected.transform.IsChildOf(menuButtons[i].transform)))
+            if (list[i].button != null &&
+                (selected == list[i].button.gameObject ||
+                 selected.transform.IsChildOf(list[i].button.transform)))
                 return true;
         }
 
         return false;
-    }
-
-    private void OnResumeClicked()
-    {
-        if (loadingScene)
-            return;
-
-        SelectButtonByReference(resumeButton);
-        SoundManager.Instance?.PlayUiConfirm();
-        Close();
     }
 
     private void OnReturnHomeTownClicked()
@@ -753,7 +1419,6 @@ public class PauseA : MonoBehaviour
         if (loadingScene)
             return;
 
-        SelectButtonByReference(returnHomeTownButton);
         SoundManager.Instance?.PlayUiConfirm();
         loadingScene = true;
 
@@ -767,7 +1432,6 @@ public class PauseA : MonoBehaviour
 
         string scene = string.IsNullOrWhiteSpace(homeTownSceneName) ? "HomeTown" : homeTownSceneName;
 
-        // Kit's rocket ship swoops in, the player boards, and the fade starts once it is off-screen.
         if (KitRocketShip.TryPickUpPlayer(scene))
             return;
 
@@ -780,7 +1444,6 @@ public class PauseA : MonoBehaviour
         if (loadingScene)
             return;
 
-        SelectButtonByReference(quitGameButton);
         SoundManager.Instance?.PlayUiConfirm();
 
         if (freezeTimeWhileOpen)

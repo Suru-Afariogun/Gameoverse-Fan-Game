@@ -1,0 +1,3933 @@
+fileFormatVersion: 2
+guid: 903d244b7f0b461478e25b2db8cbf3a9
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -7333631674885079706
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_0
+  - first:
+      213: -2882591245668452780
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_1
+  - first:
+      213: 308462553786971785
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_2
+  - first:
+      213: -3550032602945046547
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_3
+  - first:
+      213: -1799818898947894050
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_4
+  - first:
+      213: -977504804745371156
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_5
+  - first:
+      213: 6642604532115737913
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_6
+  - first:
+      213: -7118045322529057501
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_7
+  - first:
+      213: -6117806164990346118
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_8
+  - first:
+      213: -4551294669056444986
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_9
+  - first:
+      213: -186503712459030151
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_10
+  - first:
+      213: -730183367469027758
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_11
+  - first:
+      213: -8635356568836577871
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_12
+  - first:
+      213: 8613133726806210562
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_13
+  - first:
+      213: -3687502991772663217
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_14
+  - first:
+      213: 2359300899778876427
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_15
+  - first:
+      213: -2495176348266652066
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_16
+  - first:
+      213: -6438051404524552997
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_17
+  - first:
+      213: -590263328805763322
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_18
+  - first:
+      213: -1390885914869450708
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_19
+  - first:
+      213: 3629266350878223665
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_20
+  - first:
+      213: 8532393028904962125
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_21
+  - first:
+      213: 7852358580285354013
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_22
+  - first:
+      213: -6231814962719111433
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_23
+  - first:
+      213: 2403491748868681990
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_24
+  - first:
+      213: 4824012470503301248
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_25
+  - first:
+      213: 6216683248614038621
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_26
+  - first:
+      213: 5098738435452676634
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_27
+  - first:
+      213: -7429163726477452471
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_28
+  - first:
+      213: -404620839919989867
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_29
+  - first:
+      213: -4064027673493507898
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_30
+  - first:
+      213: 3145415186777164969
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_31
+  - first:
+      213: 9168859430139805812
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_32
+  - first:
+      213: 4760749003005034245
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_33
+  - first:
+      213: 4185335253958131335
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_34
+  - first:
+      213: -7434604883460551449
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_35
+  - first:
+      213: 3294531864647545242
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_36
+  - first:
+      213: 1933446996387880879
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_37
+  - first:
+      213: 6745480085993172120
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_38
+  - first:
+      213: 8694937641819661868
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_39
+  - first:
+      213: -1539673020405111906
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_40
+  - first:
+      213: 4857255617527419012
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_41
+  - first:
+      213: 81278673386478477
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_42
+  - first:
+      213: 2543191340061901546
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_43
+  - first:
+      213: 7749823606158087261
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_44
+  - first:
+      213: 3261529208016886678
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_45
+  - first:
+      213: 3291528136245068521
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_46
+  - first:
+      213: -2753254919499079253
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_47
+  - first:
+      213: -6266490616991117348
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_48
+  - first:
+      213: 5522804300312017370
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_49
+  - first:
+      213: 4234812170401468691
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_50
+  - first:
+      213: 2405518800291194220
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_51
+  - first:
+      213: -694476182479357369
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_52
+  - first:
+      213: 1688166969355980497
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_53
+  - first:
+      213: -2770154674944399291
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_54
+  - first:
+      213: 9046398041457677715
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_55
+  - first:
+      213: -1917576451019121858
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_56
+  - first:
+      213: 1323517236869680667
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_57
+  - first:
+      213: -1529438444407431701
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_58
+  - first:
+      213: 4738797483630280825
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_59
+  - first:
+      213: 1367304350916164530
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_60
+  - first:
+      213: -51861908276784505
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_61
+  - first:
+      213: 8790015564081475392
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_62
+  - first:
+      213: -1406901027234084247
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_63
+  - first:
+      213: 7083646715951572659
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_64
+  - first:
+      213: -5936386132623544703
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_65
+  - first:
+      213: -5368688215766542943
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_66
+  - first:
+      213: -4237492677864380534
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_67
+  - first:
+      213: 3051948715445883757
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_68
+  - first:
+      213: -5358982101702539615
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_69
+  - first:
+      213: 1581730496634747925
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_70
+  - first:
+      213: -1794527083870745307
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_71
+  - first:
+      213: 8197983483727105343
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_72
+  - first:
+      213: 703228921366271955
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_73
+  - first:
+      213: -1920548113986840252
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_74
+  - first:
+      213: -443429984451212632
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_75
+  - first:
+      213: -265808223197755755
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_76
+  - first:
+      213: 2129850421069271765
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_77
+  - first:
+      213: 2849948956222075145
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_78
+  - first:
+      213: -940125397632887589
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_79
+  - first:
+      213: 1215046320705710844
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_80
+  - first:
+      213: -1665267097644632480
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_81
+  - first:
+      213: 7904341902325264443
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_82
+  - first:
+      213: -8155287996309191221
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_83
+  - first:
+      213: 7336703749437919479
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_84
+  - first:
+      213: 8628027239587403704
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_85
+  - first:
+      213: 585399482346062468
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_86
+  - first:
+      213: 8346427188190839875
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_87
+  - first:
+      213: -100680337599683746
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_88
+  - first:
+      213: 2142204780284316849
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_89
+  - first:
+      213: 1892432336526571590
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_90
+  - first:
+      213: 2497859168711915791
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_91
+  - first:
+      213: -4110227710969255193
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_92
+  - first:
+      213: -9159923406033773855
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_93
+  - first:
+      213: 280384663265558916
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_94
+  - first:
+      213: 4265255711956342274
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_95
+  - first:
+      213: 7293506103749390108
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_96
+  - first:
+      213: -5029467501033250186
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_97
+  - first:
+      213: 4716567064444986403
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_98
+  - first:
+      213: 6393743694153921297
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_99
+  - first:
+      213: -4188928964327756138
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_100
+  - first:
+      213: 3280369531126094721
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_101
+  - first:
+      213: 6255880371522696162
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_102
+  - first:
+      213: -7559565340674359926
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_103
+  - first:
+      213: -1804665405596721796
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_104
+  - first:
+      213: -1861811894226795429
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_105
+  - first:
+      213: -7957011139818858583
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_106
+  - first:
+      213: 314199257288439054
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_107
+  - first:
+      213: 2354643693380311357
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_108
+  - first:
+      213: 8900671389682833148
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_109
+  - first:
+      213: -6594395375022715486
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_110
+  - first:
+      213: -4355894866227626926
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_111
+  - first:
+      213: 4027600799154769074
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_112
+  - first:
+      213: -4603897234381794535
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_113
+  - first:
+      213: -1417485616775713669
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_114
+  - first:
+      213: 7755934275086698514
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_115
+  - first:
+      213: -7321715974610204444
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_116
+  - first:
+      213: 320274545374154228
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_117
+  - first:
+      213: 6205224753514307895
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_118
+  - first:
+      213: -4206970426456051941
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_119
+  - first:
+      213: 5443980558550195581
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_120
+  - first:
+      213: -8885506431590129167
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_121
+  - first:
+      213: -2631195041604701080
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_122
+  - first:
+      213: -390448790724107647
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_123
+  - first:
+      213: 125269601158544995
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_124
+  - first:
+      213: -6688731160054802205
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_125
+  - first:
+      213: -7796902199516784718
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_126
+  - first:
+      213: 830725172465910334
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_127
+  - first:
+      213: -1688901063314876973
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_128
+  - first:
+      213: -7168153771168716879
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_129
+  - first:
+      213: -5376766491895268610
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_130
+  - first:
+      213: -7832937696784910131
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_131
+  - first:
+      213: 5253313334840977919
+    second: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_132
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_0
+      rect:
+        serializedVersion: 2
+        x: 239
+        y: 3567
+        width: 225
+        height: 260
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 66dfbe0d8d4b93a90800000000000000
+      internalID: -7333631674885079706
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_1
+      rect:
+        serializedVersion: 2
+        x: 627
+        y: 3563
+        width: 249
+        height: 260
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 456f741e88afef7d0800000000000000
+      internalID: -2882591245668452780
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_2
+      rect:
+        serializedVersion: 2
+        x: 1110
+        y: 3560
+        width: 247
+        height: 260
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9867bf0fe01e74400800000000000000
+      internalID: 308462553786971785
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_3
+      rect:
+        serializedVersion: 2
+        x: 1600
+        y: 3528
+        width: 246
+        height: 275
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: de7b7601820cbbec0800000000000000
+      internalID: -3550032602945046547
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_4
+      rect:
+        serializedVersion: 2
+        x: 1967
+        y: 3504
+        width: 273
+        height: 295
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ed41d2c4f32c507e0800000000000000
+      internalID: -1799818898947894050
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_5
+      rect:
+        serializedVersion: 2
+        x: 2517
+        y: 3523
+        width: 312
+        height: 255
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ce12ae22f843f62f0800000000000000
+      internalID: -977504804745371156
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_6
+      rect:
+        serializedVersion: 2
+        x: 3043
+        y: 3523
+        width: 238
+        height: 260
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 93d8820c0a54f2c50800000000000000
+      internalID: 6642604532115737913
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_7
+      rect:
+        serializedVersion: 2
+        x: 250
+        y: 3153
+        width: 240
+        height: 265
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 325568ffd7f973d90800000000000000
+      internalID: -7118045322529057501
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_8
+      rect:
+        serializedVersion: 2
+        x: 686
+        y: 3165
+        width: 225
+        height: 254
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a7c3e0bd4bf291ba0800000000000000
+      internalID: -6117806164990346118
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_9
+      rect:
+        serializedVersion: 2
+        x: 1176
+        y: 3150
+        width: 205
+        height: 266
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6c5f2cebc9d86d0c0800000000000000
+      internalID: -4551294669056444986
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_10
+      rect:
+        serializedVersion: 2
+        x: 1587
+        y: 3118
+        width: 265
+        height: 295
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 97186959cd7696df0800000000000000
+      internalID: -186503712459030151
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_11
+      rect:
+        serializedVersion: 2
+        x: 2014
+        y: 3109
+        width: 264
+        height: 295
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 25e2c11981eddd5f0800000000000000
+      internalID: -730183367469027758
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_12
+      rect:
+        serializedVersion: 2
+        x: 2505
+        y: 3105
+        width: 223
+        height: 295
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1b5e8a5e3fc092880800000000000000
+      internalID: -8635356568836577871
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_13
+      rect:
+        serializedVersion: 2
+        x: 2825
+        y: 3318
+        width: 51
+        height: 30
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 208783d7d7ff78770800000000000000
+      internalID: 8613133726806210562
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_14
+      rect:
+        serializedVersion: 2
+        x: 2904
+        y: 3302
+        width: 92
+        height: 54
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f424333f09b53dcc0800000000000000
+      internalID: -3687502991772663217
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_15
+      rect:
+        serializedVersion: 2
+        x: 3053
+        y: 3282
+        width: 133
+        height: 81
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b0454911babedb020800000000000000
+      internalID: 2359300899778876427
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_16
+      rect:
+        serializedVersion: 2
+        x: 3238
+        y: 3267
+        width: 133
+        height: 99
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e5e1c9dc45a5f5dd0800000000000000
+      internalID: -2495176348266652066
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_17
+      rect:
+        serializedVersion: 2
+        x: 2831
+        y: 3163
+        width: 50
+        height: 29
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bdcfb9b9b5277a6a0800000000000000
+      internalID: -6438051404524552997
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_18
+      rect:
+        serializedVersion: 2
+        x: 2910
+        y: 3147
+        width: 91
+        height: 53
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 607c79a31a6fec7f0800000000000000
+      internalID: -590263328805763322
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_19
+      rect:
+        serializedVersion: 2
+        x: 3059
+        y: 3128
+        width: 133
+        height: 80
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c28bc1131a492bce0800000000000000
+      internalID: -1390885914869450708
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_20
+      rect:
+        serializedVersion: 2
+        x: 3244
+        y: 3113
+        width: 133
+        height: 98
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 13def57748ebd5230800000000000000
+      internalID: 3629266350878223665
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_21
+      rect:
+        serializedVersion: 2
+        x: 3433
+        y: 3136
+        width: 51
+        height: 30
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d4846e3d046296670800000000000000
+      internalID: 8532393028904962125
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_22
+      rect:
+        serializedVersion: 2
+        x: 3512
+        y: 3120
+        width: 92
+        height: 54
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d1036e2768e29fc60800000000000000
+      internalID: 7852358580285354013
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_23
+      rect:
+        serializedVersion: 2
+        x: 3661
+        y: 3100
+        width: 133
+        height: 81
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7f6c9291f452489a0800000000000000
+      internalID: -6231814962719111433
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_24
+      rect:
+        serializedVersion: 2
+        x: 3846
+        y: 3085
+        width: 133
+        height: 99
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 60176e7e20bea5120800000000000000
+      internalID: 2403491748868681990
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_25
+      rect:
+        serializedVersion: 2
+        x: 497
+        y: 2936
+        width: 151
+        height: 145
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 080676088c552f240800000000000000
+      internalID: 4824012470503301248
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_26
+      rect:
+        serializedVersion: 2
+        x: 2277
+        y: 3079
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d5cd2ca2a78164650800000000000000
+      internalID: 6216683248614038621
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_27
+      rect:
+        serializedVersion: 2
+        x: 354
+        y: 2980
+        width: 79
+        height: 75
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a1aa9cfb79b52c640800000000000000
+      internalID: 5098738435452676634
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_28
+      rect:
+        serializedVersion: 2
+        x: 1160
+        y: 2640
+        width: 186
+        height: 252
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 94b1811c3fe46e890800000000000000
+      internalID: -7429163726477452471
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_29
+      rect:
+        serializedVersion: 2
+        x: 1610
+        y: 2585
+        width: 343
+        height: 306
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 59b49d76d7f726af0800000000000000
+      internalID: -404620839919989867
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_30
+      rect:
+        serializedVersion: 2
+        x: 2023
+        y: 2591
+        width: 312
+        height: 282
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6c0ff04fc5ca997c0800000000000000
+      internalID: -4064027673493507898
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_31
+      rect:
+        serializedVersion: 2
+        x: 3728
+        y: 2623
+        width: 237
+        height: 250
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9acc8fe7272c6ab20800000000000000
+      internalID: 3145415186777164969
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_32
+      rect:
+        serializedVersion: 2
+        x: 697
+        y: 2375
+        width: 35
+        height: 39
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 47049f0b2155e3f70800000000000000
+      internalID: 9168859430139805812
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_33
+      rect:
+        serializedVersion: 2
+        x: 773
+        y: 2380
+        width: 22
+        height: 28
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 50ff8e4aef3911240800000000000000
+      internalID: 4760749003005034245
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_34
+      rect:
+        serializedVersion: 2
+        x: 3159
+        y: 2365
+        width: 170
+        height: 169
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 78ef7161d3c451a30800000000000000
+      internalID: 4185335253958131335
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_35
+      rect:
+        serializedVersion: 2
+        x: 3422
+        y: 2408
+        width: 62
+        height: 72
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7ec03fbaf3af2d890800000000000000
+      internalID: -7434604883460551449
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_36
+      rect:
+        serializedVersion: 2
+        x: 3749
+        y: 2252
+        width: 215
+        height: 239
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a91b585964788bd20800000000000000
+      internalID: 3294531864647545242
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_37
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 2218
+        width: 184
+        height: 188
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fafdeb3accbf4da10800000000000000
+      internalID: 1933446996387880879
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_38
+      rect:
+        serializedVersion: 2
+        x: 403
+        y: 2214
+        width: 180
+        height: 191
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 89c281d2662cc9d50800000000000000
+      internalID: 6745480085993172120
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_39
+      rect:
+        serializedVersion: 2
+        x: 635
+        y: 2364
+        width: 39
+        height: 26
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c2665dca7bf9aa870800000000000000
+      internalID: 8694937641819661868
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_40
+      rect:
+        serializedVersion: 2
+        x: 644
+        y: 2288
+        width: 30
+        height: 47
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e932084ab8bf1aae0800000000000000
+      internalID: -1539673020405111906
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_41
+      rect:
+        serializedVersion: 2
+        x: 789
+        y: 2322
+        width: 24
+        height: 24
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4801ef1df30786340800000000000000
+      internalID: 4857255617527419012
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_42
+      rect:
+        serializedVersion: 2
+        x: 1603
+        y: 2157
+        width: 224
+        height: 200
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d8b1407d582c02100800000000000000
+      internalID: 81278673386478477
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_43
+      rect:
+        serializedVersion: 2
+        x: 652
+        y: 2217
+        width: 41
+        height: 50
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ae24d34ac0b3b4320800000000000000
+      internalID: 2543191340061901546
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_44
+      rect:
+        serializedVersion: 2
+        x: 721
+        y: 2232
+        width: 37
+        height: 28
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d545dfc6287ec8b60800000000000000
+      internalID: 7749823606158087261
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_45
+      rect:
+        serializedVersion: 2
+        x: 791
+        y: 2239
+        width: 37
+        height: 28
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 69b586cc887434d20800000000000000
+      internalID: 3261529208016886678
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_46
+      rect:
+        serializedVersion: 2
+        x: 152
+        y: 1895
+        width: 184
+        height: 188
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9e24711966bddad20800000000000000
+      internalID: 3291528136245068521
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_47
+      rect:
+        serializedVersion: 2
+        x: 402
+        y: 1891
+        width: 180
+        height: 191
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ba12923fc397ac9d0800000000000000
+      internalID: -2753254919499079253
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_48
+      rect:
+        serializedVersion: 2
+        x: 634
+        y: 2041
+        width: 39
+        height: 26
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cdf0de13cf3f809a0800000000000000
+      internalID: -6266490616991117348
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_49
+      rect:
+        serializedVersion: 2
+        x: 696
+        y: 2052
+        width: 35
+        height: 39
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ad9f8140041f4ac40800000000000000
+      internalID: 5522804300312017370
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_50
+      rect:
+        serializedVersion: 2
+        x: 772
+        y: 2057
+        width: 22
+        height: 28
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 311d7436b3315ca30800000000000000
+      internalID: 4234812170401468691
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_51
+      rect:
+        serializedVersion: 2
+        x: 643
+        y: 1965
+        width: 30
+        height: 47
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c6561e79a9e126120800000000000000
+      internalID: 2405518800291194220
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_52
+      rect:
+        serializedVersion: 2
+        x: 788
+        y: 1999
+        width: 24
+        height: 24
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 74a395e6799bc56f0800000000000000
+      internalID: -694476182479357369
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_53
+      rect:
+        serializedVersion: 2
+        x: 1202
+        y: 1363
+        width: 165
+        height: 637
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1dec2021ae29d6710800000000000000
+      internalID: 1688166969355980497
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_54
+      rect:
+        serializedVersion: 2
+        x: 651
+        y: 1894
+        width: 41
+        height: 50
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5482d03000f6e89d0800000000000000
+      internalID: -2770154674944399291
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_55
+      rect:
+        serializedVersion: 2
+        x: 720
+        y: 1909
+        width: 37
+        height: 28
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 395dfddb6134b8d70800000000000000
+      internalID: 9046398041457677715
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_56
+      rect:
+        serializedVersion: 2
+        x: 790
+        y: 1916
+        width: 37
+        height: 28
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e3bd957a0666365e0800000000000000
+      internalID: -1917576451019121858
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_57
+      rect:
+        serializedVersion: 2
+        x: 1532
+        y: 1357
+        width: 165
+        height: 637
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b1e49b52ae31e5210800000000000000
+      internalID: 1323517236869680667
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_58
+      rect:
+        serializedVersion: 2
+        x: 1822
+        y: 1352
+        width: 165
+        height: 637
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bedd44f86d756cae0800000000000000
+      internalID: -1529438444407431701
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_59
+      rect:
+        serializedVersion: 2
+        x: 2145
+        y: 1346
+        width: 165
+        height: 637
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9704c42443793c140800000000000000
+      internalID: 4738797483630280825
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_60
+      rect:
+        serializedVersion: 2
+        x: 2467
+        y: 1337
+        width: 165
+        height: 637
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2bb34381014a9f210800000000000000
+      internalID: 1367304350916164530
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_61
+      rect:
+        serializedVersion: 2
+        x: 167
+        y: 1588
+        width: 184
+        height: 188
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 782d9c38edfb74ff0800000000000000
+      internalID: -51861908276784505
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_62
+      rect:
+        serializedVersion: 2
+        x: 417
+        y: 1584
+        width: 180
+        height: 191
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 04f2b3385986cf970800000000000000
+      internalID: 8790015564081475392
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_63
+      rect:
+        serializedVersion: 2
+        x: 649
+        y: 1734
+        width: 39
+        height: 26
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 96a849548fea97ce0800000000000000
+      internalID: -1406901027234084247
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_64
+      rect:
+        serializedVersion: 2
+        x: 711
+        y: 1745
+        width: 35
+        height: 39
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3b6e7aa482b2e4260800000000000000
+      internalID: 7083646715951572659
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_65
+      rect:
+        serializedVersion: 2
+        x: 787
+        y: 1750
+        width: 22
+        height: 28
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 18e2b63c348bd9da0800000000000000
+      internalID: -5936386132623544703
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_66
+      rect:
+        serializedVersion: 2
+        x: 3100
+        y: 1724
+        width: 180
+        height: 91
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1a5d86523869e75b0800000000000000
+      internalID: -5368688215766542943
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_67
+      rect:
+        serializedVersion: 2
+        x: 3595
+        y: 1722
+        width: 180
+        height: 91
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a8723955cd66135c0800000000000000
+      internalID: -4237492677864380534
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_68
+      rect:
+        serializedVersion: 2
+        x: 658
+        y: 1658
+        width: 30
+        height: 47
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d639cd0df23ba5a20800000000000000
+      internalID: 3051948715445883757
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_69
+      rect:
+        serializedVersion: 2
+        x: 803
+        y: 1692
+        width: 24
+        height: 24
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1a6085eeb2211a5b0800000000000000
+      internalID: -5358982101702539615
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_70
+      rect:
+        serializedVersion: 2
+        x: 3369
+        y: 1524
+        width: 116
+        height: 199
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 51cf05e918f63f510800000000000000
+      internalID: 1581730496634747925
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_71
+      rect:
+        serializedVersion: 2
+        x: 3844
+        y: 1541
+        width: 116
+        height: 199
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 52d0112002f8817e0800000000000000
+      internalID: -1794527083870745307
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_72
+      rect:
+        serializedVersion: 2
+        x: 666
+        y: 1587
+        width: 41
+        height: 50
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f3dc21e2b8615c170800000000000000
+      internalID: 8197983483727105343
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_73
+      rect:
+        serializedVersion: 2
+        x: 735
+        y: 1602
+        width: 37
+        height: 28
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3d751d56afe52c900800000000000000
+      internalID: 703228921366271955
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_74
+      rect:
+        serializedVersion: 2
+        x: 805
+        y: 1609
+        width: 37
+        height: 28
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 44994c37aa7d855e0800000000000000
+      internalID: -1920548113986840252
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_75
+      rect:
+        serializedVersion: 2
+        x: 3101
+        y: 1577
+        width: 139
+        height: 91
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8aa470e47ce98d9f0800000000000000
+      internalID: -443429984451212632
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_76
+      rect:
+        serializedVersion: 2
+        x: 3473
+        y: 1321
+        width: 39
+        height: 58
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5968bed44d8af4cf0800000000000000
+      internalID: -265808223197755755
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_77
+      rect:
+        serializedVersion: 2
+        x: 3582
+        y: 1090
+        width: 52
+        height: 325
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5d2dc8c6cafbe8d10800000000000000
+      internalID: 2129850421069271765
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_78
+      rect:
+        serializedVersion: 2
+        x: 3687
+        y: 1093
+        width: 67
+        height: 315
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 901bc9bd97d0d8720800000000000000
+      internalID: 2849948956222075145
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_79
+      rect:
+        serializedVersion: 2
+        x: 3776
+        y: 1158
+        width: 198
+        height: 288
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bd4d4cd8ee004f2f0800000000000000
+      internalID: -940125397632887589
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_80
+      rect:
+        serializedVersion: 2
+        x: 3473
+        y: 1208
+        width: 50
+        height: 52
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cfa2f4be036bcd010800000000000000
+      internalID: 1215046320705710844
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_81
+      rect:
+        serializedVersion: 2
+        x: 357
+        y: 1166
+        width: 198
+        height: 28
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 066febcc568c3e8e0800000000000000
+      internalID: -1665267097644632480
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_82
+      rect:
+        serializedVersion: 2
+        x: 344
+        y: 1040
+        width: 90
+        height: 88
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b303557c41dd1bd60800000000000000
+      internalID: 7904341902325264443
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_83
+      rect:
+        serializedVersion: 2
+        x: 480
+        y: 1039
+        width: 91
+        height: 88
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bc5cbf2a6c892de80800000000000000
+      internalID: -8155287996309191221
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_84
+      rect:
+        serializedVersion: 2
+        x: 1193
+        y: 473
+        width: 165
+        height: 637
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7f01687403531d560800000000000000
+      internalID: 7336703749437919479
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_85
+      rect:
+        serializedVersion: 2
+        x: 1538
+        y: 471
+        width: 165
+        height: 637
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8b75008af09ecb770800000000000000
+      internalID: 8628027239587403704
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_86
+      rect:
+        serializedVersion: 2
+        x: 1828
+        y: 472
+        width: 165
+        height: 637
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4824fe44ab1cf1800800000000000000
+      internalID: 585399482346062468
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_87
+      rect:
+        serializedVersion: 2
+        x: 3470
+        y: 1108
+        width: 48
+        height: 49
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 34407cf6e4774d370800000000000000
+      internalID: 8346427188190839875
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_88
+      rect:
+        serializedVersion: 2
+        x: 2154
+        y: 470
+        width: 165
+        height: 637
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e53218134cf4a9ef0800000000000000
+      internalID: -100680337599683746
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_89
+      rect:
+        serializedVersion: 2
+        x: 2426
+        y: 465
+        width: 165
+        height: 637
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1bc8df4d5e3aabd10800000000000000
+      internalID: 2142204780284316849
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_90
+      rect:
+        serializedVersion: 2
+        x: 2694
+        y: 464
+        width: 165
+        height: 637
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 648f02cfe25434a10800000000000000
+      internalID: 1892432336526571590
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_91
+      rect:
+        serializedVersion: 2
+        x: 3482
+        y: 970
+        width: 47
+        height: 43
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f09b6020ead2aa220800000000000000
+      internalID: 2497859168711915791
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_92
+      rect:
+        serializedVersion: 2
+        x: 3598
+        y: 932
+        width: 98
+        height: 100
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7eae5bd7ca985f6c0800000000000000
+      internalID: -4110227710969255193
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_93
+      rect:
+        serializedVersion: 2
+        x: 3775
+        y: 757
+        width: 213
+        height: 301
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1ea129d813a61e080800000000000000
+      internalID: -9159923406033773855
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_94
+      rect:
+        serializedVersion: 2
+        x: 135
+        y: 801
+        width: 398
+        height: 49
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 481496e9d5024e300800000000000000
+      internalID: 280384663265558916
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_95
+      rect:
+        serializedVersion: 2
+        x: 2992
+        y: 736
+        width: 62
+        height: 139
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2061d53c87b313b30800000000000000
+      internalID: 4265255711956342274
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_96
+      rect:
+        serializedVersion: 2
+        x: 3120
+        y: 763
+        width: 59
+        height: 69
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c1f2021a82db73560800000000000000
+      internalID: 7293506103749390108
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_97
+      rect:
+        serializedVersion: 2
+        x: 3274
+        y: 735
+        width: 119
+        height: 106
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 672aa8f74fdb33ab0800000000000000
+      internalID: -5029467501033250186
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_98
+      rect:
+        serializedVersion: 2
+        x: 3428
+        y: 687
+        width: 185
+        height: 187
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 324ec8371cc947140800000000000000
+      internalID: 4716567064444986403
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_99
+      rect:
+        serializedVersion: 2
+        x: 105
+        y: 540
+        width: 181
+        height: 176
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 11330faa3042bb850800000000000000
+      internalID: 6393743694153921297
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_100
+      rect:
+        serializedVersion: 2
+        x: 387
+        y: 538
+        width: 181
+        height: 176
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 69e26e30d4fedd5c0800000000000000
+      internalID: -4188928964327756138
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_101
+      rect:
+        serializedVersion: 2
+        x: 3062
+        y: 370
+        width: 326
+        height: 312
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 18b19ca55b6368d20800000000000000
+      internalID: 3280369531126094721
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_102
+      rect:
+        serializedVersion: 2
+        x: 3709
+        y: 525
+        width: 105
+        height: 99
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2e3f2f58d0a51d650800000000000000
+      internalID: 6255880371522696162
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_103
+      rect:
+        serializedVersion: 2
+        x: 3840
+        y: 525
+        width: 100
+        height: 99
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a8dffbcff57071790800000000000000
+      internalID: -7559565340674359926
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_104
+      rect:
+        serializedVersion: 2
+        x: 2622
+        y: 400
+        width: 38
+        height: 39
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c7d98f8006a84f6e0800000000000000
+      internalID: -1804665405596721796
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_105
+      rect:
+        serializedVersion: 2
+        x: 3708
+        y: 392
+        width: 106
+        height: 106
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b54c30e42f38926e0800000000000000
+      internalID: -1861811894226795429
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_106
+      rect:
+        serializedVersion: 2
+        x: 3840
+        y: 392
+        width: 101
+        height: 106
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9a75541c684039190800000000000000
+      internalID: -7957011139818858583
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_107
+      rect:
+        serializedVersion: 2
+        x: 6
+        y: 19
+        width: 560
+        height: 330
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e057e5f4f824c5400800000000000000
+      internalID: 314199257288439054
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_108
+      rect:
+        serializedVersion: 2
+        x: 791
+        y: 0
+        width: 615
+        height: 321
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d391c84b6ff5da020800000000000000
+      internalID: 2354643693380311357
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_109
+      rect:
+        serializedVersion: 2
+        x: 1603
+        y: 0
+        width: 779
+        height: 327
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cf6178c9879858b70800000000000000
+      internalID: 8900671389682833148
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_110
+      rect:
+        serializedVersion: 2
+        x: 2439
+        y: 282
+        width: 61
+        height: 59
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2adca4358500c74a0800000000000000
+      internalID: -6594395375022715486
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_111
+      rect:
+        serializedVersion: 2
+        x: 2484
+        y: 303
+        width: 43
+        height: 54
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 25cfd8b92b0cc83c0800000000000000
+      internalID: -4355894866227626926
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_112
+      rect:
+        serializedVersion: 2
+        x: 2524
+        y: 310
+        width: 30
+        height: 51
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2bc03b27699e4e730800000000000000
+      internalID: 4027600799154769074
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_113
+      rect:
+        serializedVersion: 2
+        x: 2567
+        y: 306
+        width: 39
+        height: 19
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 913154a9bdbab10c0800000000000000
+      internalID: -4603897234381794535
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_114
+      rect:
+        serializedVersion: 2
+        x: 2613
+        y: 291
+        width: 25
+        height: 23
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b7cabd97754145ce0800000000000000
+      internalID: -1417485616775713669
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_115
+      rect:
+        serializedVersion: 2
+        x: 2735
+        y: 25
+        width: 302
+        height: 301
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 218c1d7612d92ab60800000000000000
+      internalID: 7755934275086698514
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_116
+      rect:
+        serializedVersion: 2
+        x: 3066
+        y: 17
+        width: 326
+        height: 312
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4e84e0bfc1a046a90800000000000000
+      internalID: -7321715974610204444
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_117
+      rect:
+        serializedVersion: 2
+        x: 3619
+        y: 15
+        width: 326
+        height: 312
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4fd40ab8008d17400800000000000000
+      internalID: 320274545374154228
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_118
+      rect:
+        serializedVersion: 2
+        x: 2402
+        y: 242
+        width: 63
+        height: 63
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7316ea069036d1650800000000000000
+      internalID: 6205224753514307895
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_119
+      rect:
+        serializedVersion: 2
+        x: 2639
+        y: 259
+        width: 38
+        height: 37
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b1f6386cfa6dd95c0800000000000000
+      internalID: -4206970426456051941
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_120
+      rect:
+        serializedVersion: 2
+        x: 2666
+        y: 226
+        width: 33
+        height: 33
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d7d548c7977ec8b40800000000000000
+      internalID: 5443980558550195581
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_121
+      rect:
+        serializedVersion: 2
+        x: 2392
+        y: 210
+        width: 43
+        height: 37
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1f12f975af650b480800000000000000
+      internalID: -8885506431590129167
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_122
+      rect:
+        serializedVersion: 2
+        x: 2677
+        y: 184
+        width: 33
+        height: 38
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 864f162ec0e1c7bd0800000000000000
+      internalID: -2631195041604701080
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_123
+      rect:
+        serializedVersion: 2
+        x: 2391
+        y: 160
+        width: 34
+        height: 45
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 182a8edb4e8d49af0800000000000000
+      internalID: -390448790724107647
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_124
+      rect:
+        serializedVersion: 2
+        x: 2674
+        y: 147
+        width: 38
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 36eb53ed90c0db100800000000000000
+      internalID: 125269601158544995
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_125
+      rect:
+        serializedVersion: 2
+        x: 2396
+        y: 113
+        width: 36
+        height: 45
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3e8d8d6c27adc23a0800000000000000
+      internalID: -6688731160054802205
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_126
+      rect:
+        serializedVersion: 2
+        x: 2417
+        y: 64
+        width: 44
+        height: 50
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2b7175162c6dbc390800000000000000
+      internalID: -7796902199516784718
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_127
+      rect:
+        serializedVersion: 2
+        x: 2652
+        y: 87
+        width: 56
+        height: 62
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e324eca9424578b00800000000000000
+      internalID: 830725172465910334
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_128
+      rect:
+        serializedVersion: 2
+        x: 2461
+        y: 41
+        width: 33
+        height: 29
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3d5565c5e61df88e0800000000000000
+      internalID: -1688901063314876973
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_129
+      rect:
+        serializedVersion: 2
+        x: 2567
+        y: 24
+        width: 31
+        height: 53
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1b7ac16af1a958c90800000000000000
+      internalID: -7168153771168716879
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_130
+      rect:
+        serializedVersion: 2
+        x: 2594
+        y: 32
+        width: 41
+        height: 54
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: efafb5aec53e165b0800000000000000
+      internalID: -5376766491895268610
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_131
+      rect:
+        serializedVersion: 2
+        x: 2620
+        y: 49
+        width: 56
+        height: 60
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dc87e5b5aa0db4390800000000000000
+      internalID: -7832937696784910131
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_132
+      rect:
+        serializedVersion: 2
+        x: 2501
+        y: 24
+        width: 53
+        height: 23
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ff9e40115a487e840800000000000000
+      internalID: 5253313334840977919
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_133
+      rect:
+        serializedVersion: 2
+        x: 617
+        y: 2201
+        width: 241
+        height: 234
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0f5581da22b7ff747bc52b6efbe610cb
+      internalID: -1181423738
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_134
+      rect:
+        serializedVersion: 2
+        x: 612
+        y: 1873
+        width: 249
+        height: 256
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d4a72c059d55c7440b519c0cf4543b2f
+      internalID: -27763441
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_135
+      rect:
+        serializedVersion: 2
+        x: 629
+        y: 1578
+        width: 232
+        height: 225
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 93698e930b9259f47bde2de3112fc9fd
+      internalID: 1368876735
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_136
+      rect:
+        serializedVersion: 2
+        x: 974
+        y: 2641
+        width: 176
+        height: 255
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 881616369cff367419431e84b399ac91
+      internalID: -2009323593
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_137
+      rect:
+        serializedVersion: 2
+        x: 839
+        y: 2650
+        width: 117
+        height: 253
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 39713729cd743e34c999dab1893af30e
+      internalID: -616872305
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_138
+      rect:
+        serializedVersion: 2
+        x: 745
+        y: 2669
+        width: 85
+        height: 219
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 85c65782a8f39104e9493f1c8f28bd72
+      internalID: -1389903812
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_139
+      rect:
+        serializedVersion: 2
+        x: 550
+        y: 2664
+        width: 190
+        height: 238
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 26aa14307bc5b4f4f80d4a177eff9ab1
+      internalID: 1320907593
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_140
+      rect:
+        serializedVersion: 2
+        x: 362
+        y: 2666
+        width: 180
+        height: 247
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 757e319f4975a4449896de62d68b7803
+      internalID: -760122273
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_141
+      rect:
+        serializedVersion: 2
+        x: 229
+        y: 2691
+        width: 117
+        height: 230
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2a34cd00f9d1b774ab404764fc95c6e8
+      internalID: 1270534864
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_142
+      rect:
+        serializedVersion: 2
+        x: 151
+        y: 2735
+        width: 78
+        height: 140
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8dad17dcea30205478aa6e04b9b18631
+      internalID: -250305250
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_143
+      rect:
+        serializedVersion: 2
+        x: 1426
+        y: 2157
+        width: 179
+        height: 209
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5d95b3b20efd52d4692d6c121c0131a0
+      internalID: -1933554514
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_144
+      rect:
+        serializedVersion: 2
+        x: 1288
+        y: 2157
+        width: 138
+        height: 224
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2f4a9d91762435e46b26a9d46ff9d23c
+      internalID: 1394418437
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_145
+      rect:
+        serializedVersion: 2
+        x: 1199
+        y: 2196
+        width: 91
+        height: 157
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 62a2478c412905a439cb74cacf1b0c4b
+      internalID: -1591114287
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_146
+      rect:
+        serializedVersion: 2
+        x: 2391
+        y: 9
+        width: 327
+        height: 336
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1059527caafd4764c8f487b1096be5e5
+      internalID: 443635611
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_147
+      rect:
+        serializedVersion: 2
+        x: 3676
+        y: 358
+        width: 288
+        height: 297
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 17926b1f56250894f9d176da741d3c96
+      internalID: 797291644
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 76b522dd6ba60e74b81c6726ba239030
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_0: -7333631674885079706
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_1: -2882591245668452780
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_10: -186503712459030151
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_100: -4188928964327756138
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_101: 3280369531126094721
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_102: 6255880371522696162
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_103: -7559565340674359926
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_104: -1804665405596721796
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_105: -1861811894226795429
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_106: -7957011139818858583
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_107: 314199257288439054
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_108: 2354643693380311357
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_109: 8900671389682833148
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_11: -730183367469027758
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_110: -6594395375022715486
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_111: -4355894866227626926
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_112: 4027600799154769074
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_113: -4603897234381794535
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_114: -1417485616775713669
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_115: 7755934275086698514
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_116: -7321715974610204444
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_117: 320274545374154228
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_118: 6205224753514307895
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_119: -4206970426456051941
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_12: -8635356568836577871
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_120: 5443980558550195581
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_121: -8885506431590129167
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_122: -2631195041604701080
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_123: -390448790724107647
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_124: 125269601158544995
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_125: -6688731160054802205
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_126: -7796902199516784718
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_127: 830725172465910334
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_128: -1688901063314876973
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_129: -7168153771168716879
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_13: 8613133726806210562
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_130: -5376766491895268610
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_131: -7832937696784910131
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_132: 5253313334840977919
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_133: -1181423738
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_134: -27763441
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_135: 1368876735
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_136: -2009323593
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_137: -616872305
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_138: -1389903812
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_139: 1320907593
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_14: -3687502991772663217
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_140: -760122273
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_141: 1270534864
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_142: -250305250
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_143: -1933554514
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_144: 1394418437
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_145: -1591114287
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_146: 443635611
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_147: 797291644
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_15: 2359300899778876427
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_16: -2495176348266652066
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_17: -6438051404524552997
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_18: -590263328805763322
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_19: -1390885914869450708
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_2: 308462553786971785
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_20: 3629266350878223665
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_21: 8532393028904962125
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_22: 7852358580285354013
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_23: -6231814962719111433
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_24: 2403491748868681990
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_25: 4824012470503301248
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_26: 6216683248614038621
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_27: 5098738435452676634
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_28: -7429163726477452471
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_29: -404620839919989867
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_3: -3550032602945046547
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_30: -4064027673493507898
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_31: 3145415186777164969
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_32: 9168859430139805812
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_33: 4760749003005034245
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_34: 4185335253958131335
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_35: -7434604883460551449
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_36: 3294531864647545242
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_37: 1933446996387880879
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_38: 6745480085993172120
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_39: 8694937641819661868
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_4: -1799818898947894050
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_40: -1539673020405111906
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_41: 4857255617527419012
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_42: 81278673386478477
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_43: 2543191340061901546
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_44: 7749823606158087261
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_45: 3261529208016886678
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_46: 3291528136245068521
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_47: -2753254919499079253
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_48: -6266490616991117348
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_49: 5522804300312017370
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_5: -977504804745371156
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_50: 4234812170401468691
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_51: 2405518800291194220
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_52: -694476182479357369
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_53: 1688166969355980497
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_54: -2770154674944399291
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_55: 9046398041457677715
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_56: -1917576451019121858
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_57: 1323517236869680667
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_58: -1529438444407431701
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_59: 4738797483630280825
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_6: 6642604532115737913
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_60: 1367304350916164530
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_61: -51861908276784505
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_62: 8790015564081475392
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_63: -1406901027234084247
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_64: 7083646715951572659
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_65: -5936386132623544703
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_66: -5368688215766542943
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_67: -4237492677864380534
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_68: 3051948715445883757
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_69: -5358982101702539615
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_7: -7118045322529057501
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_70: 1581730496634747925
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_71: -1794527083870745307
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_72: 8197983483727105343
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_73: 703228921366271955
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_74: -1920548113986840252
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_75: -443429984451212632
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_76: -265808223197755755
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_77: 2129850421069271765
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_78: 2849948956222075145
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_79: -940125397632887589
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_8: -6117806164990346118
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_80: 1215046320705710844
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_81: -1665267097644632480
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_82: 7904341902325264443
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_83: -8155287996309191221
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_84: 7336703749437919479
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_85: 8628027239587403704
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_86: 585399482346062468
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_87: 8346427188190839875
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_88: -100680337599683746
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_89: 2142204780284316849
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_9: -4551294669056444986
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_90: 1892432336526571590
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_91: 2497859168711915791
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_92: -4110227710969255193
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_93: -9159923406033773855
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_94: 280384663265558916
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_95: 4265255711956342274
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_96: 7293506103749390108
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_97: -5029467501033250186
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_98: 4716567064444986403
+      Gameoverse Fan Game sprite sheet 7 Bass Sheet 2_99: 6393743694153921297
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

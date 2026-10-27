@@ -6,8 +6,8 @@ using UnityEngine;
 /// Boss Count. Mixes three Mega Man 2 Robot Masters:
 ///  • Metal Man — hops (low / high) and throws Short Hands at the player from the apex. Hops away when shot at.
 ///  • Quick Man — Hyper Speed rush through the player (red afterimages), and a high jump that throws boomerang hands.
-///  • Flash Man — time stop: the screen turns red and the player freezes. Four Long Hands appear 4 spaces around the
-///    player's spot and orbit very slowly. 0.5 s after time resumes they all fire into that spot.
+///  • Flash Man — drastic Hyper Speed slow (like playable Count): red wash, world crawls, Count stays full speed.
+///    Four Long Hands appear 4 spaces around the player's spot and orbit very slowly, then fire.
 /// Each distance zone runs a fixed rotation so the fight can be learned.
 /// At ≤ 55% HP (Boss Fight and Copy Bot) he enrages and drops whatever he is doing for his signature combo:
 /// Midnight (a 12-hand clock that fires inward like a ticking clock, with a gap) straight into Rewind Rush
@@ -15,7 +15,7 @@ using UnityEngine;
 /// and while it runs each hit gives him 0.5 s of i-frames. Enraged he also chains his normal moves.
 /// Copy Bot Omega (≤ 30% HP): a little faster still.
 /// </summary>
-public class BossCount : Boss
+public class BossCount : Boss, CountSignatureTimeModule.IHost
 {
     private enum Pattern
     {
@@ -24,7 +24,11 @@ public class BossCount : Boss
         QuickBoomerang,
         TimeStop,
         Midnight,
-        RewindRush
+        RewindRush,
+        HyperChase,
+        HyperEvade,
+        SoloRewind,
+        TimeClones
     }
 
     private enum Zone { Close, Mid, Far, AntiAir }
@@ -32,13 +36,13 @@ public class BossCount : Boss
     private enum Motion { Free, Stop, Walk, Velocity, Hang }
 
     private static readonly Pattern[] CloseRotation =
-        { Pattern.QuickRush, Pattern.MetalHop, Pattern.TimeStop, Pattern.QuickBoomerang };
+        { Pattern.QuickRush, Pattern.MetalHop, Pattern.TimeStop, Pattern.HyperEvade, Pattern.QuickBoomerang, Pattern.TimeClones };
     private static readonly Pattern[] MidRotation =
-        { Pattern.MetalHop, Pattern.QuickBoomerang, Pattern.QuickRush, Pattern.TimeStop };
+        { Pattern.MetalHop, Pattern.QuickBoomerang, Pattern.HyperChase, Pattern.QuickRush, Pattern.TimeStop, Pattern.SoloRewind };
     private static readonly Pattern[] FarRotation =
-        { Pattern.QuickBoomerang, Pattern.MetalHop, Pattern.QuickRush, Pattern.TimeStop };
+        { Pattern.HyperChase, Pattern.QuickBoomerang, Pattern.MetalHop, Pattern.QuickRush, Pattern.TimeStop, Pattern.TimeClones };
     private static readonly Pattern[] AntiAirRotation =
-        { Pattern.MetalHop, Pattern.QuickBoomerang, Pattern.TimeStop };
+        { Pattern.MetalHop, Pattern.QuickBoomerang, Pattern.TimeStop, Pattern.HyperChase };
 
     [Header("Identity")]
     [Tooltip("Max HP when spawned as a Copy Bot.")]
@@ -127,6 +131,12 @@ public class BossCount : Boss
     [SerializeField] private int timeStopHandDamage = 3;
     [Tooltip("Red screen wash while he alters time.")]
     [Range(0f, 1f)] [SerializeField] private float timeRedTint = 0.4f;
+    [Tooltip("Midnight world/player scale (much harsher than playable Count Up-Hyper ~0.5).")]
+    [SerializeField] [Range(0.03f, 0.25f)] private float drasticTimeSlowScale = 0.07f;
+    [Tooltip("Boss Hyper Speed world/player scale — matches playable Count Up-Hyper feel.")]
+    [SerializeField] [Range(0.15f, 0.7f)] private float hyperSpeedWorldScale = 0.5f;
+    [Tooltip("Easy: only use Hyper / Rewind / Clones every this many patterns.")]
+    [SerializeField] private int easySpecialEvery = 5;
 
     [Header("Enrage (HP ratio)")]
     [Range(0f, 1f)] [SerializeField] private float enrageHealthRatio = 0.55f;
@@ -152,17 +162,24 @@ public class BossCount : Boss
     [SerializeField] private float omegaTempoBonus = 0.1f;
 
     [Header("Signature - Midnight")]
-    [SerializeField] private float midnightWindupSeconds = 0.9f;
+    [SerializeField] private float midnightWindupSeconds = 0.45f;
     [SerializeField] private float midnightRadius = 5f;
     [Tooltip("Long Hands are scaled down so the gap can be escaped.")]
     [SerializeField] private float midnightHandScale = 0.7f;
-    [SerializeField] private float midnightHandSpawnGap = 0.06f;
-    [SerializeField] private float midnightFrozenSeconds = 1.6f;
-    [SerializeField] private float midnightFireDelay = 0.5f;
+    [Tooltip("Real-time gap between hand spawns (Count is not slowed — keep this tiny).")]
+    [SerializeField] private float midnightHandSpawnGap = 0.025f;
+    [SerializeField] private float midnightFrozenSeconds = 0.85f;
+    [SerializeField] private float midnightFireDelay = 0.18f;
     [Tooltip("Seconds between hands firing (the clock ticking).")]
-    [SerializeField] private float midnightFireGap = 0.12f;
+    [SerializeField] private float midnightFireGap = 0.07f;
     [SerializeField] private float midnightHandSpeed = 15f;
     [SerializeField] private int midnightHandDamage = 2;
+    [Tooltip("How often Midnight Count fires Short Hands while chasing.")]
+    [SerializeField] private float midnightShootInterval = 0.38f;
+    [Tooltip("Chance each combat tick to start a self-speed burst during Midnight.")]
+    [SerializeField] [Range(0f, 1f)] private float midnightSpeedBurstChance = 0.04f;
+    [SerializeField] private float midnightSpeedBurstMul = 1.55f;
+    [SerializeField] private float midnightSpeedBurstSeconds = 0.55f;
 
     [Header("Signature - Rewind Rush")]
     [SerializeField] private int rewindRushDashes = 3;
@@ -218,7 +235,18 @@ public class BossCount : Boss
     private CountChargeAuraVisual clockAura;
     private CountHyperSpeedWorldTint timeTint;
     private bool timeTintActive;
-    private PlayerController frozenPlayer;
+    private readonly object flashSlowOwner = new object();
+    private bool ownsFlashSlow;
+    private bool hyperSpeedActive;
+    private bool ownsHyperSlow;
+    private bool midnightPhaseActive;
+    private float midnightSelfSpeedMul = 1f;
+    private float midnightSpeedBurstEndsAt;
+    private float midnightNextShootAt;
+    private bool midnightEscapeArmed;
+    private float midnightEscapeAngleDeg;
+    private Vector2 midnightOrbitCenter;
+    private int patternsSinceSpecial;
 
     private readonly List<Projectile> orbitHands = new List<Projectile>(12);
     private readonly List<float> orbitHandAngles = new List<float>(12);
@@ -231,6 +259,11 @@ public class BossCount : Boss
 
     private Aura telegraphAura;
     private Aura enrageAura;
+
+    /// <summary>During his own Flash / Hyper he keeps full speed (Bass DG isolation pattern).</summary>
+    private bool KeepsFullSpeed => ownsFlashSlow || ownsHyperSlow || hyperSpeedActive;
+
+    private float ActionDeltaTime => KeepsFullSpeed ? Time.deltaTime : BossDeltaTime;
 
     private readonly HashSet<int> animatorParams = new HashSet<int>();
     private GameObject[] afterimageObjects;
@@ -257,9 +290,17 @@ public class BossCount : Boss
     public override int CopyBotMaxHealthOverride => copyBotMaxHealth;
 
     private float HealthRatio => currentHealth / (float)Mathf.Max(1, maxHealth);
-    private bool IsEnraged => HealthRatio <= enrageHealthRatio + 0.0001f;
+    private bool IsEnraged =>
+        EnrageLatched || HealthRatio <= DifficultyTuning.BossEnrageThreshold(enrageHealthRatio) + 0.0001f;
     private bool OmegaActive => IsMainCopyBot && HealthRatio <= omegaHealthRatio + 0.0001f;
-    private bool SignaturePhase => HealthRatio <= signatureHealthRatio + 0.0001f;
+    private bool SignaturePhase => SignaturePhaseLatched || HealthRatio <= signatureHealthRatio + 0.0001f;
+
+    protected override int ResolveLifeBarCount() => lifeBarCount;
+
+    protected override void OnNearDeathPhasesSnapshot()
+    {
+        LatchCombatPhases(IsEnraged, signaturePhase: SignaturePhase, desperatePhase: false);
+    }
 
     private int BarsLost
     {
@@ -272,12 +313,13 @@ public class BossCount : Boss
 
     private float BarsLost01 => Mathf.Clamp01(BarsLost / (float)Mathf.Max(1, lifeBarCount - 1));
 
-    private float Tempo =>
+    private float Tempo => DifficultyTuning.ScaleBossTempo(
         1f + BarsLost * Mathf.Max(0f, tempoPerBarLost) +
         (IsEnraged ? Mathf.Max(0f, enrageTempoBonus) : 0f) +
-        (OmegaActive ? Mathf.Max(0f, omegaTempoBonus) : 0f);
+        (OmegaActive ? Mathf.Max(0f, omegaTempoBonus) : 0f));
 
-    private float RecoverDuration => Mathf.Max(0.05f, Mathf.Lerp(recoverDurationFullHp, recoverDurationLowHp, BarsLost01));
+    private float RecoverDuration => DifficultyTuning.ScaleBossRecover(
+        Mathf.Max(0.05f, Mathf.Lerp(recoverDurationFullHp, recoverDurationLowHp, BarsLost01)));
 
     // ---------- Lifecycle ----------
 
@@ -304,13 +346,15 @@ public class BossCount : Boss
 
     private void OnDisable()
     {
-        EndTimeStop();
+        EndDrasticTimeSlow();
+        EndBossHyperSpeed();
         ClearOrbitHands();
     }
 
     private void OnDestroy()
     {
-        EndTimeStop();
+        EndDrasticTimeSlow();
+        EndBossHyperSpeed();
         ClearOrbitHands();
         DestroyAura(telegraphAura);
         DestroyAura(enrageAura);
@@ -354,9 +398,20 @@ public class BossCount : Boss
 
     protected override float GetMoveSpeed()
     {
-        float speed = moveSpeed + crystalMoveSpeedBonus + BarsLost * Mathf.Max(0f, moveSpeedPerBarLost);
+        float speed = DifficultyTuning.ScaleBossMoveSpeed(authoredMoveSpeed)
+                      + crystalMoveSpeedBonus + BarsLost * Mathf.Max(0f, moveSpeedPerBarLost);
         if (IsEnraged)
             speed += Mathf.Max(0f, enrageMoveSpeedBonus);
+
+        // During his own Midnight / Hyper he is NOT slowed — sometimes he even accelerates.
+        if (KeepsFullSpeed)
+        {
+            float self = Mathf.Max(1f, midnightSelfSpeedMul);
+            if (midnightPhaseActive)
+                self *= DifficultyTuning.BossMidnightMoveMul();
+            return speed * self;
+        }
+
         return BossSpeed(speed);
     }
 
@@ -432,8 +487,23 @@ public class BossCount : Boss
                     StopHorizontal();
                 break;
             case Motion.Velocity:
-                rb.linearVelocity = new Vector2(BossSpeed(motionVelocity.x), BossSpeed(motionVelocity.y));
+            {
+                float vx = motionVelocity.x;
+                float vy = motionVelocity.y;
+                if (!KeepsFullSpeed)
+                {
+                    vx = BossSpeed(vx);
+                    vy = BossSpeed(vy);
+                }
+                else if (midnightSelfSpeedMul > 1.01f)
+                {
+                    vx *= midnightSelfSpeedMul;
+                    vy *= midnightSelfSpeedMul;
+                }
+
+                rb.linearVelocity = new Vector2(vx, vy);
                 break;
+            }
             case Motion.Hang:
                 rb.linearVelocity = Vector2.zero;
                 break;
@@ -509,7 +579,10 @@ public class BossCount : Boss
         if (animator == null)
             return;
 
-        animator.speed = HyperSpeedWorldSlow.IsActive ? HyperSpeedWorldSlow.WorldTimeScale : 1f;
+        // Keep his own clock running at full rate while he owns the slow (player/world crawl).
+        animator.speed = KeepsFullSpeed
+            ? Mathf.Max(1f, midnightSelfSpeedMul)
+            : (HyperSpeedWorldSlow.IsActive ? HyperSpeedWorldSlow.WorldTimeScale : 1f);
 
         float vy = rb != null ? rb.linearVelocity.y : 0f;
         bool moving = motion == Motion.Walk && Mathf.Abs(walkDir) > 0.01f && !isDashing;
@@ -539,7 +612,19 @@ public class BossCount : Boss
         if (TryStartSignature())
         {
             signatureActive = true;
-            yield return RunPattern(Pattern.Midnight);
+            if (GameSettings.Difficulty == GameDifficulty.Hard)
+            {
+                float slow = DifficultyTuning.BossMidnightWorldSlowScale(drasticTimeSlowScale);
+                yield return CountSignatureTimeModule.MidnightChain(
+                    this, midnightWindupSeconds, midnightRadius, midnightHandScale, midnightHandSpawnGap,
+                    midnightFrozenSeconds, midnightFireDelay, midnightFireGap, midnightHandSpeed,
+                    midnightHandDamage, slow, 5);
+            }
+            else
+            {
+                yield return RunPattern(Pattern.Midnight);
+            }
+
             CleanupAfterPattern();
             if (!isGrounded)
                 yield return WaitUntilGrounded(2f);
@@ -551,6 +636,9 @@ public class BossCount : Boss
         }
 
         Pattern pattern = PickPattern(player);
+        // Alternate: sometimes layer Hyper Speed onto a normal approach (keeps the player guessing).
+        if (ShouldLayerHyperOnPattern(pattern))
+            yield return HyperSpeedAssist(chase: pattern == Pattern.MetalHop || pattern == Pattern.QuickBoomerang);
         yield return RunPattern(pattern);
 
         if (enragedChains && IsEnraged && TryGetFollowUp(pattern, out Pattern followUp))
@@ -616,11 +704,40 @@ public class BossCount : Boss
 
     private bool IsPatternReady(Pattern pattern)
     {
-        if (pattern == Pattern.TimeStop)
+        if (pattern == Pattern.TimeStop || pattern == Pattern.Midnight)
             return longHandPrefab != null && Time.time >= timeStopReadyAt;
-        if (pattern == Pattern.MetalHop || pattern == Pattern.QuickBoomerang)
+        if (pattern == Pattern.MetalHop || pattern == Pattern.QuickBoomerang || pattern == Pattern.TimeClones)
             return shortHandPrefab != null;
+        if (IsSpecialPowerPattern(pattern) && !AllowSpecialPowerNow())
+            return false;
         return true;
+    }
+
+    private static bool IsSpecialPowerPattern(Pattern pattern) =>
+        pattern is Pattern.HyperChase or Pattern.HyperEvade or Pattern.SoloRewind or Pattern.TimeClones;
+
+    private bool AllowSpecialPowerNow()
+    {
+        switch (GameSettings.Difficulty)
+        {
+            case GameDifficulty.Easy:
+                return patternsSinceSpecial >= Mathf.Max(2, easySpecialEvery);
+            case GameDifficulty.Hard:
+                return true;
+            default:
+                return true; // Normal / Balanced: Bass-like free rotation mix
+        }
+    }
+
+    private bool ShouldLayerHyperOnPattern(Pattern pattern)
+    {
+        if (pattern is Pattern.TimeStop or Pattern.Midnight or Pattern.RewindRush)
+            return false;
+        if (GameSettings.Difficulty == GameDifficulty.Easy)
+            return AllowSpecialPowerNow() && Random.value < 0.2f;
+        if (GameSettings.Difficulty == GameDifficulty.Hard)
+            return Random.value < 0.55f;
+        return Random.value < 0.35f;
     }
 
     private Zone ResolveZone(PlayerController player)
@@ -649,6 +766,11 @@ public class BossCount : Boss
 
     private IEnumerator RunPattern(Pattern pattern)
     {
+        if (IsSpecialPowerPattern(pattern))
+            patternsSinceSpecial = 0;
+        else
+            patternsSinceSpecial++;
+
         switch (pattern)
         {
             case Pattern.QuickRush: return QuickRushPattern();
@@ -656,6 +778,10 @@ public class BossCount : Boss
             case Pattern.TimeStop: return TimeStopPattern();
             case Pattern.Midnight: return MidnightPattern();
             case Pattern.RewindRush: return RewindRushPattern();
+            case Pattern.HyperChase: return HyperChasePattern();
+            case Pattern.HyperEvade: return HyperEvadePattern();
+            case Pattern.SoloRewind: return SoloRewindPattern();
+            case Pattern.TimeClones: return TimeClonesPattern();
             default: return MetalHopPattern();
         }
     }
@@ -710,6 +836,8 @@ public class BossCount : Boss
     private int MetalVolleySize(int hop)
     {
         int[] volleys = IsEnraged ? new[] { 3, 2, 3 } : new[] { 2, 1, 3 };
+        for (int v = 0; v < volleys.Length; v++)
+            volleys[v] = DifficultyTuning.ScaleSignatureCount(volleys[v]);
         return volleys[hop % volleys.Length];
     }
 
@@ -791,7 +919,7 @@ public class BossCount : Boss
     {
         yield return RushTelegraph(rushWindupSeconds);
 
-        int rushes = IsEnraged ? 2 : 1;
+        int rushes = DifficultyTuning.ScaleSignatureCount(IsEnraged ? 2 : 1);
         for (int i = 0; i < rushes; i++)
         {
             float dx = DxToPlayer();
@@ -935,8 +1063,7 @@ public class BossCount : Boss
     // ---------- Flash Man ----------
 
     /// <summary>
-    /// Clock telegraph → time stops (red screen, player frozen) → four Long Hands appear 4 spaces around the player's
-    /// spot and orbit very slowly while he repositions → time resumes → 0.5 s later the hands fire into the spot.
+    /// Clock telegraph → drastic Hyper Speed slow → four Long Hands orbit → slow ends → hands fire.
     /// </summary>
     private IEnumerator TimeStopPattern()
     {
@@ -947,7 +1074,7 @@ public class BossCount : Boss
         if (player == null || player.IsDead || longHandPrefab == null)
             yield break;
 
-        BeginTimeStop(player);
+        BeginDrasticTimeSlow(DifficultyTuning.BossMidnightWorldSlowScale(drasticTimeSlowScale));
         orbitCenter = PlayerBounds(player).center;
         orbitRadius = Mathf.Max(0.5f, timeStopRadius);
         orbitDegreesPerSecond = Mathf.Abs(timeStopOrbitDegreesPerSecond) * (Random.value < 0.5f ? 1f : -1f);
@@ -963,10 +1090,9 @@ public class BossCount : Boss
             yield return WaitRaw(gap);
         }
 
-        // He keeps moving while the world is stopped.
         while (frozen < timeStopFrozenSeconds)
         {
-            frozen += BossDeltaTime;
+            frozen += ActionDeltaTime;
             float dx = DxToPlayer();
             if (isGrounded && Mathf.Abs(dx) > 4f)
             {
@@ -986,7 +1112,7 @@ public class BossCount : Boss
         motion = Motion.Stop;
         walkDir = 0f;
         FacePlayer();
-        EndTimeStop();
+        EndDrasticTimeSlow();
 
         yield return WaitRaw(timeStopFireDelay);
         for (int i = 0; i < orbitHands.Count; i++)
@@ -997,126 +1123,187 @@ public class BossCount : Boss
         yield return Wait(0.2f);
     }
 
-    /// <summary>
-    /// Signature: time stops and twelve Long Hands form a clock around the player (one diameter left open).
-    /// After time resumes they fire inward one after another, clockwise from 12.
-    /// </summary>
     private IEnumerator MidnightPattern()
     {
-        yield return ClockWindup(midnightWindupSeconds, 2);
+        float slow = DifficultyTuning.BossMidnightWorldSlowScale(drasticTimeSlowScale);
+        yield return CountSignatureTimeModule.Midnight(
+            this, midnightWindupSeconds, midnightRadius, midnightHandScale, midnightHandSpawnGap,
+            midnightFrozenSeconds, midnightFireDelay, midnightFireGap, midnightHandSpeed,
+            midnightHandDamage, slow);
+    }
 
-        PlayerController player = FindPlayer();
-        if (player == null || player.IsDead || longHandPrefab == null)
-            yield break;
+    private IEnumerator RewindRushPattern()
+    {
+        float speed = rewindRushSpeed * DifficultyTuning.BossRewindRushSpeedMul();
+        float pause = rewindRushPause * DifficultyTuning.BossRewindRushPauseMul();
+        float playback = rewindPlaybackSeconds * DifficultyTuning.BossRewindRushPlaybackMul();
+        float windup = rushWindupSeconds * DifficultyTuning.BossRewindRushPauseMul();
+        yield return CountSignatureTimeModule.RewindRush(
+            this, rewindRushDashes, speed, pause, playback,
+            rewindRushDamage, rushOvershoot, rushMinDistance, rushMaxDistance, windup);
+    }
 
-        BeginTimeStop(player);
-        orbitCenter = PlayerBounds(player).center;
-        orbitRadius = Mathf.Max(1f, midnightRadius);
-        orbitDegreesPerSecond = 0f;
-
-        int[] gapChoices = { 3, 3, 2, 4 };
-        int gapHour = gapChoices[Random.Range(0, gapChoices.Length)];
-        int gapOpposite = (gapHour + 6) % 12;
-
-        float frozen = 0f;
-        for (int hour = 0; hour < 12; hour++)
+    private IEnumerator HyperChasePattern()
+    {
+        yield return HyperSpeedAssist(chase: true);
+        float t = 0f;
+        while (t < 1.1f)
         {
-            if (hour == gapHour || hour == gapOpposite)
-                continue;
+            t += ActionDeltaTime;
+            float dx = DxToPlayer();
+            if (isGrounded)
+            {
+                motion = Motion.Walk;
+                walkDir = Mathf.Abs(dx) > 0.2f ? Mathf.Sign(dx) : 0f;
+            }
 
-            SpawnOrbitHand(90f - 30f * hour, midnightHandScale);
-            PlayClockTick(hour);
-            float gap = Mathf.Max(0f, midnightHandSpawnGap);
-            frozen += gap;
-            yield return WaitRaw(gap);
-        }
-
-        while (frozen < midnightFrozenSeconds)
-        {
-            frozen += BossDeltaTime;
-            motion = Motion.Stop;
             FacePlayer();
             yield return null;
         }
 
-        EndTimeStop();
-        yield return WaitRaw(midnightFireDelay);
-
-        for (int i = 0; i < orbitHands.Count; i++)
-        {
-            LaunchOrbitHand(i, midnightHandSpeed, Damage(midnightHandDamage));
-            PlayClockTick(i);
-            if (i % 3 == 0)
-                PlayShootAnim();
-            yield return WaitRaw(Mathf.Max(0f, midnightFireGap));
-        }
-
-        ClearOrbitHands();
-        yield return Wait(0.25f);
+        EndBossHyperSpeed();
+        motion = Motion.Stop;
     }
 
-    /// <summary>
-    /// Signature: three rushes through the player, a red rewind back to where he started, then the same three rushes
-    /// mirrored (opposite directions, same lengths).
-    /// </summary>
-    private IEnumerator RewindRushPattern()
+    private IEnumerator HyperEvadePattern()
+    {
+        yield return HyperSpeedAssist(chase: false);
+        float away = -Mathf.Sign(DxToPlayer());
+        if (Mathf.Abs(away) < 0.01f)
+            away = -facingSign;
+        yield return Rush(away, Mathf.Clamp(dashDistanceSafe(), rushMinDistance, rushMaxDistance),
+            rushSpeed * 1.15f, 0, null);
+        EndBossHyperSpeed();
+    }
+
+    private float dashDistanceSafe() => Mathf.Abs(DxToPlayer()) + rushOvershoot;
+
+    private IEnumerator SoloRewindPattern()
     {
         if (rb == null)
             yield break;
 
-        yield return RushTelegraph(rushWindupSeconds);
-
         rewindPath.Clear();
-        List<float> dashLengths = new List<float>(Mathf.Max(1, rewindRushDashes));
-        int dashes = Mathf.Max(1, rewindRushDashes);
-        for (int i = 0; i < dashes; i++)
+        float recordFor = 0.85f;
+        float t = 0f;
+        while (t < recordFor)
         {
+            t += ActionDeltaTime;
+            rewindPath.Add(rb.position);
             float dx = DxToPlayer();
-            float dir = Mathf.Abs(dx) > 0.05f ? Mathf.Sign(dx) : facingSign;
-            float distance = Mathf.Clamp(Mathf.Abs(dx) + rushOvershoot, rushMinDistance, rushMaxDistance);
-            float x0 = rb.position.x;
-            yield return Rush(dir, distance, rewindRushSpeed, Damage(rewindRushDamage), rewindPath);
-            dashLengths.Add(rb.position.x - x0);
-            yield return RushTelegraph(rewindRushPause);
+            if (isGrounded && Mathf.Abs(dx) > 0.3f)
+            {
+                motion = Motion.Walk;
+                walkDir = Mathf.Sign(dx);
+            }
+
+            yield return null;
         }
 
-        // Rewind: replay the path backwards with the red wash on.
-        BeginTimeTint();
+        BeginTimeTintOnly();
         SoundManager.Instance?.PlayClockworkToc();
-        isDashing = true;
-        forceTrail = true;
-        SetGravity(false);
-        motion = Motion.Hang;
-        float playback = Mathf.Max(0.1f, rewindPlaybackSeconds);
-        float t = 0f;
+        float playback = Mathf.Max(0.2f, rewindPlaybackSeconds);
+        t = 0f;
         int count = rewindPath.Count;
         while (t < playback && count > 0)
         {
-            t += BossDeltaTime;
-            int index = Mathf.Clamp(Mathf.RoundToInt((1f - Mathf.Clamp01(t / playback)) * (count - 1)), 0, count - 1);
+            t += ActionDeltaTime;
+            int index = Mathf.Clamp(
+                Mathf.RoundToInt((1f - Mathf.Clamp01(t / playback)) * (count - 1)), 0, count - 1);
             TeleportTo(rewindPath[index]);
             yield return null;
         }
 
         if (count > 0)
             TeleportTo(rewindPath[0]);
-        EndTimeTint();
-        EndRush();
-        rewindPath.Clear();
+        EndTimeTintOnly();
+        motion = Motion.Stop;
+        FacePlayer();
+        if (shortHandPrefab != null)
+            FireShortHandAtPlayer();
+    }
 
-        yield return RushTelegraph(rewindRushPause * 1.5f);
-        for (int i = 0; i < dashLengths.Count; i++)
+    private IEnumerator TimeClonesPattern()
+    {
+        if (shortHandPrefab == null || spriteRenderer == null)
+            yield break;
+
+        FacePlayer();
+        int clones = GameSettings.Difficulty == GameDifficulty.Hard ? 3 : 2;
+        for (int i = 0; i < clones; i++)
         {
-            float length = dashLengths[i];
-            if (Mathf.Abs(length) < 0.2f)
-                continue;
-
-            yield return Rush(-Mathf.Sign(length), Mathf.Abs(length), rewindRushSpeed, Damage(rewindRushDamage), null);
-            if (i < dashLengths.Count - 1)
-                yield return RushTelegraph(rewindRushPause);
+            Vector3 offset = new Vector3((i - (clones - 1) * 0.5f) * 1.4f, 0.1f, 0f);
+            BossCountTimeClone.Spawn(
+                this, transform.position + offset, spriteRenderer.sprite, spriteRenderer.flipX,
+                new Color(1f, 0.55f, 0.55f, 0.85f), shortHandPrefab, Damage(metalShotDamage),
+                0.55f, 14f);
+            yield return Wait(0.12f);
         }
 
-        yield return Wait(0.15f);
+        yield return Wait(1.2f);
+    }
+
+    private IEnumerator HyperSpeedAssist(bool chase)
+    {
+        BeginBossHyperSpeed();
+        forceTrail = true;
+        float t = 0f;
+        float dur = chase ? 0.45f : 0.35f;
+        while (t < dur)
+        {
+            t += ActionDeltaTime;
+            float dx = DxToPlayer();
+            float dir = chase ? Mathf.Sign(dx) : -Mathf.Sign(dx);
+            if (Mathf.Abs(dir) < 0.01f)
+                dir = facingSign;
+            if (isGrounded)
+            {
+                motion = Motion.Walk;
+                walkDir = dir;
+            }
+
+            yield return null;
+        }
+    }
+
+    private void BeginBossHyperSpeed()
+    {
+        if (ownsHyperSlow)
+            return;
+        hyperSpeedActive = true;
+        ownsHyperSlow = true;
+        // Same player-slow feel as playable Count Up-Hyper (~0.5 world scale).
+        HyperSpeedWorldSlow.Begin(this, Mathf.Clamp(hyperSpeedWorldScale, 0.15f, 0.7f), slowPlayer: true);
+        BeginTimeTint();
+    }
+
+    private void EndBossHyperSpeed()
+    {
+        hyperSpeedActive = false;
+        if (ownsHyperSlow)
+        {
+            HyperSpeedWorldSlow.End(this);
+            ownsHyperSlow = false;
+        }
+
+        EndTimeTint();
+        forceTrail = false;
+    }
+
+    private void FireShortHandAtPlayer()
+    {
+        // Uses existing metal apex throw helpers when available; otherwise a direct Launch.
+        PlayerController player = FindPlayer();
+        if (player == null || shortHandPrefab == null)
+            return;
+
+        Vector2 origin = firePoint != null ? (Vector2)firePoint.position : (Vector2)transform.position;
+        Vector2 dir = ((Vector2)PlayerBounds(player).center - origin).normalized;
+        if (dir.sqrMagnitude < 0.01f)
+            dir = new Vector2(facingSign, 0f);
+        Projectile shot = Object.Instantiate(shortHandPrefab, origin, Quaternion.identity);
+        shot.Launch(dir, metalShotSpeed, Damage(metalShotDamage), transform);
+        PlayShootAnim();
     }
 
     /// <summary>Clock activation pose, Count's charge aura and clock sounds.</summary>
@@ -1166,24 +1353,29 @@ public class BossCount : Boss
             SoundManager.Instance?.PlayClockworkToc();
     }
 
-    private void BeginTimeStop(PlayerController player)
+    public void BeginDrasticTimeSlow(float worldScale)
     {
-        if (player != null && !player.IsDead)
-        {
-            player.SetTimeFrozen(true);
-            frozenPlayer = player;
-        }
-
+        // Already difficulty-tuned by caller; clamp keeps Easy mild and Hard near authored crawl.
+        float scale = Mathf.Clamp(worldScale, 0.03f, 0.35f);
+        HyperSpeedWorldSlow.Begin(flashSlowOwner, scale, slowPlayer: true);
+        ownsFlashSlow = true;
         BeginTimeTint();
     }
 
-    private void EndTimeStop()
+    public void EndDrasticTimeSlow()
     {
-        if (frozenPlayer != null)
-            frozenPlayer.SetTimeFrozen(false);
-        frozenPlayer = null;
+        if (ownsFlashSlow)
+        {
+            HyperSpeedWorldSlow.End(flashSlowOwner);
+            ownsFlashSlow = false;
+        }
+
         EndTimeTint();
     }
+
+    public void BeginTimeTintOnly() => BeginTimeTint();
+
+    public void EndTimeTintOnly() => EndTimeTint();
 
     private void BeginTimeTint()
     {
@@ -1203,6 +1395,214 @@ public class BossCount : Boss
         if (timeTint != null)
             timeTint.Release();
     }
+
+    // ---- CountSignatureTimeModule.IHost ----
+
+    IEnumerator CountSignatureTimeModule.IHost.ClockWindup(float seconds, int tickPairs) =>
+        ClockWindup(seconds, tickPairs);
+
+    Bounds CountSignatureTimeModule.IHost.PlayerAimBounds()
+    {
+        PlayerController p = FindPlayer();
+        return p != null ? PlayerBounds(p) : MyBounds();
+    }
+
+    bool CountSignatureTimeModule.IHost.HasLongHandPrefab => longHandPrefab != null;
+
+    void CountSignatureTimeModule.IHost.SpawnOrbitHand(float angleDegrees, float scale) =>
+        SpawnOrbitHand(angleDegrees, scale);
+
+    void CountSignatureTimeModule.IHost.ClearOrbitHands() => ClearOrbitHands();
+
+    void CountSignatureTimeModule.IHost.LaunchOrbitHand(int index, float speed, int damage) =>
+        LaunchOrbitHand(index, speed, damage);
+
+    int CountSignatureTimeModule.IHost.OrbitHandCount => orbitHands.Count;
+
+    void CountSignatureTimeModule.IHost.SetOrbitCenter(Vector3 center, float radius, float degreesPerSecond)
+    {
+        orbitCenter = center;
+        orbitRadius = radius;
+        orbitDegreesPerSecond = degreesPerSecond;
+    }
+
+    void CountSignatureTimeModule.IHost.PlayClockTick(int index) => PlayClockTick(index);
+
+    void CountSignatureTimeModule.IHost.FacePlayer() => FacePlayer();
+
+    void CountSignatureTimeModule.IHost.PlayShootAnim() => PlayShootAnim();
+
+    void CountSignatureTimeModule.IHost.StopMotion()
+    {
+        motion = Motion.Stop;
+        walkDir = 0f;
+    }
+
+    void CountSignatureTimeModule.IHost.BeginMidnightPhase()
+    {
+        midnightPhaseActive = true;
+        midnightSelfSpeedMul = 1f;
+        midnightSpeedBurstEndsAt = 0f;
+        midnightNextShootAt = Time.time + 0.12f;
+        midnightEscapeArmed = false;
+        forceTrail = true;
+    }
+
+    void CountSignatureTimeModule.IHost.EndMidnightPhase()
+    {
+        midnightPhaseActive = false;
+        midnightSelfSpeedMul = 1f;
+        midnightSpeedBurstEndsAt = 0f;
+        midnightEscapeArmed = false;
+        forceTrail = false;
+        motion = Motion.Stop;
+        walkDir = 0f;
+    }
+
+    void CountSignatureTimeModule.IHost.SetMidnightEscapeOpening(float escapeAngleDegrees, Vector2 orbitCenter)
+    {
+        midnightEscapeArmed = true;
+        midnightEscapeAngleDeg = escapeAngleDegrees;
+        midnightOrbitCenter = orbitCenter;
+    }
+
+    void CountSignatureTimeModule.IHost.MaybeRollMidnightSpeedBurst()
+    {
+        if (!midnightPhaseActive)
+            return;
+        if (Time.time < midnightSpeedBurstEndsAt)
+            return;
+
+        float blend = DifficultyTuning.BossMidnightSpeedBurstBlend();
+        if (blend <= 0.01f)
+            return;
+
+        // Module already gated with Random; still respect authored chance as a soft filter.
+        if (Random.value > Mathf.Clamp01(Mathf.Max(0.35f, midnightSpeedBurstChance * 12f)))
+            return;
+
+        float burst = Mathf.Lerp(1f, Mathf.Max(1f, midnightSpeedBurstMul), blend);
+        midnightSelfSpeedMul = burst;
+        midnightSpeedBurstEndsAt = Time.time + Mathf.Max(0.15f, midnightSpeedBurstSeconds);
+        forceTrail = true;
+    }
+
+    void CountSignatureTimeModule.IHost.TickMidnightCombat(float dt)
+    {
+        if (Time.time >= midnightSpeedBurstEndsAt)
+            midnightSelfSpeedMul = 1f;
+
+        PlayerController player = FindPlayer();
+        if (player == null || player.IsDead)
+        {
+            motion = Motion.Stop;
+            walkDir = 0f;
+            return;
+        }
+
+        FacePlayer();
+
+        // Stay on the side OPPOSITE the escape opening so the player has a clear lane out.
+        if (midnightEscapeArmed && isGrounded && rb != null)
+        {
+            float rad = midnightEscapeAngleDeg * Mathf.Deg2Rad;
+            Vector2 escapeDir = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
+            Vector2 pressureDir = -escapeDir;
+            float preferX = midnightOrbitCenter.x + pressureDir.x * Mathf.Max(1.6f, midnightRadius * 0.55f);
+            float toPrefer = preferX - rb.position.x;
+
+            // Soft pull toward pressure side; still nudge toward player if already parked there.
+            if (Mathf.Abs(toPrefer) > 0.35f)
+            {
+                motion = Motion.Walk;
+                walkDir = Mathf.Sign(toPrefer);
+            }
+            else
+            {
+                float dx = DxToPlayer();
+                // Don't chase into the escape lane — only close distance if player is also on pressure side.
+                float playerFromCenter = player.transform.position.x - midnightOrbitCenter.x;
+                bool playerOnPressureSide = Mathf.Sign(playerFromCenter) == Mathf.Sign(pressureDir.x) ||
+                                           Mathf.Abs(playerFromCenter) < 0.4f;
+                if (playerOnPressureSide && Mathf.Abs(dx) > 1.0f)
+                {
+                    motion = Motion.Walk;
+                    walkDir = Mathf.Sign(dx);
+                }
+                else
+                {
+                    motion = Motion.Stop;
+                    walkDir = 0f;
+                }
+            }
+        }
+        else if (isGrounded)
+        {
+            float dx = DxToPlayer();
+            float absDx = Mathf.Abs(dx);
+            if (absDx > 1.1f)
+            {
+                motion = Motion.Walk;
+                walkDir = Mathf.Sign(dx);
+            }
+            else if (absDx < 0.55f)
+            {
+                motion = Motion.Walk;
+                walkDir = -Mathf.Sign(dx);
+            }
+            else
+            {
+                motion = Motion.Walk;
+                walkDir = Mathf.Sign(dx) * 0.35f;
+            }
+        }
+
+        if (Time.time >= midnightNextShootAt && shortHandPrefab != null)
+        {
+            // Don't shoot while standing in the escape lane — keep fire from the pressure side.
+            bool inEscapeLane = false;
+            if (midnightEscapeArmed && rb != null)
+            {
+                float rad = midnightEscapeAngleDeg * Mathf.Deg2Rad;
+                Vector2 escapeDir = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
+                float alongEscape = Vector2.Dot(
+                    (Vector2)rb.position - midnightOrbitCenter, escapeDir.normalized);
+                inEscapeLane = alongEscape > midnightRadius * 0.25f;
+            }
+
+            if (!inEscapeLane)
+            {
+                midnightNextShootAt = Time.time + Mathf.Max(0.12f, midnightShootInterval);
+                FireShortHandAtPlayer();
+            }
+            else
+            {
+                midnightNextShootAt = Time.time + 0.08f;
+            }
+        }
+    }
+
+    float CountSignatureTimeModule.IHost.BossDt => ActionDeltaTime;
+
+    IEnumerator CountSignatureTimeModule.IHost.WaitRaw(float seconds) => WaitRaw(seconds);
+
+    IEnumerator CountSignatureTimeModule.IHost.WaitScaled(float seconds) => Wait(seconds);
+
+    int CountSignatureTimeModule.IHost.ScaleDamage(int baseDamage) => Damage(baseDamage);
+
+    IEnumerator CountSignatureTimeModule.IHost.RushTelegraph(float seconds) => RushTelegraph(seconds);
+
+    IEnumerator CountSignatureTimeModule.IHost.PerformRush(
+        float dir, float distance, float speed, int damage, List<Vector2> pathRecorder) =>
+        Rush(dir, distance, speed, damage, pathRecorder);
+
+    void CountSignatureTimeModule.IHost.TeleportTo(Vector2 position) => TeleportTo(position);
+
+    Rigidbody2D CountSignatureTimeModule.IHost.Body => rb;
+
+    float CountSignatureTimeModule.IHost.DxToPlayer() => DxToPlayer();
+
+    float CountSignatureTimeModule.IHost.FacingSign => facingSign;
 
     private void SpawnOrbitHand(float angleDegrees, float scale)
     {
@@ -1352,13 +1752,17 @@ public class BossCount : Boss
         }
     }
 
-    /// <summary>Exact wait, not sped up by Tempo (shot spacing, the 0.5 s fire delay).</summary>
+    /// <summary>
+    /// Exact wait for shot / Midnight spawn spacing.
+    /// Uses ActionDeltaTime so while Count owns Hyper/Midnight the wait stays real-time
+    /// (spawn rate is not slowed — only launched shots crawl).
+    /// </summary>
     private IEnumerator WaitRaw(float seconds)
     {
         float t = 0f;
         while (t < seconds)
         {
-            t += BossDeltaTime;
+            t += ActionDeltaTime;
             yield return null;
         }
     }
@@ -1723,7 +2127,12 @@ public class BossCount : Boss
 
     private void CleanupAfterPattern()
     {
-        EndTimeStop();
+        EndDrasticTimeSlow();
+        EndBossHyperSpeed();
+        midnightPhaseActive = false;
+        midnightSelfSpeedMul = 1f;
+        midnightSpeedBurstEndsAt = 0f;
+        midnightEscapeArmed = false;
         ClearOrbitHands();
         HideAura(telegraphAura);
         if (clockAura != null)
@@ -1763,6 +2172,21 @@ public class BossCount : Boss
         signaturePatternCounter = 0;
         signatureInterruptPending = false;
         StopSignatureFlicker();
+    }
+
+    protected override void OnCinematicDeathStarted()
+    {
+        base.OnCinematicDeathStarted();
+        ResetActions();
+        StopSignatureFlicker();
+        EndBossHyperSpeed();
+        EndTimeTint();
+        ClearOrbitHands();
+        BossCountTimeClone.DestroyAllForOwner(this);
+        HideAura(enrageAura);
+        HideAura(telegraphAura);
+        HideAfterimages();
+        hitVfxTimer = 0f;
     }
 
     protected override void OnBossDefeated()
@@ -1836,6 +2260,8 @@ public class BossCount : Boss
         signatureEvery = Mathf.Max(1, signatureEvery);
         signatureHitInvincibility = Mathf.Max(0f, signatureHitInvincibility);
         signatureFlickerRate = Mathf.Max(1f, signatureFlickerRate);
+        drasticTimeSlowScale = Mathf.Clamp(drasticTimeSlowScale, 0.03f, 0.25f);
+        hyperSpeedWorldScale = Mathf.Clamp(hyperSpeedWorldScale, 0.15f, 0.7f);
         midnightWindupSeconds = Mathf.Max(0.05f, midnightWindupSeconds);
         midnightRadius = Mathf.Max(1f, midnightRadius);
         midnightHandScale = Mathf.Max(0.1f, midnightHandScale);
@@ -1845,6 +2271,10 @@ public class BossCount : Boss
         midnightFireGap = Mathf.Max(0f, midnightFireGap);
         midnightHandSpeed = Mathf.Max(1f, midnightHandSpeed);
         midnightHandDamage = Mathf.Max(0, midnightHandDamage);
+        midnightShootInterval = Mathf.Max(0.1f, midnightShootInterval);
+        midnightSpeedBurstMul = Mathf.Max(1f, midnightSpeedBurstMul);
+        midnightSpeedBurstSeconds = Mathf.Max(0.1f, midnightSpeedBurstSeconds);
+        easySpecialEvery = Mathf.Max(2, easySpecialEvery);
         rewindRushDashes = Mathf.Max(1, rewindRushDashes);
         rewindRushSpeed = Mathf.Max(1f, rewindRushSpeed);
         rewindRushPause = Mathf.Max(0f, rewindRushPause);

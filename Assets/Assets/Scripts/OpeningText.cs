@@ -136,7 +136,7 @@ public class OpeningText : MonoBehaviour
         ApplyOpeningVisibleState();
         LockStartScreenMenu();
 
-        controls = new InputActions();
+        controls = GameInput.Create();
         controls.PlayerControls.Enable();
         controls.PlayerControls.Start.performed += OnStartPerformed;
 

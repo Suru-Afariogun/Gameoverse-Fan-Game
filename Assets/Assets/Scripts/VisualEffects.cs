@@ -179,6 +179,10 @@ public static class VisualEffects
             return;
         }
 
+        // Bass spark / stunned art is Bass-only — never parent it onto enemies, bosses, or props.
+        if (IsBassOnlySparkPrefab(prefab) && host.GetComponentInParent<BassPlayerController>() == null)
+            return;
+
         int id = host.gameObject.GetInstanceID();
 
         if (ActiveStunnedByHostId.TryGetValue(id, out DefaultStunnedEffect existing) &&
@@ -220,6 +224,10 @@ public static class VisualEffects
         float duration = 0.15f)
     {
         if (prefab == null || host == null)
+            return;
+
+        // If an enemy's hit-spark slot was wrongly pointed at Bass art, refuse and stop.
+        if (IsBassOnlySparkPrefab(prefab) && host.GetComponentInParent<BassPlayerController>() == null)
             return;
 
         int id = host.gameObject.GetInstanceID();
@@ -295,6 +303,24 @@ public static class VisualEffects
         {
             ActiveStunnedByHostId.Remove(hostId);
         }
+    }
+
+    /// <summary>True for Bass Spark / Bass Stunned effect prefabs (must not be used by other actors).</summary>
+    private static bool IsBassOnlySparkPrefab(Component prefab)
+    {
+        if (prefab == null)
+            return false;
+
+        string n = prefab.name;
+        if (string.IsNullOrEmpty(n))
+            return false;
+
+        // Strip "(Clone)" if someone passed an instance by mistake.
+        if (n.EndsWith("(Clone)", System.StringComparison.Ordinal))
+            n = n.Substring(0, n.Length - 7).TrimEnd();
+
+        return n.IndexOf("Bass Spark", System.StringComparison.OrdinalIgnoreCase) >= 0
+            || n.IndexOf("Bass Stunned", System.StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
     /// <summary>
@@ -396,6 +422,65 @@ public static class VisualEffects
         ActiveHealedEffects.Remove(effect);
     }
 
+    private static GameVisualEffect[] cachedEnemyExplosionSmallPurplePrefabs;
+
+    /// <summary>
+    /// EnemyExplosionSmallPurple templates for cinematic death waves.
+    /// Prefers scene/enemy references, then Resources under Visual effects/.
+    /// </summary>
+    public static GameVisualEffect[] ResolveEnemyExplosionSmallPurplePrefabs()
+    {
+        if (cachedEnemyExplosionSmallPurplePrefabs != null && cachedEnemyExplosionSmallPurplePrefabs.Length > 0)
+        {
+            bool stillValid = true;
+            for (int i = 0; i < cachedEnemyExplosionSmallPurplePrefabs.Length; i++)
+            {
+                if (cachedEnemyExplosionSmallPurplePrefabs[i] == null)
+                {
+                    stillValid = false;
+                    break;
+                }
+            }
+
+            if (stillValid)
+                return cachedEnemyExplosionSmallPurplePrefabs;
+        }
+
+        var list = new System.Collections.Generic.List<GameVisualEffect>(4);
+
+        void TryAdd(GameVisualEffect fx)
+        {
+            if (fx == null || !fx.IsEnemyExplosionSmallPurpleType)
+                return;
+            if (list.Contains(fx))
+                return;
+            list.Add(fx);
+        }
+
+        CrankyClanky cranky = Object.FindFirstObjectByType<CrankyClanky>(FindObjectsInactive.Include);
+        if (cranky != null)
+            TryAdd(cranky.DeathExplosionPrefab);
+        ScrapNit scrap = Object.FindFirstObjectByType<ScrapNit>(FindObjectsInactive.Include);
+        if (scrap != null)
+            TryAdd(scrap.DeathExplosionPrefab);
+        ChaoticTanker tanker = Object.FindFirstObjectByType<ChaoticTanker>(FindObjectsInactive.Include);
+        if (tanker != null)
+            TryAdd(tanker.DeathExplosionPrefab);
+        GameVisualEffect[] sceneFx = Object.FindObjectsByType<GameVisualEffect>(
+            FindObjectsInactive.Include,
+            FindObjectsSortMode.None);
+        for (int i = 0; i < sceneFx.Length; i++)
+            TryAdd(sceneFx[i]);
+
+        TryAdd(Resources.Load<GameVisualEffect>("Visual effects/Enemy explosion small purple"));
+        TryAdd(Resources.Load<GameVisualEffect>("Visual effects/Enemy explosion small purple 1"));
+        TryAdd(Resources.Load<GameVisualEffect>("Enemy explosion small purple"));
+        TryAdd(Resources.Load<GameVisualEffect>("Enemy explosion small purple 1"));
+
+        cachedEnemyExplosionSmallPurplePrefabs = list.ToArray();
+        return cachedEnemyExplosionSmallPurplePrefabs;
+    }
+
     /// <summary>
     /// Spawn the one-shot purple enemy death explosion at a world position.
     /// </summary>
@@ -404,6 +489,26 @@ public static class VisualEffects
         Vector3 worldPosition,
         SpriteRenderer sortReference = null)
     {
+        SpawnEnemyExplosionSmallPurple(prefab, worldPosition, sortReference, useUnscaledTime: false);
+    }
+
+    /// <summary>
+    /// Spawn the one-shot purple enemy death explosion at a world position.
+    /// </summary>
+    /// <param name="useUnscaledTime">True for cinematic deaths that run while timeScale is slowed/paused.</param>
+    public static void SpawnEnemyExplosionSmallPurple(
+        GameVisualEffect prefab,
+        Vector3 worldPosition,
+        SpriteRenderer sortReference,
+        bool useUnscaledTime)
+    {
+        if (prefab == null)
+        {
+            GameVisualEffect[] resolved = ResolveEnemyExplosionSmallPurplePrefabs();
+            if (resolved != null && resolved.Length > 0)
+                prefab = resolved[0];
+        }
+
         if (prefab == null)
             return;
 
@@ -437,7 +542,8 @@ public static class VisualEffects
             instance != null ? instance.EnemyExplosionAnimationStateName : "Enemy explosion small purple",
             instance != null ? instance.EnemyExplosionMaxLifetime : 0.2f,
             sortLayerId,
-            sortOrder);
+            sortOrder,
+            useUnscaledTime);
     }
 
     /// <summary>
@@ -446,8 +552,24 @@ public static class VisualEffects
     /// </summary>
     public static void SpawnBlockerBotHitSparks(GameVisualEffect prefab, Vector3 origin)
     {
+        SpawnBlockerBotHitSparks(prefab, origin, null);
+    }
+
+    /// <param name="sortReference">Blocker Bot body sprite — sparks draw above it.</param>
+    public static void SpawnBlockerBotHitSparks(
+        GameVisualEffect prefab,
+        Vector3 origin,
+        SpriteRenderer sortReference)
+    {
         if (prefab == null)
             return;
+
+        // Guard against a corrupted Blocker Bot reference pointing at Bass Spark.
+        if (IsBassOnlySparkPrefab(prefab))
+            return;
+
+        int sortLayerId = sortReference != null ? sortReference.sortingLayerID : 0;
+        int sortOrder = sortReference != null ? sortReference.sortingOrder + 3 : 8;
 
         float[] xSigns = { -1f, -1f, 1f, 1f };
         // Inner / outer lanes — spaced so they don't overlap immediately.
@@ -457,6 +579,35 @@ public static class VisualEffects
         {
             GameObject go = Object.Instantiate(prefab.gameObject, origin, Quaternion.identity);
             go.SetActive(true);
+
+            // Strip physics so sparks never shove anything.
+            Rigidbody2D rb = go.GetComponent<Rigidbody2D>();
+            if (rb != null)
+                Object.Destroy(rb);
+            Collider2D col = go.GetComponent<Collider2D>();
+            if (col != null)
+                Object.Destroy(col);
+
+            SpriteRenderer sr = go.GetComponent<SpriteRenderer>();
+            if (sr == null)
+                sr = go.GetComponentInChildren<SpriteRenderer>(true);
+            if (sr != null)
+            {
+                sr.enabled = true;
+                sr.sortingLayerID = sortLayerId;
+                sr.sortingOrder = sortOrder + (i % 2);
+            }
+
+            // Animator can fight manual fade — rebind once, then leave playback for the flash art.
+            Animator anim = go.GetComponent<Animator>();
+            if (anim == null)
+                anim = go.GetComponentInChildren<Animator>(true);
+            if (anim != null)
+            {
+                anim.enabled = true;
+                anim.Rebind();
+                anim.Update(0f);
+            }
 
             BlockerBotHitSparkEffect spark = go.GetComponent<BlockerBotHitSparkEffect>();
             if (spark == null)
@@ -1751,11 +1902,28 @@ public class EnemyExplosionSmallPurpleEffect : MonoBehaviour
     private float timer;
     private bool running;
 
+    private bool useUnscaledTime;
+
     public void Play(string animationStateName, float maxLifetime, int sortLayerId, int sortOrder)
     {
+        Play(animationStateName, maxLifetime, sortLayerId, sortOrder, useUnscaledTime: false);
+    }
+
+    public void Play(
+        string animationStateName,
+        float maxLifetime,
+        int sortLayerId,
+        int sortOrder,
+        bool useUnscaledTime)
+    {
+        this.useUnscaledTime = useUnscaledTime;
+
         animator = GetComponent<Animator>();
         if (animator == null)
             animator = GetComponentInChildren<Animator>(true);
+
+        if (animator != null && useUnscaledTime)
+            animator.updateMode = AnimatorUpdateMode.UnscaledTime;
 
         renderers = GetComponentsInChildren<SpriteRenderer>(true);
         for (int i = 0; i < renderers.Length; i++)
@@ -1784,7 +1952,7 @@ public class EnemyExplosionSmallPurpleEffect : MonoBehaviour
         if (!running)
             return;
 
-        timer += Time.deltaTime;
+        timer += useUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime;
         if (timer >= lifetime)
             Destroy(gameObject);
     }
@@ -1911,15 +2079,23 @@ public class BlockerBotHitSparkEffect : MonoBehaviour
 
         spriteRenderer = GetComponent<SpriteRenderer>();
         if (spriteRenderer == null)
-            spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+            spriteRenderer = GetComponentInChildren<SpriteRenderer>(true);
         if (spriteRenderer != null)
         {
+            spriteRenderer.enabled = true;
+            // Keep authored RGB; force a visible base alpha so animator keys can't start invisible.
             baseColor = spriteRenderer.color;
+            if (baseColor.a < 0.2f)
+                baseColor.a = 1f;
             if (!started)
             {
                 Color c = baseColor;
                 c.a = 0f;
                 spriteRenderer.color = c;
+            }
+            else
+            {
+                spriteRenderer.color = baseColor;
             }
         }
 
@@ -1976,7 +2152,10 @@ public class BlockerBotHitSparkEffect : MonoBehaviour
         if (spriteRenderer == null)
             return;
 
-        Color c = baseColor;
+        Color c = spriteRenderer.color;
+        c.r = baseColor.r;
+        c.g = baseColor.g;
+        c.b = baseColor.b;
         c.a = baseColor.a * Mathf.Clamp01(alpha);
         spriteRenderer.color = c;
     }

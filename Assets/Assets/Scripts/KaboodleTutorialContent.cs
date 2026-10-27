@@ -16,6 +16,7 @@ public static class KaboodleTutorialContent
         bool harlie = IsCharacterSelected("Harlie");
         bool hex = IsCharacterSelected("Hex");
         bool count = IsCharacterSelected("Count");
+        bool bass = IsCharacterSelected("Bass");
         AttackStyleId style = PlayerAttackStyle.Selected;
         var parts = new List<string>(7);
 
@@ -27,6 +28,8 @@ public static class KaboodleTutorialContent
             BuildHarlieParts(parts, style);
         else if (malice)
             BuildMaliceParts(parts, style);
+        else if (bass)
+            BuildBassParts(parts, style);
         else
             BuildKitParts(parts, style);
 
@@ -46,7 +49,8 @@ public static class KaboodleTutorialContent
             "Banana Phone calls the rocket to drop food, and Silver Swords rain down on enemies.\n\n" +
             "• You carry one item at a time. Blacksmith Cat's <b>Item Pouch</b> adds more slots: extra items follow behind you, and Use Item always uses the front one.\n\n" +
             "• Spend crystals on upgrades at <b>Scratch</b>'s shop and on gear at <b>Blacksmith Cat</b>'s forge. You can unequip anything in either shop.\n\n" +
-            "• <b>Auto Use Gear</b> uses your front item for you when a hit would defeat you, and blocks that hit.";
+            "• <b>Auto Use Gear</b> uses your front item for you when a hit would defeat you, and blocks that hit.\n\n" +
+            "• <b>Piercing Attack</b> (Blacksmith, one-time 300 crystals) lets your projectiles pass through walls and ceilings — not floors. Crash Bombs ignore it.";
     }
 
     /// <summary>Shared movement tips every character uses.</summary>
@@ -57,6 +61,8 @@ public static class KaboodleTutorialContent
             "Extra tips:\n\n" +
             $"• Slide down a wall and {b.FormatPress("Jump")} to kick off it. To climb instead, {b.FormatAimUp()} as you jump.\n\n" +
             $"• To drop through a thin platform, {b.FormatAimDown()} and {b.FormatPress("Jump")}.\n\n" +
+            $"• To peek the camera up or down, hold {b.FormatAimUp()} or {b.FormatAimDown()} by itself — no left/right and no other buttons. " +
+            "If you press anything else while looking, the camera stays centered so intense fights don't yank the view around.\n\n" +
             "• Kaboodle's <b>Item Shop</b> sells attack styles, and his <b>Boss Fight</b> page lets you pick a boss and fight it again.";
     }
 
@@ -78,7 +84,8 @@ public static class KaboodleTutorialContent
             "You are playing as <b>Count</b>.\n\n" +
             $"To move, {b.FormatMoveHorizontal()}.\n\n" +
             $"To jump, {b.FormatPress("Jump")}.\n\n" +
-            $"To dash, {b.FormatPress("Dash")}. Count can air-dash up to twice before landing, and can dash-jump for extra mobility.");
+            $"To dash, {b.FormatPress("Dash")}. Count can air-dash up to twice before landing, and can dash-jump for extra mobility.\n\n" +
+            $"To peek the camera up or down, hold {b.FormatAimUp()} or {b.FormatAimDown()} alone (no other buttons).");
 
         parts.Add(
             "Count fights with clock-hand buster shots.\n\n" +
@@ -144,7 +151,8 @@ public static class KaboodleTutorialContent
             "You are playing as <b>Harlie</b>.\n\n" +
             $"To move, {b.FormatMoveHorizontal()}.\n\n" +
             $"To jump, {b.FormatPress("Jump")}. In the air, press it again to double jump.\n\n" +
-            $"To dash, {b.FormatPress("Dash")}. Harlie can't be hurt while dashing, can air-dash up to three times before landing, and can dash-jump for extra mobility.");
+            $"To dash, {b.FormatPress("Dash")}. Harlie can't be hurt while dashing, can air-dash up to three times before landing, and can dash-jump for extra mobility.\n\n" +
+            $"To peek the camera up or down, hold {b.FormatAimUp()} or {b.FormatAimDown()} alone (no other buttons).");
 
         parts.Add(BuildSwordComboPart("Harlie", "yellow"));
         parts.Add(BuildSwordChargePart("Harlie", tripleWaves: false));
@@ -175,7 +183,8 @@ public static class KaboodleTutorialContent
             "Hex moves and fights like Harlie, but every hit deals 1.5× damage and her sword waves are red.\n\n" +
             $"To move, {b.FormatMoveHorizontal()}.\n\n" +
             $"To jump, {b.FormatPress("Jump")}. In the air, press it again to double jump.\n\n" +
-            $"To dash, {b.FormatPress("Dash")}. Hex can't be hurt while dashing, can air-dash up to three times before landing, and can dash-jump for extra mobility.");
+            $"To dash, {b.FormatPress("Dash")}. Hex can't be hurt while dashing, can air-dash up to three times before landing, and can dash-jump for extra mobility.\n\n" +
+            $"To peek the camera up or down, hold {b.FormatAimUp()} or {b.FormatAimDown()} alone (no other buttons).");
 
         parts.Add(BuildSwordComboPart("Hex", "red"));
         parts.Add(BuildSwordChargePart("Hex", tripleWaves: true));
@@ -257,6 +266,67 @@ public static class KaboodleTutorialContent
                     "Visit Kaboodle's Item Shop to equip <b>Speed Style</b> or <b>Heavy Style</b> when you want a different play style.";
         }
     }
+    private static void BuildBassParts(List<string> parts, AttackStyleId style)
+    {
+        ButtonSpriteManager b = Btn;
+
+        parts.Add(
+            "You are playing as <b>Bass</b>.\n\n" +
+            $"To move, {b.FormatMoveHorizontal()}.\n\n" +
+            $"To jump, {b.FormatPress("Jump")}. Bass has a built-in double jump — {b.FormatPress("Jump")} again in the air.\n\n" +
+            $"To dash, {b.FormatPress("Dash")}. Bass dashes farther and faster than Kit, leaves afterimages, and can dash-jump for extra mobility.\n\n" +
+            $"To peek the camera up or down, hold {b.FormatAimUp()} or {b.FormatAimDown()} alone (no other buttons).");
+
+        parts.Add(
+            "Bass fights with a Mega Man-style buster.\n\n" +
+            $"To fire, {b.FormatPress("Attack")} (or hold for rapid fire).\n\n" +
+            $"To aim up or down while shooting, {b.FormatAimUp()} or {b.FormatAimDown()}.\n\n" +
+            "On the ground, Bass stands still while shooting — classic Mega Man feel.");
+
+        parts.Add(
+            "Dual System and Double Gear:\n\n" +
+            $"• With <b>Dual System</b> equipped: {b.FormatAimDown()} + {b.FormatPress("Dash")} cycles Metal Leaf, Crashing Heat, Bubble Air, and QuickTime.\n\n" +
+            $"• With <b>Double Gear</b> equipped: {b.FormatAimDown()} + {b.FormatPress("Dash")} toggles Double Gear (faster shots, world slow for enemies).\n\n" +
+            "Scratch's <b>Hyper Ability</b> (at full health) lets you use Dual abilities and Double Gear together — controls flip depending on which Attack Style you bought.");
+
+        parts.Add(
+            "Bass's Scratch upgrades:\n\n" +
+            "• <b>Ariel Action</b>: +1 air jump per level.\n\n" +
+            "• <b>Hyper Ability</b>: +2 max health per level. At full health, Dual + Double Gear can run together (with weakened ammo/duration while Hyper stays equipped).\n\n" +
+            "• <b>Attack Style</b>: +2s Double Gear duration and +100 Dual ammo per level. Level 5 doubles Dual and Double Gear shot damage.");
+
+        parts.Add(BuildBassStylePart(style));
+    }
+
+    private static string BuildBassStylePart(AttackStyleId style)
+    {
+        ButtonSpriteManager b = Btn;
+        string styleName = PlayerAttackStyle.DisplayName(style);
+        switch (style)
+        {
+            case AttackStyleId.SpreadShot:
+                return
+                    $"Current attack style: <b>{styleName}</b> (Dual System).\n\n" +
+                    $"Cycle outfits with {b.FormatAimDown()} + {b.FormatPress("Dash")}. Each outfit has its own ammo bar and special attack.\n\n" +
+                    $"With Hyper Ability equipped, {b.FormatAimUp()} + {b.FormatPress("Dash")} also starts Double Gear (shortened duration).\n\n" +
+                    $"Change styles at Kaboodle's Item Shop. Hover an equipped style and {b.FormatPress("Attack")} to return to <b>Normal</b>.";
+
+            case AttackStyleId.MachineGun:
+                return
+                    $"Current attack style: <b>{styleName}</b> (Double Gear).\n\n" +
+                    $"Toggle Double Gear with {b.FormatAimDown()} + {b.FormatPress("Dash")}. While it is on, Bass fires gear shots and enemies slow down.\n\n" +
+                    $"With Hyper Ability equipped, {b.FormatAimUp()} + {b.FormatPress("Dash")} cycles Dual outfits (with reduced Dual ammo).\n\n" +
+                    $"Change styles at Kaboodle's Item Shop. Hover an equipped style and {b.FormatPress("Attack")} to return to <b>Normal</b>.";
+
+            default:
+                return
+                    $"Current attack style: <b>{styleName}</b>.\n\n" +
+                    "This is Bass's default buster — rapid shots with no Dual outfits or Double Gear until you buy a style.\n\n" +
+                    $"With Hyper Ability equipped: {b.FormatAimDown()} + {b.FormatPress("Dash")} toggles Double Gear, and {b.FormatAimUp()} + {b.FormatPress("Dash")} cycles Dual outfits (both weakened while used together).\n\n" +
+                    "Visit Kaboodle's Item Shop for <b>Dual System</b> or <b>Double Gear</b>.";
+        }
+    }
+
     private static void BuildKitParts(List<string> parts, AttackStyleId style)
     {
         ButtonSpriteManager b = Btn;
@@ -266,7 +336,8 @@ public static class KaboodleTutorialContent
             $"To move, {b.FormatMoveHorizontal()}.\n\n" +
             $"To jump, {b.FormatPress("Jump")}.\n\n" +
             $"To dash, {b.FormatPress("Dash")}. Kit can air-dash up to twice before landing, and can dash-jump for extra mobility.\n\n" +
-            $"In the air, {b.FormatPress("Jump")} again to double jump. Keep holding {b.FormatButton("Jump")} at the top (or press it again later) to hover. Dashing at max charge or while hovering is faster and goes farther.");
+            $"In the air, {b.FormatPress("Jump")} again to double jump. Keep holding {b.FormatButton("Jump")} at the top (or press it again later) to hover. Dashing at max charge or while hovering is faster and goes farther.\n\n" +
+            $"To peek the camera up or down, hold {b.FormatAimUp()} or {b.FormatAimDown()} alone (no other buttons).");
 
         parts.Add(
             "Kit fights with buster shots.\n\n" +
@@ -324,7 +395,8 @@ public static class KaboodleTutorialContent
             $"To move, {b.FormatMoveHorizontal()}.\n\n" +
             $"To jump, {b.FormatPress("Jump")}.\n\n" +
             $"To dash, {b.FormatPress("Dash")}. Malice's dash hits enemies on contact, and she becomes invincible during the second half of the dash.\n\n" +
-            $"In the air, {b.FormatPress("Jump")} again to double jump.");
+            $"In the air, {b.FormatPress("Jump")} again to double jump.\n\n" +
+            $"To peek the camera up or down, hold {b.FormatAimUp()} or {b.FormatAimDown()} alone (no other buttons).");
 
         parts.Add(
             "Malice's basic offense is a slash combo.\n\n" +

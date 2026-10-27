@@ -129,7 +129,7 @@ Transform:
   m_GameObject: {fileID: 8992999658742231598}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -866, y: 277, z: -6942.8574}
+  m_LocalPosition: {x: -866, y: 277, z: 0}
   m_LocalScale: {x: 77.14286, y: 77.14286, z: 77.14286}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -221,6 +221,8 @@ MonoBehaviour:
     - {fileID: 4865020685671740121, guid: 53648e0d7fe713944941b497fa5b9095, type: 3}
     - {fileID: -5060453525043680296, guid: 53648e0d7fe713944941b497fa5b9095, type: 3}
     damagedLifeBarSprite: {fileID: -34673998, guid: 53648e0d7fe713944941b497fa5b9095, type: 3}
+    positionOffsetDownSpaces: 0
+    sizeMultiplier: 1
   - characterId: Malice
     lifeBarSprites:
     - {fileID: -1717088757511456810, guid: 53648e0d7fe713944941b497fa5b9095, type: 3}
@@ -235,6 +237,8 @@ MonoBehaviour:
     - {fileID: 6258929059948514395, guid: 53648e0d7fe713944941b497fa5b9095, type: 3}
     - {fileID: 5775268025608941045, guid: 53648e0d7fe713944941b497fa5b9095, type: 3}
     damagedLifeBarSprite: {fileID: -709588051, guid: 53648e0d7fe713944941b497fa5b9095, type: 3}
+    positionOffsetDownSpaces: 0
+    sizeMultiplier: 1
   - characterId: Harlie
     lifeBarSprites:
     - {fileID: 1332609407, guid: c193b6668123c304ba1df0db8f0322a9, type: 3}
@@ -244,6 +248,7 @@ MonoBehaviour:
     - {fileID: -1395861514, guid: c193b6668123c304ba1df0db8f0322a9, type: 3}
     - {fileID: 1696717760, guid: c193b6668123c304ba1df0db8f0322a9, type: 3}
     damagedLifeBarSprite: {fileID: 1332609407, guid: c193b6668123c304ba1df0db8f0322a9, type: 3}
+    positionOffsetDownSpaces: 0
     sizeMultiplier: 3
   - characterId: Count
     lifeBarSprites:
@@ -256,6 +261,7 @@ MonoBehaviour:
     - {fileID: 5622668395133422969, guid: 3713ed55690a41d409aa659e6ddefec3, type: 3}
     damagedLifeBarSprite: {fileID: -7849933211252913511, guid: 3713ed55690a41d409aa659e6ddefec3, type: 3}
     positionOffsetDownSpaces: 2
+    sizeMultiplier: 1
   - characterId: Hex
     lifeBarSprites:
     - {fileID: 1332609407, guid: c193b6668123c304ba1df0db8f0322a9, type: 3}
@@ -265,7 +271,24 @@ MonoBehaviour:
     - {fileID: -1395861514, guid: c193b6668123c304ba1df0db8f0322a9, type: 3}
     - {fileID: 1696717760, guid: c193b6668123c304ba1df0db8f0322a9, type: 3}
     damagedLifeBarSprite: {fileID: 1332609407, guid: c193b6668123c304ba1df0db8f0322a9, type: 3}
+    positionOffsetDownSpaces: 0
     sizeMultiplier: 3
+  - characterId: Bass
+    lifeBarSprites:
+    - {fileID: 1688166969355980497, guid: 903d244b7f0b461478e25b2db8cbf3a9, type: 3}
+    - {fileID: 1323517236869680667, guid: 903d244b7f0b461478e25b2db8cbf3a9, type: 3}
+    - {fileID: -1529438444407431701, guid: 903d244b7f0b461478e25b2db8cbf3a9, type: 3}
+    - {fileID: 4738797483630280825, guid: 903d244b7f0b461478e25b2db8cbf3a9, type: 3}
+    - {fileID: 1367304350916164530, guid: 903d244b7f0b461478e25b2db8cbf3a9, type: 3}
+    - {fileID: 7336703749437919479, guid: 903d244b7f0b461478e25b2db8cbf3a9, type: 3}
+    - {fileID: 8628027239587403704, guid: 903d244b7f0b461478e25b2db8cbf3a9, type: 3}
+    - {fileID: 585399482346062468, guid: 903d244b7f0b461478e25b2db8cbf3a9, type: 3}
+    - {fileID: -100680337599683746, guid: 903d244b7f0b461478e25b2db8cbf3a9, type: 3}
+    - {fileID: 2142204780284316849, guid: 903d244b7f0b461478e25b2db8cbf3a9, type: 3}
+    - {fileID: 1892432336526571590, guid: 903d244b7f0b461478e25b2db8cbf3a9, type: 3}
+    damagedLifeBarSprite: {fileID: 1688166969355980497, guid: 903d244b7f0b461478e25b2db8cbf3a9, type: 3}
+    positionOffsetDownSpaces: 0
+    sizeMultiplier: 1
   lifeBarSpriteRenderer: {fileID: 8343243882425708302}
   autoFindActivePlayer: 1
   playerOverride: {fileID: 0}

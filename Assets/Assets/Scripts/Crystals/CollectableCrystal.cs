@@ -38,5 +38,8 @@ public class CollectableCrystal : CollectablePickupBase
     {
         if (PlayerInventory.Instance != null)
             PlayerInventory.Instance.AddCrystals(PlayerGear.CrystalMultiplier(player));
+
+        if (player != null)
+            player.NotifyCollectableCrystalCollected();
     }
 }

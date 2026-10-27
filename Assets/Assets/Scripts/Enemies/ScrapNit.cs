@@ -111,9 +111,17 @@ public sealed class ScrapNit : MonoBehaviour, ICommonEnemy, IKnockbackReceiver, 
     private Vector2 orbitCenter;
     private float orbitCurrentRadius;
     private bool hitboxArmed;
+    private int authoredMaxHealth;
+    private int authoredContactDamage;
+    private float authoredSpeedBelowPlayer;
+    private float authoredFallbackMoveSpeed;
+    private float authoredDetectRadius;
+    private Vector2 authoredDetectBoxSize;
+    private bool difficultyCaptured;
 
     public int CurrentHealth => currentHealth;
     public int MaxHealth => maxHealth;
+    public GameVisualEffect DeathExplosionPrefab => deathExplosionPrefab;
     public bool IsDead => currentHealth <= 0;
     public bool IsStunned => isStunned;
 
@@ -130,6 +138,7 @@ public sealed class ScrapNit : MonoBehaviour, ICommonEnemy, IKnockbackReceiver, 
         ConfigureBody();
         ConfigureUtilityColliders();
         ConfigureAttackHitbox();
+        CaptureDifficultyAuthored();
 
         if (orbitBlockLayers.value == 0)
             orbitBlockLayers = LayerMask.GetMask("Ground");
@@ -143,6 +152,35 @@ public sealed class ScrapNit : MonoBehaviour, ICommonEnemy, IKnockbackReceiver, 
         facingSign = -1f;
         ApplyFacingVisual();
         state = AiState.PatrolRight;
+        RefreshDifficulty();
+    }
+
+    private void CaptureDifficultyAuthored()
+    {
+        if (difficultyCaptured)
+            return;
+        authoredMaxHealth = Mathf.Max(1, maxHealth);
+        authoredContactDamage = contactDamage;
+        authoredSpeedBelowPlayer = speedBelowPlayer;
+        authoredFallbackMoveSpeed = fallbackMoveSpeed;
+        if (detectionCollider is CircleCollider2D circle)
+            authoredDetectRadius = circle.radius;
+        else if (detectionCollider is BoxCollider2D box)
+            authoredDetectBoxSize = box.size;
+        difficultyCaptured = true;
+    }
+
+    public void RefreshDifficulty()
+    {
+        CaptureDifficultyAuthored();
+        int newMax = DifficultyTuning.ScaleEnemyHp(authoredMaxHealth);
+        DifficultyTuning.RetuneHealth(ref currentHealth, ref maxHealth, newMax, IsDead);
+        contactDamage = DifficultyTuning.ScaleEnemyDamage(authoredContactDamage);
+        // Faster chase on Hard: less gap below player speed / higher fallback.
+        float speedMul = DifficultyTuning.EnemySpeedMul();
+        speedBelowPlayer = Mathf.Max(0f, authoredSpeedBelowPlayer / Mathf.Max(0.25f, speedMul));
+        fallbackMoveSpeed = DifficultyTuning.ScaleEnemySpeed(authoredFallbackMoveSpeed);
+        DifficultyTuning.ApplyDetectionCollider(detectionCollider, authoredDetectRadius, authoredDetectBoxSize);
     }
 
     private void Start()

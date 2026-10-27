@@ -26,6 +26,7 @@ public sealed class DialogueBox : MonoBehaviour
     private Coroutine typingRoutine;
     private Coroutine dashReleaseRoutine;
     private string[] pages = Array.Empty<string>();
+    private string[] pageSpeakers = Array.Empty<string>();
     private int pageIndex;
     private string currentFullPage = string.Empty;
     private bool isOpen;
@@ -35,6 +36,29 @@ public sealed class DialogueBox : MonoBehaviour
 
     public bool IsOpen => isOpen;
     public bool IsTyping => isTyping;
+
+    /// <summary>One spoken beat (speaker name + page text) for multi-speaker cutscenes.</summary>
+    public readonly struct Line
+    {
+        public readonly string Speaker;
+        public readonly string Text;
+        public readonly bool IsCopySpeaker;
+
+        public Line(string speaker, string text, bool isCopySpeaker = false)
+        {
+            Speaker = speaker ?? string.Empty;
+            Text = text ?? string.Empty;
+            IsCopySpeaker = isCopySpeaker;
+        }
+    }
+
+    [Header("Copy Bot Speakers")]
+    [Tooltip("Speaker-name color for Copy Bot / mirror doppelganger lines.")]
+    [SerializeField] private Color copySpeakerNameColor = new Color(1f, 0.22f, 0.22f, 1f);
+
+    private bool[] pageCopyFlags = Array.Empty<bool>();
+    private Color defaultSpeakerNameColor = Color.white;
+    private bool defaultSpeakerNameColorCached;
 
     private void Awake()
     {
@@ -52,7 +76,7 @@ public sealed class DialogueBox : MonoBehaviour
     private void OnEnable()
     {
         if (controls == null)
-            controls = new InputActions();
+            controls = GameInput.Create();
 
         controls.PlayerControls.Enable();
         controls.PlayerControls.Confirm.performed += OnConfirmPerformed;
@@ -92,17 +116,59 @@ public sealed class DialogueBox : MonoBehaviour
         if (dialoguePages == null || dialoguePages.Length == 0)
             return;
 
+        string[] speakers = new string[dialoguePages.Length];
+        for (int i = 0; i < speakers.Length; i++)
+            speakers[i] = speakerName ?? string.Empty;
+
+        OpenConversation(speakers, dialoguePages, player, closedCallback);
+    }
+
+    /// <summary>
+    /// Opens a multi-speaker conversation (Powered Up–style banter). Confirm advances beats.
+    /// </summary>
+    public void OpenConversation(Line[] lines, PlayerController player, Action closedCallback = null)
+    {
+        if (lines == null || lines.Length == 0)
+            return;
+
+        string[] speakers = new string[lines.Length];
+        string[] texts = new string[lines.Length];
+        bool[] copyFlags = new bool[lines.Length];
+        for (int i = 0; i < lines.Length; i++)
+        {
+            speakers[i] = lines[i].Speaker;
+            texts[i] = lines[i].Text;
+            copyFlags[i] = lines[i].IsCopySpeaker;
+        }
+
+        OpenConversation(speakers, texts, player, closedCallback, copyFlags);
+    }
+
+    public void OpenConversation(
+        string[] speakers,
+        string[] dialoguePages,
+        PlayerController player,
+        Action closedCallback = null,
+        bool[] copySpeakerFlags = null)
+    {
+        if (dialoguePages == null || dialoguePages.Length == 0)
+            return;
+
         CacheUi();
+        CacheDefaultSpeakerNameColor();
         StopTypingRoutine();
         EndTypingSound();
 
         pages = dialoguePages;
+        pageSpeakers = speakers != null && speakers.Length == dialoguePages.Length
+            ? speakers
+            : Array.Empty<string>();
+        pageCopyFlags = copySpeakerFlags != null && copySpeakerFlags.Length == dialoguePages.Length
+            ? copySpeakerFlags
+            : Array.Empty<bool>();
         pageIndex = 0;
         onClosed = closedCallback;
         isOpen = true;
-
-        if (nameOfSpeakerText != null)
-            nameOfSpeakerText.text = speakerName ?? string.Empty;
 
         ShowVisual(true);
         LockPlayer(player);
@@ -121,8 +187,14 @@ public sealed class DialogueBox : MonoBehaviour
         if (dialogueOfSpeakerText != null)
             dialogueOfSpeakerText.text = string.Empty;
         if (nameOfSpeakerText != null)
+        {
             nameOfSpeakerText.text = string.Empty;
+            if (defaultSpeakerNameColorCached)
+                nameOfSpeakerText.color = defaultSpeakerNameColor;
+        }
 
+        pageSpeakers = Array.Empty<string>();
+        pageCopyFlags = Array.Empty<bool>();
         HideImmediate();
         UnlockPlayer();
 
@@ -157,9 +229,29 @@ public sealed class DialogueBox : MonoBehaviour
         if (index < 0 || index >= pages.Length)
             return;
 
+        if (nameOfSpeakerText != null)
+        {
+            string speaker = pageSpeakers != null && index < pageSpeakers.Length
+                ? pageSpeakers[index]
+                : string.Empty;
+            nameOfSpeakerText.text = speaker ?? string.Empty;
+
+            bool isCopy = pageCopyFlags != null && index < pageCopyFlags.Length && pageCopyFlags[index];
+            nameOfSpeakerText.color = isCopy ? copySpeakerNameColor : defaultSpeakerNameColor;
+        }
+
         currentFullPage = pages[index] ?? string.Empty;
         StopTypingRoutine();
         typingRoutine = StartCoroutine(TypePageRoutine(currentFullPage));
+    }
+
+    private void CacheDefaultSpeakerNameColor()
+    {
+        if (defaultSpeakerNameColorCached || nameOfSpeakerText == null)
+            return;
+
+        defaultSpeakerNameColor = nameOfSpeakerText.color;
+        defaultSpeakerNameColorCached = true;
     }
 
     private IEnumerator TypePageRoutine(string message)

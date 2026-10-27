@@ -3,8 +3,9 @@ using TMPro;
 using UnityEngine;
 
 /// <summary>
-/// Boss-fight crystal: shows HP as NNN%, keeps the boss respawning while HP remains,
-/// and periodically grants mutually exclusive heal / blue speed / orange power boosts.
+/// Boss-fight crystal: shows HP as NNN%, prevents lethal boss blows while HP remains
+/// (full cinematic heal instead of death/respawn), and periodically grants mutually exclusive
+/// heal / blue speed / orange power boosts.
 /// Boosts telegraph on the crystal with a matching-color aura 0.5s before they apply.
 /// Phases through everything (trigger collider) but still takes overlap damage from
 /// player melee and shots.
@@ -71,6 +72,7 @@ public class Crystal : MonoBehaviour, IDamageable
     private float nextEffectAllowedAt;
     private float nextEffectRollAt;
     private bool effectRunning;
+    private float hitInvincibilityTimer;
     private int directDamageAccumulator;
     private int bossDamageAccumulator;
     private Collider2D bodyCollider;
@@ -122,6 +124,9 @@ public class Crystal : MonoBehaviour, IDamageable
 
     private void Update()
     {
+        if (hitInvincibilityTimer > 0f)
+            hitInvincibilityTimer = Mathf.Max(0f, hitInvincibilityTimer - Time.deltaTime);
+
         if (warningAuraActive)
             TickWarningAura();
 
@@ -136,55 +141,51 @@ public class Crystal : MonoBehaviour, IDamageable
             return;
 
         Boss boss = FindLivingBoss();
-        if (boss == null)
+        if (boss == null || boss.IsNearDeathSaving || boss.IsCinematicDying)
             return;
 
         CrystalEffect pick = (CrystalEffect)Random.Range(0, 3);
+        // Heal is rarer: never while boss is above 50% HP, and uses a 3× cooldown.
+        if (pick == CrystalEffect.Heal)
+        {
+            float ratio = boss.MaxHealth > 0 ? boss.CurrentHealth / (float)boss.MaxHealth : 1f;
+            if (ratio > 0.5f)
+                pick = Random.value < 0.5f ? CrystalEffect.BlueSpeed : CrystalEffect.OrangePower;
+        }
+
         StartCoroutine(RunEffect(pick, boss));
     }
 
     /// <summary>
-    /// Called by BossFightDirector when a boss dies. Drains crystal HP and reports whether
-    /// the boss should respawn (crystal still has HP after the drain).
+    /// Called when a boss would have died. Returns true if the crystal still had HP before the
+    /// defeat tax (cinematic full heal). The 250 drain may empty the crystal afterward — that
+    /// still counts as a successful save. Copy Bots never use this path.
     /// </summary>
-    public bool TryHandleBossDeath(Boss defeatedBoss)
+    public bool TryPreventBossDeath(Boss boss)
     {
+        if (boss == null || boss.IsCopyBot || IsDead)
+            return false;
+
+        // Grant the save based on HP before the tax. Paying 250 may zero the crystal.
         ApplyBossDeathPenalty();
-        return AllowsBossRespawn;
+        return true;
     }
 
+    /// <summary>
+    /// Legacy name used by BossFightDirector. Always false — near-death saves are handled inside
+    /// <see cref="Boss"/> before OnDied, and final defeats do not respawn.
+    /// </summary>
+    public bool TryHandleBossDeath(Boss defeatedBoss) => false;
+
+    /// <summary>Legacy respawn path — kept for safety; near-death heals replaced ball-recall respawns.</summary>
     public IEnumerator RespawnBossAfterDeath(Boss defeatedBoss)
     {
-        // Capture death center before anything else moves the boss.
-        Vector3 deathPos = defeatedBoss != null
-            ? defeatedBoss.transform.position
-            : Vector3.zero;
-
-        // Start recall immediately so balls don't fade out on the way to 9 spaces.
-        DeathEnergyBallBurst burst = VisualEffects.ActiveDeathBurst;
-        if (burst != null)
-            burst.EnableCrystalRecall(crystalRecallOutboundDistance);
-
-        if (respawnDelay > 0f)
-            yield return new WaitForSecondsRealtime(respawnDelay);
-
-        yield return VisualEffects.WaitForDeathBallsCrystalRecall(
-            burst,
-            crystalRecallOutboundDistance);
-
-        if (burst != null)
-            Destroy(burst.gameObject);
-
-        if (!AllowsBossRespawn || defeatedBoss == null)
-            yield break;
-
-        // Reform at the kill spot — crystal pulls the boss back together there.
-        defeatedBoss.ReviveFull(deathPos);
+        yield break;
     }
 
     public void TakeDamage(int amount)
     {
-        if (amount <= 0 || IsDead)
+        if (amount <= 0 || IsDead || hitInvincibilityTimer > 0f)
             return;
 
         int before = currentHealth;
@@ -194,6 +195,7 @@ public class Crystal : MonoBehaviour, IDamageable
 
         if (applied > 0)
         {
+            hitInvincibilityTimer = Mathf.Max(hitInvincibilityTimer, DifficultyTuning.CrystalHitIFrames());
             if (!IsDead)
                 SoundManager.Instance?.PlayCrystalHit();
             ApplyDirectDamageSideEffects(applied);
@@ -292,13 +294,20 @@ public class Crystal : MonoBehaviour, IDamageable
             yield break;
 
         effectRunning = true;
-        nextEffectAllowedAt = Time.time + Mathf.Max(0.1f, sharedEffectCooldown);
+        float cooldown = Mathf.Max(0.1f, sharedEffectCooldown);
+        if (effect == CrystalEffect.Heal)
+            cooldown *= 3f;
+        nextEffectAllowedAt = Time.time + cooldown;
 
         switch (effect)
         {
             case CrystalEffect.Heal:
-                boss.Heal(healAmount);
+            {
+                float ratio = boss.MaxHealth > 0 ? boss.CurrentHealth / (float)boss.MaxHealth : 1f;
+                if (ratio <= 0.5f + 0.0001f)
+                    boss.Heal(healAmount);
                 break;
+            }
 
             case CrystalEffect.BlueSpeed:
                 yield return TelegraphThenBoost(

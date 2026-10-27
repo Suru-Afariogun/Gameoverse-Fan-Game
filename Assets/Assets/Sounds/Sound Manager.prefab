@@ -55,6 +55,8 @@ MonoBehaviour:
   levelOneMusicVolume: 1
   levelOneCopyBotBossMusic: {fileID: 0}
   levelOneCopyBotBossMusicVolume: 1
+  cityLevelMusic: {fileID: 8300000, guid: da5138148c384bc48a94532cbbccab4f, type: 3}
+  cityLevelMusicVolume: 1
   bossFightMusic: {fileID: 8300000, guid: 71e36907a5872574aa5b397c65f1ee77, type: 3}
   bossFightMusicVolume: 1
   extraSceneMusic: []

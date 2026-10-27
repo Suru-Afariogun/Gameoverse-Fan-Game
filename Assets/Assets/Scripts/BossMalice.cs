@@ -452,7 +452,7 @@ public class BossMalice : Boss
 
     protected override float GetMoveSpeed()
     {
-        float speed = moveSpeed;
+        float speed = DifficultyTuning.ScaleBossMoveSpeed(authoredMoveSpeed);
         if (isGrappleCharging && IsChargeAuraActive())
         {
             if (chargeTimer >= bigChargeSeconds)
@@ -479,8 +479,15 @@ public class BossMalice : Boss
 
     private bool IsEnraged()
     {
+        if (EnrageLatched)
+            return true;
         float max = Mathf.Max(1, maxHealth);
-        return currentHealth / max <= enrageHealthRatio + 0.0001f;
+        return currentHealth / max <= DifficultyTuning.BossEnrageThreshold(enrageHealthRatio) + 0.0001f;
+    }
+
+    protected override void OnNearDeathPhasesSnapshot()
+    {
+        LatchCombatPhases(IsEnraged(), signaturePhase: false, desperatePhase: false);
     }
 
     /// <summary>Enrage action add in “multiplier units” (+3 moveSpeed → +3/moveSpeed).</summary>
@@ -499,24 +506,34 @@ public class BossMalice : Boss
 
     private float CurrentDecideInterval()
     {
+        float interval;
         if (IsEnraged())
         {
             float enrageT = Mathf.Clamp01(EnrageActionSpeedAdd());
-            return Mathf.Max(0.05f, Mathf.Lerp(decideIntervalFullHp, enrageDecideInterval, enrageT));
+            interval = Mathf.Max(0.05f, Mathf.Lerp(decideIntervalFullHp, enrageDecideInterval, enrageT));
+        }
+        else
+        {
+            interval = Mathf.Max(0.05f, decideIntervalFullHp);
         }
 
-        return Mathf.Max(0.05f, decideIntervalFullHp);
+        return DifficultyTuning.ScaleBossRecover(interval);
     }
 
     private float CurrentRecoverDuration()
     {
+        float duration;
         if (IsEnraged())
         {
             float enrageT = Mathf.Clamp01(EnrageActionSpeedAdd());
-            return Mathf.Max(0.05f, Mathf.Lerp(recoverDurationFullHp, enrageRecoverDuration, enrageT));
+            duration = Mathf.Max(0.05f, Mathf.Lerp(recoverDurationFullHp, enrageRecoverDuration, enrageT));
+        }
+        else
+        {
+            duration = Mathf.Max(0.05f, recoverDurationFullHp);
         }
 
-        return Mathf.Max(0.05f, recoverDurationFullHp);
+        return DifficultyTuning.ScaleBossRecover(duration);
     }
 
     protected override void HandleBossUpdate()
@@ -3079,6 +3096,19 @@ public class BossMalice : Boss
         }
 
         slashGhosts.Clear();
+    }
+
+    protected override void OnCinematicDeathStarted()
+    {
+        base.OnCinematicDeathStarted();
+        CancelAttackImmediate();
+        EndAirHang();
+        EndDash();
+        EndGrappleCharge(clearAura: true);
+        ClearGrabbedTarget();
+        ClearSlashGhosts(immediate: true);
+        SetChargeAuraVisible(false);
+        hitVfxTimer = 0f;
     }
 
     protected override void OnBossDefeated()

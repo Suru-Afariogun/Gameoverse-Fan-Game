@@ -49,5 +49,7 @@ public class CopyBossAppearance : MonoBehaviour
             harlieBoss.SetCopyBotAfterimageStyle(grayLevel);
         else if (boss is BossCount countBoss)
             countBoss.SetCopyBotAfterimageStyle(grayLevel);
+        else if (boss is BossBass bassBoss)
+            bassBoss.SetCopyBotAfterimageStyle(grayLevel);
     }
 }

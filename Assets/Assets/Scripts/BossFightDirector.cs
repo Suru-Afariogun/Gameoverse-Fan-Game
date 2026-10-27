@@ -159,12 +159,46 @@ public class BossFightDirector : MonoBehaviour
                 warning = WarningText.FindInScene(includeInactive: true);
         }
 
+        // Same-character Boss Select: reuse Copy Bot banter before unlock (handy for testing too).
+        yield return PlayMirrorIntroDialogueIfNeeded();
+
         // WarningText unlocks on finish; keep a clean release for anything spawned late.
         IntroPending = false;
         ReleaseIntroLock();
 
         if (CameraFollow.Instance != null)
             CameraFollow.Instance.SetFollowEnabled(true);
+    }
+
+    private IEnumerator PlayMirrorIntroDialogueIfNeeded()
+    {
+        PlayerController player = PlayerController.ResolveActive();
+        string playerId = player != null ? player.CharacterId : PlayerSpawner.SelectedCharacterId;
+        if (string.IsNullOrWhiteSpace(playerId))
+            yield break;
+
+        Boss mirrorBoss = FindLivingMirrorBoss(playerId);
+        if (mirrorBoss == null)
+            yield break;
+
+        ApplyIntroLock();
+        yield return CopyBotIntroDialogue.PlayForActivePlayer(mirrorBoss);
+        ApplyIntroLock();
+    }
+
+    private static Boss FindLivingMirrorBoss(string playerCharacterId)
+    {
+        Boss[] bosses = FindObjectsByType<Boss>(FindObjectsSortMode.None);
+        for (int i = 0; i < bosses.Length; i++)
+        {
+            Boss boss = bosses[i];
+            if (boss == null || boss.IsDead || boss.IsCopyBotDecoy)
+                continue;
+            if (BossEncounter.MatchesBoss(boss, playerCharacterId))
+                return boss;
+        }
+
+        return null;
     }
 
     private static void ApplyIntroLock()
@@ -308,15 +342,8 @@ public class BossFightDirector : MonoBehaviour
             return;
         }
 
-        // Crystal still has HP → drain it and respawn the boss instead of ending the fight.
-        if (Crystal.Instance != null &&
-            defeated != null &&
-            Crystal.Instance.TryHandleBossDeath(defeated))
-        {
-            flowBusy = true;
-            StartCoroutine(CrystalBossRespawnFlow(defeated));
-            return;
-        }
+        // Near-death crystal saves are handled inside Boss before OnDied.
+        // OnDied means the cinematic defeat finished and the crystal could not save them.
 
         bossDeathHandled = true;
         flowBusy = true;

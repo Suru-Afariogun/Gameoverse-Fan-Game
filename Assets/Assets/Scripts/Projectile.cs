@@ -30,8 +30,12 @@ public class Projectile : MonoBehaviour
     [SerializeField] private bool rotateToDirection = true;
 
     [Header("Combat")]
-    [SerializeField] private int damage = 1;
+    [Tooltip("Supports fractions (e.g. Bass purple buster at 0.5). Whole HP is applied via FractionalDamage.")]
+    [SerializeField] private float damage = 1f;
     [SerializeField] private bool destroyOnHit = true;
+    [Tooltip("If set with destroyOnHit off, keep flying and may damage again after rehitDelay.")]
+    [SerializeField] private bool pierceAndContinue;
+    [SerializeField] private float rehitDelay = 0.18f;
     [SerializeField] private LayerMask hitLayers = ~0;
     [Tooltip("Solid Ground / platforms shots stop on (defaults to Ground layer at runtime).")]
     [SerializeField] private LayerMask environmentLayers;
@@ -47,7 +51,7 @@ public class Projectile : MonoBehaviour
     [SerializeField] private bool applySuggestedStatsWhenTypeChanges = true;
 
     public ProjectileShotType ShotType => shotType;
-    public int Damage => damage;
+    public float Damage => damage;
     public float Speed => speed;
     public Transform Owner => owner;
     public bool IsLaunched => launched;
@@ -64,6 +68,28 @@ public class Projectile : MonoBehaviour
         {
             if (shots[i] != null)
                 Destroy(shots[i].gameObject);
+        }
+    }
+
+    /// <summary>
+    /// Remove shots owned by this transform (or any child of it). Used when a boss defeat cinema starts.
+    /// </summary>
+    public static void DestroyOwnedBy(Transform root)
+    {
+        if (root == null)
+            return;
+
+        Projectile[] shots = FindObjectsByType<Projectile>(FindObjectsSortMode.None);
+        for (int i = 0; i < shots.Length; i++)
+        {
+            Projectile shot = shots[i];
+            if (shot == null)
+                continue;
+            Transform shotOwner = shot.Owner;
+            if (shotOwner == null)
+                continue;
+            if (shotOwner == root || shotOwner.IsChildOf(root) || root.IsChildOf(shotOwner))
+                Destroy(shot.gameObject);
         }
     }
 
@@ -92,6 +118,11 @@ public class Projectile : MonoBehaviour
     private float maxTravelDistance;
     private float traveledDistance;
     private bool pierceCommonKills;
+    private float nextPierceHitTime;
+    private string spawnStateName;
+    private string activeStateName;
+    private string onHitStateName;
+    private Coroutine spawnToActiveRoutine;
 
     [Header("Lifetime End")]
     [Tooltip("When lifetime / max travel ends, scale down over this many seconds instead of popping.")]
@@ -143,7 +174,7 @@ public class Projectile : MonoBehaviour
     /// <summary>
     /// Launch with optional runtime overrides (Kit can pass its own values if desired).
     /// </summary>
-    public void Launch(Vector2 dir, float moveSpeed, int dmg, Transform shotOwner)
+    public void Launch(Vector2 dir, float moveSpeed, float dmg, Transform shotOwner)
     {
         Launch(dir, moveSpeed, dmg, lifetime, shotOwner);
     }
@@ -151,7 +182,7 @@ public class Projectile : MonoBehaviour
     /// <summary>
     /// Launch with an explicit lifetime (used for fixed travel-distance shots like Tanker volts).
     /// </summary>
-    public void Launch(Vector2 dir, float moveSpeed, int dmg, float lifeSeconds, Transform shotOwner)
+    public void Launch(Vector2 dir, float moveSpeed, float dmg, float lifeSeconds, Transform shotOwner)
     {
         Launch(dir, moveSpeed, dmg, lifeSeconds, shotOwner, environmentSpawnGraceSeconds: 0f);
     }
@@ -162,20 +193,21 @@ public class Projectile : MonoBehaviour
     public void Launch(
         Vector2 dir,
         float moveSpeed,
-        int dmg,
+        float dmg,
         float lifeSeconds,
         Transform shotOwner,
         float environmentSpawnGraceSeconds)
     {
         direction = dir.sqrMagnitude > 0.001f ? dir.normalized : Vector2.right;
         speed = moveSpeed;
-        damage = dmg;
+        damage = Mathf.Max(0f, dmg);
         lifetime = Mathf.Max(0.05f, lifeSeconds);
         owner = shotOwner;
         launched = true;
         resolvingHit = false;
         hasResolvedCombatHit = false;
         countChargedHit = false;
+        nextPierceHitTime = 0f;
         environmentGraceTimer = Mathf.Max(0f, environmentSpawnGraceSeconds);
         traveledDistance = 0f;
         ApplyWeaponGear();
@@ -194,17 +226,161 @@ public class Projectile : MonoBehaviour
         if (lifetimeRoutine != null)
             StopCoroutine(lifetimeRoutine);
         lifetimeRoutine = StartCoroutine(CoLifetime());
+
+        BeginSpawnActiveHitCycle();
     }
 
-    /// <summary>Blacksmith Weapon Gear on Kit / Count shots: more damage, faster and farther, kill shots fly on at max.</summary>
+    /// <summary>
+    /// Bass (and similar) shots: Spawn clip on fire → Active while traveling → On Hit on impact.
+    /// Detected from animator state/clip names containing spawn / active / on hit.
+    /// </summary>
+    private void BeginSpawnActiveHitCycle()
+    {
+        CacheSpawnActiveHitStates();
+        if (!HasSpawnActiveHitCycle)
+            return;
+
+        if (animator == null)
+            animator = GetComponent<Animator>();
+        if (animator == null)
+            return;
+
+        animator.Play(spawnStateName, 0, 0f);
+        if (spawnToActiveRoutine != null)
+            StopCoroutine(spawnToActiveRoutine);
+        spawnToActiveRoutine = StartCoroutine(CoPromoteToActiveAfterSpawn());
+    }
+
+    private bool HasSpawnActiveHitCycle =>
+        !string.IsNullOrEmpty(spawnStateName)
+        && !string.IsNullOrEmpty(activeStateName)
+        && !string.IsNullOrEmpty(onHitStateName);
+
+    private void CacheSpawnActiveHitStates()
+    {
+        spawnStateName = null;
+        activeStateName = null;
+        onHitStateName = null;
+
+        if (animator == null)
+            animator = GetComponent<Animator>();
+        if (animator == null || animator.runtimeAnimatorController == null)
+            return;
+
+        AnimationClip[] clips = animator.runtimeAnimatorController.animationClips;
+        if (clips == null)
+            return;
+
+        for (int i = 0; i < clips.Length; i++)
+        {
+            AnimationClip clip = clips[i];
+            if (clip == null || string.IsNullOrEmpty(clip.name))
+                continue;
+
+            string lower = clip.name.ToLowerInvariant();
+            if (lower.Contains("on hit") || lower.Contains("onhit"))
+                onHitStateName = clip.name;
+            else if (lower.Contains("spawn"))
+                spawnStateName = clip.name;
+            else if (lower.Contains("active"))
+                activeStateName = clip.name;
+        }
+
+        // Animator state names match clip names on Bass shot controllers.
+        if (!string.IsNullOrEmpty(spawnStateName) && !animator.HasState(0, Animator.StringToHash(spawnStateName)))
+        {
+            // Try common casing variants used in controllers.
+            TryResolveStateName(ref spawnStateName);
+            TryResolveStateName(ref activeStateName);
+            TryResolveStateName(ref onHitStateName);
+        }
+    }
+
+    private void TryResolveStateName(ref string stateName)
+    {
+        if (string.IsNullOrEmpty(stateName) || animator == null)
+            return;
+        if (animator.HasState(0, Animator.StringToHash(stateName)))
+            return;
+
+        // Controllers sometimes differ only by capitalization (Spawn vs spawn).
+        string[] guesses =
+        {
+            stateName,
+            stateName.Replace(" Spawn", " spawn"),
+            stateName.Replace(" spawn", " Spawn"),
+            stateName.Replace(" On Hit", " on hit"),
+            stateName.Replace(" on hit", " On Hit"),
+            stateName.Replace(" OnHit", " on hit"),
+        };
+        for (int i = 0; i < guesses.Length; i++)
+        {
+            if (animator.HasState(0, Animator.StringToHash(guesses[i])))
+            {
+                stateName = guesses[i];
+                return;
+            }
+        }
+    }
+
+    private IEnumerator CoPromoteToActiveAfterSpawn()
+    {
+        float wait = 0.08f;
+        if (TryGetClipLength(spawnStateName, out float spawnLen))
+            wait = Mathf.Max(0.02f, spawnLen);
+
+        yield return new WaitForSeconds(wait);
+        spawnToActiveRoutine = null;
+
+        if (resolvingHit || !launched || animator == null || string.IsNullOrEmpty(activeStateName))
+            yield break;
+
+        animator.Play(activeStateName, 0, 0f);
+    }
+
+    private bool TryGetClipLength(string clipOrStateName, out float length)
+    {
+        length = 0f;
+        if (string.IsNullOrEmpty(clipOrStateName) || animator == null || animator.runtimeAnimatorController == null)
+            return false;
+
+        AnimationClip[] clips = animator.runtimeAnimatorController.animationClips;
+        if (clips == null)
+            return false;
+
+        for (int i = 0; i < clips.Length; i++)
+        {
+            AnimationClip clip = clips[i];
+            if (clip == null)
+                continue;
+            if (!string.Equals(clip.name, clipOrStateName, System.StringComparison.OrdinalIgnoreCase)
+                && clip.name.IndexOf(clipOrStateName, System.StringComparison.OrdinalIgnoreCase) < 0)
+                continue;
+
+            length = clip.length;
+            return length > 0.001f;
+        }
+
+        return false;
+    }
+
+    private bool pierceWallsAndCeilings;
+
+    /// <summary>Blacksmith Weapon Gear on Kit / Count / Bass shots: more damage, faster and farther, kill shots fly on at max.</summary>
     private void ApplyWeaponGear()
     {
         pierceCommonKills = false;
+        pierceWallsAndCeilings = false;
         if (owner == null)
             return;
 
         PlayerController shooter = owner.GetComponentInParent<PlayerController>();
-        if (shooter == null || !shooter.WeaponGearBoostsShots)
+        if (shooter == null)
+            return;
+
+        pierceWallsAndCeilings = PlayerGear.PiercesWallsAndCeilings(shooter);
+
+        if (!shooter.WeaponGearBoostsShots)
             return;
 
         damage += PlayerGear.WeaponDamageBonus(shooter);
@@ -220,7 +396,14 @@ public class Projectile : MonoBehaviour
         environmentGraceTimer = Mathf.Max(environmentGraceTimer, Mathf.Max(0f, seconds));
     }
 
-    /// <summary>Steer a launched shot (Boss Count's boomerang hands). Speed and travel limit are unchanged.</summary>
+    /// <summary>Boomerangs / piercing player shots: keep flying and re-hit after a short delay.</summary>
+    public void ConfigurePierceAndContinue(float hitDelaySeconds = 0.18f)
+    {
+        destroyOnHit = false;
+        pierceAndContinue = true;
+        rehitDelay = Mathf.Max(0.05f, hitDelaySeconds);
+    }
+
     public void SetDirection(Vector2 dir)
     {
         if (dir.sqrMagnitude < 0.0001f)
@@ -232,6 +415,11 @@ public class Projectile : MonoBehaviour
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
             transform.rotation = Quaternion.Euler(0f, 0f, angle);
         }
+    }
+
+    public void SetSpeed(float moveSpeed)
+    {
+        speed = Mathf.Max(0f, moveSpeed);
     }
 
     public Vector2 Direction => direction;
@@ -377,12 +565,19 @@ public class Projectile : MonoBehaviour
                 stepDistance,
                 environmentLayers);
 
-            if (hit.collider != null && ShouldStopOnEnvironment(hit.collider))
+            if (hit.collider != null && ShouldStopOnEnvironment(hit.collider) && !pierceAndContinue)
             {
-                rb.MovePosition(hit.point - direction * 0.02f);
-                if (destroyOnHit)
-                    Despawn(playHitAnimation: true);
-                return;
+                if (pierceWallsAndCeilings && IsWallOrCeilingSurface(hit.normal))
+                {
+                    // Piercing Attack: pass through walls/ceilings; floors still block.
+                }
+                else
+                {
+                    rb.MovePosition(hit.point - direction * 0.02f);
+                    if (destroyOnHit)
+                        Despawn(playHitAnimation: true);
+                    return;
+                }
             }
         }
 
@@ -419,7 +614,11 @@ public class Projectile : MonoBehaviour
 
     private void TryHandleTrigger(Collider2D other)
     {
-        if (!launched || resolvingHit || hasResolvedCombatHit)
+        if (!launched || resolvingHit)
+            return;
+        if (hasResolvedCombatHit && !pierceAndContinue)
+            return;
+        if (pierceAndContinue && Time.time < nextPierceHitTime)
             return;
 
         if (IsOwnerCollider(other))
@@ -438,6 +637,10 @@ public class Projectile : MonoBehaviour
 
         if (ShouldStopOnEnvironment(other))
         {
+            if (pierceAndContinue)
+                return;
+            if (pierceWallsAndCeilings && IsWallOrCeilingCollider(other, rb != null ? rb.position : (Vector2)transform.position))
+                return;
             if (destroyOnHit)
                 Despawn(playHitAnimation: true);
             return;
@@ -504,6 +707,10 @@ public class Projectile : MonoBehaviour
                 return;
         }
 
+        // Bass Leaf Shield absorbs enemy shots itself (Bass-owned blades pass through).
+        if (other.GetComponentInParent<BassLeafShield>() != null)
+            return;
+
         if (!TryResolveDamageTarget(other, out IDamageable damageable, out CrankyClanky cranky))
             return;
 
@@ -526,29 +733,45 @@ public class Projectile : MonoBehaviour
         if (ownerBoss != null && ownerBoss.IsCopyBot && damageable is Boss hitBoss && hitBoss.IsCopyBot)
             return;
 
-        hasResolvedCombatHit = true;
-        launched = false;
-        if (hitCollider != null)
-            hitCollider.enabled = false;
-
-        if (damageable is Boss boss)
-            boss.TakeDamage(damage, shotType);
-        else if (damageable is PlayerController player)
-            player.TakeDamage(damage, owner != null ? owner : transform);
-        else if (cranky != null)
-            cranky.TakeDamage(damage, shotType);
-        else if (damageable is LaserBot laserBot)
-            laserBot.TakeDamage(damage, shotType);
-        else if (damageable is BlockerBot blockerBot)
-            blockerBot.TakeDamage(damage, shotType);
-        else if (damageable is ChaoticTanker tanker)
-            tanker.TakeDamage(damage, shotType);
+        if (!pierceAndContinue)
+        {
+            hasResolvedCombatHit = true;
+            launched = false;
+            if (hitCollider != null)
+                hitCollider.enabled = false;
+        }
         else
-            damageable.TakeDamage(damage);
+        {
+            nextPierceHitTime = Time.time + rehitDelay;
+        }
+
+        // Bank fractions (Bass 0.5 purple); apply whole HP when residual crosses 1.
+        Component damageHost = cranky != null ? (Component)cranky : damageable as Component;
+        int applied = FractionalDamage.Consume(damageHost, damage);
+        if (applied > 0)
+        {
+            if (damageable is Boss boss)
+                boss.TakeDamage(applied, shotType);
+            else if (damageable is PlayerController player)
+                player.TakeDamage(applied, owner != null ? owner : transform);
+            else if (cranky != null)
+                cranky.TakeDamage(applied, shotType);
+            else if (damageable is LaserBot laserBot)
+                laserBot.TakeDamage(applied, shotType);
+            else if (damageable is BlockerBot blockerBot)
+                blockerBot.TakeDamage(applied, shotType);
+            else if (damageable is ChaoticTanker tanker)
+                tanker.TakeDamage(applied, shotType);
+            else
+                damageable.TakeDamage(applied);
+        }
 
         TrySpawnCountHealthClock(other);
 
         SoundManager.Instance?.PlayProjectileHit(shotType);
+
+        if (pierceAndContinue)
+            return;
 
         if (pierceCommonKills && damageable is ICommonEnemy && damageable.IsDead)
         {
@@ -671,6 +894,25 @@ public class Projectile : MonoBehaviour
 
         Vector3 spawnCenter = other.bounds.center;
         count.TrySpawnHealthClockFromEnemyHit(spawnCenter);
+    }
+
+    /// <summary>True for walls/ceilings (pierceable). False for floors (always solid).</summary>
+    private static bool IsWallOrCeilingSurface(Vector2 surfaceNormal)
+    {
+        // Floor normals point mostly up — those must still stop piercing shots.
+        return surfaceNormal.y <= 0.55f;
+    }
+
+    private static bool IsWallOrCeilingCollider(Collider2D other, Vector2 fromPoint)
+    {
+        if (other == null)
+            return true;
+
+        Vector2 closest = other.ClosestPoint(fromPoint);
+        Vector2 outward = fromPoint - closest;
+        if (outward.sqrMagnitude < 0.0001f)
+            return true; // embedded — treat as wall/ceiling so we don't soft-lock
+        return IsWallOrCeilingSurface(outward.normalized);
     }
 
     private bool ShouldStopOnEnvironment(Collider2D other)
@@ -869,9 +1111,24 @@ public class Projectile : MonoBehaviour
         if (hitCollider != null)
             hitCollider.enabled = false;
 
-        // Controllers transition Any → OnHit when BOTH Fading (bool) and OnHit (trigger) are set.
-        animator.SetBool(FadingHash, true);
-        animator.SetTrigger(OnHitHash);
+        if (spawnToActiveRoutine != null)
+        {
+            StopCoroutine(spawnToActiveRoutine);
+            spawnToActiveRoutine = null;
+        }
+
+        CacheSpawnActiveHitStates();
+        if (HasSpawnActiveHitCycle && !string.IsNullOrEmpty(onHitStateName))
+        {
+            // Bass-style controllers: play the on-hit state directly.
+            animator.Play(onHitStateName, 0, 0f);
+        }
+        else
+        {
+            // Kit-style controllers transition Any → OnHit when BOTH Fading + OnHit are set.
+            animator.SetBool(FadingHash, true);
+            animator.SetTrigger(OnHitHash);
+        }
 
         if (hitAnimRoutine != null)
             StopCoroutine(hitAnimRoutine);
@@ -1140,7 +1397,7 @@ public class Projectile : MonoBehaviour
     {
         lifetime = Mathf.Max(0.05f, lifetime);
         speed = Mathf.Max(0.1f, speed);
-        damage = Mathf.Max(0, damage);
+        damage = Mathf.Max(0f, damage);
         hitAnimFallbackDuration = Mathf.Max(0.05f, hitAnimFallbackDuration);
 
         Collider2D col = GetComponent<Collider2D>();

@@ -4,9 +4,10 @@ using UnityEngine;
 
 /// <summary>
 /// Boss version of Harlie (Boss Hex reuses it with a red wave prefab and a damage multiplier).
-/// Mirrors playable Harlie: Kick → Slash 1 → 2 → 3 with a slash wave per slash, air slash, falling
-/// jump attack with pogo, invincible 7-space dash (3 air dashes), double jump, charge slash / kick
-/// slides and the charged air slash. Boss-only patterns are takes on Lace / Hornet (Hollow Knight),
+/// Mirrors playable Harlie: Kick → Slash 1 → 2 → 3 with a slash wave per slash, air slash, spinning
+/// air slash (auto after air slash / air-jump apex), falling jump attack with pogo, invincible 7-space
+/// dash (3 air dashes), double jump, charge slash / kick slides and the charged air slash.
+/// Boss-only patterns are takes on Lace / Hornet (Hollow Knight),
 /// Chozo Robot Soldier (Metroid Dread) and Omega Zero (Mega Man Zero) moves that match one of Harlie's own
 /// moves (lunge = kick slide, cross-up / flash dash = dash, dive / plunge = falling jump attack, flurry /
 /// triple saber = slash combo, rising saber = air slash). Never flinches (sparks only).
@@ -188,6 +189,8 @@ public class BossHarlie : Boss
     [SerializeField] private float hitboxDelay = 0.05f;
     [SerializeField] private float hitboxActiveTime = 0.22f;
     [SerializeField] private float airSlashAnimHold = 0.5f;
+    [Tooltip("If still airborne this long after an air slash starts, auto-enter spinning air slash.")]
+    [SerializeField] private float airSlashAutoSpinDelay = 0.3f;
     [SerializeField] private int kickDamage = 2;
     [SerializeField] private int slash1Damage = 2;
     [SerializeField] private int slash2Damage = 2;
@@ -195,6 +198,16 @@ public class BossHarlie : Boss
     [SerializeField] private int airSlashDamage = 2;
     [SerializeField] private int jumpAttackDamage = 2;
     [SerializeField] private float aerialBounceForce = 12f;
+    [Tooltip("Gentler upward bounce while spinning air slash pogos.")]
+    [SerializeField] private float spinningAirSlashPogoBounceForce = 6.5f;
+    [Tooltip("Horizontal push multiplier vs move speed on spinning air slash pogos (normal pogo uses 0.35).")]
+    [SerializeField] [Range(0.05f, 0.5f)] private float spinningAirSlashPogoHorizontalMul = 0.18f;
+    [Tooltip("Z-spin speed while in spinning air slash (degrees/sec). Boss Hex uses a faster override.")]
+    [SerializeField] private float spinningAirSlashDegreesPerSecond = 28800f;
+    [Tooltip("Normalized time in the air slash clip to freeze on while spinning (largest Attack Box frame).")]
+    [SerializeField] [Range(0f, 1f)] private float spinningAirSlashHoldNormalizedTime = 0f;
+    [SerializeField] private float slashClashKnockback = 2f;
+    [SerializeField] private float slashClashKnockbackDuration = 0.12f;
     [SerializeField] private float dashCancelSlashSpeedMul = 1.5f;
     [SerializeField] private float kickLungeDistance = 1f;
     [SerializeField] private float slash1LungeDistance = 0.3f;
@@ -367,7 +380,15 @@ public class BossHarlie : Boss
     private bool pogoHappened;
     private float attackAnimSpeed = 1f;
     private float airSlashHoldUntil;
+    private bool isSpinningAirSlash;
+    private Quaternion spinningAirSlashRestLocalRotation = Quaternion.identity;
+    private float spinningAirSlashDirSign = -1f;
+    private bool spinningAirSlashLockedUntilApex;
+    private float autoSpinAfterAirSlashAt = -1f;
+    private int spinningAirSlashDamage;
     private int currentCombo;
+
+    private const int SpinningAirSlashCounterMinDamage = 3;
 
     private float chargeTimer;
     private float hitVfxTimer;
@@ -402,9 +423,16 @@ public class BossHarlie : Boss
     {
         public float time;
         public Vector3 position;
+        public Quaternion rotation;
         public Sprite sprite;
         public bool flipX;
     }
+
+    private float SpinningAirSlashDegreesPerSecond =>
+        useHexMoves ? 36000f : spinningAirSlashDegreesPerSecond;
+    private int SpinningAirSlashDamageMultiplier => useHexMoves ? 2 : 1;
+    /// <summary>Hex's air-slash pose reads opposite Harlie's under flipX.</summary>
+    private float SpinningAirSlashZSign => useHexMoves ? 1f : -1f;
 
     /// <summary>Solid-color copy of the body sprite drawn behind her (charge / telegraph / enrage glow).</summary>
     private sealed class Aura
@@ -419,8 +447,16 @@ public class BossHarlie : Boss
     public override int CopyBotMaxHealthOverride => copyBotMaxHealth;
 
     private float HealthRatio => currentHealth / (float)Mathf.Max(1, maxHealth);
-    private bool IsEnraged => HealthRatio <= enrageHealthRatio + 0.0001f;
-    private bool IsDesperate => HealthRatio <= desperateHealthRatio + 0.0001f;
+    private bool IsEnraged =>
+        EnrageLatched || HealthRatio <= DifficultyTuning.BossEnrageThreshold(enrageHealthRatio) + 0.0001f;
+    private bool IsDesperate => DesperatePhaseLatched || HealthRatio <= desperateHealthRatio + 0.0001f;
+
+    protected override int ResolveLifeBarCount() => lifeBarCount;
+
+    protected override void OnNearDeathPhasesSnapshot()
+    {
+        LatchCombatPhases(IsEnraged, signaturePhase: false, desperatePhase: IsDesperate);
+    }
 
     /// <summary>Whole life-bar segments lost (0 at full HP).</summary>
     private int BarsLost
@@ -434,12 +470,13 @@ public class BossHarlie : Boss
 
     private float BarsLost01 => Mathf.Clamp01(BarsLost / (float)Mathf.Max(1, lifeBarCount - 1));
 
-    private float Tempo =>
+    private float Tempo => DifficultyTuning.ScaleBossTempo(
         1f + BarsLost * Mathf.Max(0f, tempoPerBarLost) +
         (IsEnraged ? Mathf.Max(0f, enrageTempoBonus) : 0f) +
-        (IsDesperate ? Mathf.Max(0f, desperateTempoBonus) : 0f);
+        (IsDesperate ? Mathf.Max(0f, desperateTempoBonus) : 0f));
 
-    private float RecoverDuration => Mathf.Max(0.05f, Mathf.Lerp(recoverDurationFullHp, recoverDurationLowHp, BarsLost01));
+    private float RecoverDuration => DifficultyTuning.ScaleBossRecover(
+        Mathf.Max(0.05f, Mathf.Lerp(recoverDurationFullHp, recoverDurationLowHp, BarsLost01)));
 
     // ---------- Lifecycle ----------
 
@@ -495,6 +532,11 @@ public class BossHarlie : Boss
     {
         if (BlocksIncomingHit())
             return;
+        if (TryCounterSpinningAirSlash(amount, null))
+        {
+            base.TakeDamage(amount);
+            return;
+        }
         base.TakeDamage(amount);
     }
 
@@ -502,10 +544,46 @@ public class BossHarlie : Boss
     {
         if (BlocksIncomingHit())
             return;
+        if (TryCounterSpinningAirSlash(amount, null))
+        {
+            base.TakeDamage(amount, shotType);
+            return;
+        }
         base.TakeDamage(amount, shotType);
     }
 
-    private bool BlocksIncomingHit() => !IsDead && dashInvincible && isDashing;
+    /// <summary>
+    /// Strong hits (3+ damage) break spinning air slash into a regular fall with gentle knockback.
+    /// </summary>
+    private bool TryCounterSpinningAirSlash(int amount, Transform hitSource)
+    {
+        if (!isSpinningAirSlash || amount < SpinningAirSlashCounterMinDamage)
+            return false;
+
+        float away = -facingSign;
+        if (hitSource != null)
+        {
+            away = Mathf.Sign(transform.position.x - hitSource.position.x);
+            if (Mathf.Abs(away) < 0.01f)
+                away = -facingSign;
+        }
+        else
+        {
+            PlayerController player = FindPlayer();
+            if (player != null)
+            {
+                away = Mathf.Sign(transform.position.x - player.transform.position.x);
+                if (Mathf.Abs(away) < 0.01f)
+                    away = -facingSign;
+            }
+        }
+
+        CancelSpinningAirSlashFromParryOrClash(away);
+        return true;
+    }
+
+    private bool BlocksIncomingHit() =>
+        !IsDead && DifficultyTuning.BossDashInvincible(dashInvincible) && isDashing;
 
     /// <summary>Never flinches — hits only show sparks.</summary>
     protected override bool ShouldEnterHitStun(int healthBefore, int healthAfter, bool fromBigShot) => false;
@@ -522,9 +600,38 @@ public class BossHarlie : Boss
         base.OnHitStunStarted();
     }
 
+    /// <summary>Harlie/Hex have no stun clip — hold Jump for near-death / defeat cinema.</summary>
+    protected override void ApplyCinematicStunPose()
+    {
+        if (animator == null)
+            return;
+
+        SetAnimBool("IsStunned", false);
+        SetAnimBool("IsMoving", false);
+        SetAnimBool("IsDashing", false);
+        SetAnimBool("IsAttacking", false);
+        SetAnimBool("IsCharging", false);
+        SetAnimBool("IsGrounded", false);
+        SetAnimBool("IsInAir", true);
+        SetAnimBool("IsFalling", false);
+        SetAnimBool("IsJumping", true);
+        animator.speed = 1f;
+        PlayAnimState("Jump");
+    }
+
+    protected override void ClearCinematicStunPose()
+    {
+        if (animator == null)
+            return;
+
+        SetAnimBool("IsStunned", false);
+        SetAnimBool("IsJumping", isGrounded ? false : true);
+    }
+
     protected override float GetMoveSpeed()
     {
-        float speed = moveSpeed + crystalMoveSpeedBonus + BarsLost * Mathf.Max(0f, moveSpeedPerBarLost);
+        float baseSpeed = DifficultyTuning.ScaleBossMoveSpeed(authoredMoveSpeed);
+        float speed = baseSpeed + crystalMoveSpeedBonus + BarsLost * Mathf.Max(0f, moveSpeedPerBarLost);
         if (IsEnraged)
             speed += Mathf.Max(0f, enrageMoveSpeedBonus);
         return BossSpeed(speed);
@@ -542,7 +649,13 @@ public class BossHarlie : Boss
     protected override void HandleBossUpdate()
     {
         if (isGrounded && !wasGrounded)
+        {
             RefillAirActions();
+            autoSpinAfterAirSlashAt = -1f;
+            spinningAirSlashLockedUntilApex = false;
+            if (isSpinningAirSlash)
+                EndSpinningAirSlash();
+        }
         wasGrounded = isGrounded;
 
         PlayerController player = FindPlayer();
@@ -556,6 +669,10 @@ public class BossHarlie : Boss
 
         TickSilverSwords();
         TickOrbitVBots();
+
+        TickFirstAirJumpApexUnlock();
+        TickAirSlashAutoSpin();
+        TickSpinningAirSlash(BossDeltaTime);
 
         if (actionStack.Count == 0)
             actionStack.Push(RunNextPattern());
@@ -644,19 +761,22 @@ public class BossHarlie : Boss
             return;
 
         float world = HyperSpeedWorldSlow.IsActive ? HyperSpeedWorldSlow.WorldTimeScale : 1f;
-        animator.speed = world * (isAttacking ? Mathf.Max(0.05f, attackAnimSpeed) : 1f);
+        // Freeze the air-slash pose for the whole spin (largest Attack Box frame).
+        animator.speed = isSpinningAirSlash
+            ? 0f
+            : world * (isAttacking ? Mathf.Max(0.05f, attackAnimSpeed) : 1f);
 
         float vy = rb != null ? rb.linearVelocity.y : 0f;
-        bool moving = motion == Motion.Walk && Mathf.Abs(walkDir) > 0.01f && !isDashing && !isAttacking;
+        bool moving = motion == Motion.Walk && Mathf.Abs(walkDir) > 0.01f && !isDashing && !isAttacking && !isSpinningAirSlash;
         SetAnimBool("IsMoving", moving);
-        SetAnimBool("IsGrounded", isGrounded);
-        SetAnimBool("IsInAir", !isGrounded);
+        SetAnimBool("IsGrounded", isGrounded && !isSpinningAirSlash);
+        SetAnimBool("IsInAir", !isGrounded || isSpinningAirSlash);
         SetAnimBool("IsDashing", isDashing);
-        SetAnimBool("IsAttacking", isAttacking || Time.time < airSlashHoldUntil);
+        SetAnimBool("IsAttacking", isAttacking || isSpinningAirSlash || Time.time < airSlashHoldUntil);
         SetAnimBool("IsCharging", isCharging);
         SetAnimBool("IsStunned", false);
-        SetAnimBool("IsFalling", !isGrounded && vy < -0.01f);
-        SetAnimBool("IsJumping", !isGrounded && vy >= -0.01f);
+        SetAnimBool("IsFalling", !isGrounded && vy < -0.01f && !isSpinningAirSlash);
+        SetAnimBool("IsJumping", !isGrounded && vy >= -0.01f && !isSpinningAirSlash);
         SetAnimFloat("VerticalSpeed", vy);
         SetAnimInt("AttackCombo", currentCombo);
     }
@@ -808,9 +928,10 @@ public class BossHarlie : Boss
 
         motion = Motion.Stop;
         PlayerController player = FindPlayer();
-        if (player != null && Mathf.Abs(DxToPlayer()) < backdashIfPlayerWithin)
+        float backdashRange = backdashIfPlayerWithin * DifficultyTuning.BossEvasionMul();
+        if (player != null && Mathf.Abs(DxToPlayer()) < backdashRange)
         {
-            yield return Dash(-DirToPlayer(), dashDistance * 0.6f);
+            yield return Dash(-DirToPlayer(), dashDistance * 0.6f * DifficultyTuning.BossEvasionMul());
             motion = Motion.Stop;
             FacePlayer();
         }
@@ -851,8 +972,15 @@ public class BossHarlie : Boss
                 if (bounces >= 3)
                 {
                     yield return Wait(0.12f);
-                    if (PlayerInAirSlashReach())
+                    if (PlayerInAirSlashReach() && !isSpinningAirSlash)
+                    {
                         yield return AirSlash(charged: false);
+                        while (isSpinningAirSlash && !isGrounded)
+                        {
+                            SteerTowardPlayerInAir();
+                            yield return null;
+                        }
+                    }
                     break;
                 }
             }
@@ -876,10 +1004,15 @@ public class BossHarlie : Boss
         while (!isGrounded && t < 2.2f && swings < 2)
         {
             SteerTowardPlayerInAir();
-            if (PlayerInAirSlashReach())
+            if (PlayerInAirSlashReach() && !isSpinningAirSlash)
             {
                 yield return AirSlash(charged: false);
                 swings++;
+                while (isSpinningAirSlash && !isGrounded)
+                {
+                    SteerTowardPlayerInAir();
+                    yield return null;
+                }
                 continue;
             }
 
@@ -999,7 +1132,8 @@ public class BossHarlie : Boss
         yield return ApproachForSlash();
 
         bool stepped = false;
-        int slashes = Mathf.Max(1, flurrySlashes) + (IsEnraged ? 1 : 0);
+        int slashes = DifficultyTuning.ScaleSignatureCount(
+            Mathf.Max(1, flurrySlashes) + (IsEnraged ? 1 : 0));
         for (int i = 0; i < slashes; i++)
         {
             if (i > 0 && !PlayerInRange(slashRange * 1.25f))
@@ -1149,8 +1283,15 @@ public class BossHarlie : Boss
         isAttacking = false;
         airSlashHoldUntil = Time.time + airSlashAnimHold * 0.5f;
 
-        if (!isGrounded && PlayerInAirSlashReach())
+        if (!isGrounded && PlayerInAirSlashReach() && !isSpinningAirSlash)
+        {
             yield return AirSlash(charged: false);
+            while (isSpinningAirSlash && !isGrounded)
+            {
+                SteerTowardPlayerInAir();
+                yield return null;
+            }
+        }
 
         yield return WaitUntilGrounded(2f);
     }
@@ -1406,16 +1547,27 @@ public class BossHarlie : Boss
 
     private IEnumerator ApproachForSlash()
     {
+        float smart = DifficultyTuning.BossApproachSmartMul();
+        float idealGap = slashRange * 0.85f / Mathf.Max(0.5f, smart);
+        float timeout = slashApproachTimeout / Mathf.Max(0.5f, smart);
         float t = 0f;
         while (true)
         {
             float dx = DxToPlayer();
-            if (Mathf.Abs(dx) <= slashRange * 0.85f)
+            float abs = Mathf.Abs(dx);
+            // Hard/Balanced: settle into the sweet spot instead of overshooting into the player.
+            if (abs <= idealGap && abs >= idealGap * 0.45f)
                 break;
-
-            if (t >= slashApproachTimeout)
+            if (abs <= idealGap * 0.45f && smart > 1.05f)
             {
-                yield return Dash(Mathf.Sign(dx), Mathf.Clamp(Mathf.Abs(dx) - 1.2f, 1.5f, dashDistance));
+                // Too close — micro backstep for a cleaner swing lane.
+                yield return Dash(-Mathf.Sign(dx), Mathf.Clamp(idealGap - abs, 0.4f, 1.4f));
+                break;
+            }
+
+            if (t >= timeout)
+            {
+                yield return Dash(Mathf.Sign(dx), Mathf.Clamp(abs - idealGap, 1.5f, dashDistance));
                 break;
             }
 
@@ -1432,18 +1584,22 @@ public class BossHarlie : Boss
     /// <summary>Kick → Slash 1 → 2 → 3. If the player backs off mid-combo she steps in once and keeps going.</summary>
     private IEnumerator Combo(float speedMul)
     {
-        bool stepped = false;
-        for (int combo = ComboKick; combo <= ComboSlash3; combo++)
+        int passes = DifficultyTuning.BossSignatureCountMul();
+        for (int pass = 0; pass < passes; pass++)
         {
-            if (combo > ComboKick && !PlayerInRange(slashRange * 1.25f))
+            bool stepped = false;
+            for (int combo = ComboKick; combo <= ComboSlash3; combo++)
             {
-                if (stepped || !TryBeginChaseStep())
-                    break;
-                stepped = true;
-                yield return ChaseStep();
-            }
+                if (combo > ComboKick && !PlayerInRange(slashRange * 1.25f))
+                {
+                    if (stepped || !TryBeginChaseStep())
+                        yield break;
+                    stepped = true;
+                    yield return ChaseStep();
+                }
 
-            yield return GroundAttack(combo, speedMul);
+                yield return GroundAttack(combo, speedMul);
+            }
         }
     }
 
@@ -1516,6 +1672,11 @@ public class BossHarlie : Boss
             charged ? ChargedWaveShape : WaveShape.Forward);
         isAttacking = false;
         airSlashHoldUntil = Time.time + airSlashAnimHold / speed;
+        // Charged air slash stays a one-shot wave; normal air slash chains into the spin.
+        if (!charged && !isGrounded)
+            autoSpinAfterAirSlashAt = Time.time + Mathf.Max(0f, airSlashAutoSpinDelay);
+        else
+            autoSpinAfterAirSlashAt = -1f;
     }
 
     private IEnumerator AttackWindow(float duration, int damage, float speed, bool fireWave, float waveDistanceMul,
@@ -1873,14 +2034,26 @@ public class BossHarlie : Boss
         if (isGrounded || airJumpsLeft <= 0 || rb == null)
             return false;
 
+        // First air jump: normal jump, spin locked until apex. Later air jumps: spin immediately.
+        bool spinningAirJump = airJumpsLeft < maxAirJumps;
         airJumpsLeft--;
         motion = Motion.Free;
         SetGravity(true);
         if (Mathf.Abs(vx) > 0.05f)
             SetFacing(vx);
         rb.linearVelocity = new Vector2(BossSpeed(vx), Mathf.Max(0.1f, doubleJumpForce));
-        PlayAnimState("Jump");
         SoundManager.Instance?.PlayJump();
+
+        if (spinningAirJump)
+        {
+            spinningAirSlashLockedUntilApex = false;
+            BeginSpinningAirSlash();
+            return true;
+        }
+
+        spinningAirSlashLockedUntilApex = true;
+        if (!isAttacking && !isSpinningAirSlash)
+            PlayAnimState("Jump");
         return true;
     }
 
@@ -1893,7 +2066,8 @@ public class BossHarlie : Boss
         float target = Mathf.Abs(dx) < 0.2f ? 0f : Mathf.Sign(dx) * airSteerSpeed;
         float vx = Mathf.MoveTowards(rb.linearVelocity.x, BossSpeed(target), BossSpeed(airSteerSpeed) * 4f * BossDeltaTime);
         rb.linearVelocity = new Vector2(vx, rb.linearVelocity.y);
-        if (Mathf.Abs(dx) > 0.2f)
+        // Don't flip mid-tumble — spin locks facing for the whole spin.
+        if (!isSpinningAirSlash && Mathf.Abs(dx) > 0.2f)
             SetFacing(dx);
     }
 
@@ -1972,7 +2146,7 @@ public class BossHarlie : Boss
 
     private void ActivateHitbox(int damage)
     {
-        if (attackHitbox == null)
+        if (attackHitbox == null || isSpinningAirSlash)
             return;
 
         jumpAttackActive = false;
@@ -1983,6 +2157,10 @@ public class BossHarlie : Boss
 
     private void DeactivateHitbox()
     {
+        // Spinning air slash owns the hitbox until End/Cancel.
+        if (isSpinningAirSlash)
+            return;
+
         attackHitboxInUse = false;
         if (attackHitbox != null && !jumpAttackActive)
             attackHitbox.Deactivate();
@@ -1991,7 +2169,7 @@ public class BossHarlie : Boss
     /// <summary>Playable Harlie's automatic falling attack: any idle airborne moment is dangerous.</summary>
     private void TickJumpAttack()
     {
-        if (attackHitbox == null)
+        if (attackHitbox == null || isSpinningAirSlash)
             return;
 
         bool want = !isGrounded && !isAttacking && !isDashing && !attackHitboxInUse &&
@@ -2011,16 +2189,171 @@ public class BossHarlie : Boss
 
     private void HandleAttackTargetAcquired(Collider2D other, PlayerController player)
     {
-        if (!jumpAttackActive || player == null || rb == null || isGrounded)
+        bool canPogo = jumpAttackActive || isSpinningAirSlash;
+        if (!canPogo || player == null || rb == null || isGrounded)
             return;
 
         if (rb.linearVelocity.y > 0.05f || transform.position.y < player.transform.position.y + 0.3f)
             return;
 
         airJumpsLeft = Mathf.Max(0, maxAirJumps);
-        rb.linearVelocity = new Vector2(0f, Mathf.Max(0.1f, aerialBounceForce));
+        spinningAirSlashLockedUntilApex = false;
+
+        bool spinPogo = isSpinningAirSlash;
+        float bounce = Mathf.Max(0.1f, spinPogo ? spinningAirSlashPogoBounceForce : aerialBounceForce);
+        float horizMul = spinPogo ? spinningAirSlashPogoHorizontalMul : 0.35f;
+        float away = Mathf.Sign(transform.position.x - player.transform.position.x);
+        if (Mathf.Abs(away) < 0.01f)
+            away = -facingSign;
+        float awayX = away * GetMoveSpeed() * horizMul;
+
+        // Soften successive spinning pogos: if already rising, don't relaunch at full height.
+        if (spinPogo && rb.linearVelocity.y > 0.5f)
+            bounce = Mathf.Min(bounce, Mathf.Lerp(bounce, bounce * 0.4f, Mathf.Clamp01(rb.linearVelocity.y / Mathf.Max(0.1f, bounce))));
+
+        rb.linearVelocity = new Vector2(awayX, bounce);
         pogoHappened = true;
         attackHitbox.ForgetHitInstance(player.GetInstanceID());
+    }
+
+    private void TickFirstAirJumpApexUnlock()
+    {
+        if (!spinningAirSlashLockedUntilApex || rb == null || isSpinningAirSlash || isGrounded)
+            return;
+
+        if (rb.linearVelocity.y <= 0.05f)
+        {
+            spinningAirSlashLockedUntilApex = false;
+            BeginSpinningAirSlash();
+        }
+    }
+
+    private void TickAirSlashAutoSpin()
+    {
+        if (autoSpinAfterAirSlashAt < 0f || isSpinningAirSlash || isGrounded)
+            return;
+
+        if (Time.time < autoSpinAfterAirSlashAt)
+            return;
+
+        autoSpinAfterAirSlashAt = -1f;
+        spinningAirSlashLockedUntilApex = false;
+        BeginSpinningAirSlash();
+    }
+
+    private void BeginSpinningAirSlash()
+    {
+        if (spinningAirSlashLockedUntilApex || isSpinningAirSlash || isGrounded)
+            return;
+
+        airSlashHoldUntil = 0f;
+        autoSpinAfterAirSlashAt = -1f;
+        jumpAttackActive = false;
+
+        isSpinningAirSlash = true;
+        spinningAirSlashRestLocalRotation = transform.localRotation;
+        spinningAirSlashDirSign = facingSign >= 0f ? 1f : -1f;
+        SetFacingSign(spinningAirSlashDirSign);
+
+        spinningAirSlashDamage = Damage(airSlashDamage) * Mathf.Max(1, SpinningAirSlashDamageMultiplier);
+        attackHitboxInUse = true;
+        SyncAttackBoxFacing();
+        if (attackHitbox != null)
+            attackHitbox.Activate(spinningAirSlashDamage, applyDamage: true);
+
+        HoldSpinningAirSlashAnimPose();
+        forceTrail = true;
+        BeginDashAfterimageTrail(MaxAfterimageDelay + 0.5f);
+        PlaySwing();
+    }
+
+    private void HoldSpinningAirSlashAnimPose()
+    {
+        if (animator == null)
+            return;
+
+        float hold = Mathf.Clamp01(spinningAirSlashHoldNormalizedTime);
+        int stateHash = Animator.StringToHash("air slash");
+        if (animator.HasState(0, stateHash))
+            animator.Play(stateHash, 0, hold);
+        else
+            animator.Play("air slash", 0, hold);
+
+        animator.speed = 0f;
+        animator.Update(0f);
+        SetAnimBool("IsAttacking", true);
+        SetAnimBool("IsInAir", true);
+        SetAnimBool("IsGrounded", false);
+    }
+
+    private void TickSpinningAirSlash(float dt)
+    {
+        if (!isSpinningAirSlash)
+            return;
+
+        if (isGrounded)
+        {
+            EndSpinningAirSlash();
+            return;
+        }
+
+        if (facingSign != spinningAirSlashDirSign)
+            SetFacingSign(spinningAirSlashDirSign);
+
+        transform.Rotate(0f, 0f,
+            SpinningAirSlashZSign * SpinningAirSlashDegreesPerSecond * dt * spinningAirSlashDirSign);
+        if (attackHitbox != null && !attackHitbox.IsActive)
+            attackHitbox.Activate(spinningAirSlashDamage, applyDamage: true);
+    }
+
+    private void EndSpinningAirSlash()
+    {
+        if (!isSpinningAirSlash)
+            return;
+
+        isSpinningAirSlash = false;
+        autoSpinAfterAirSlashAt = -1f;
+        transform.localRotation = spinningAirSlashRestLocalRotation;
+        forceTrail = false;
+        attackHitboxInUse = false;
+        if (attackHitbox != null && !jumpAttackActive)
+            attackHitbox.Deactivate();
+
+        if (animator != null)
+        {
+            animator.speed = 1f;
+            SetAnimBool("IsAttacking", false);
+            SetAnimBool("IsInAir", !isGrounded);
+            SetAnimBool("IsGrounded", isGrounded);
+        }
+    }
+
+    /// <summary>
+    /// Clash / parry interrupt: stop spinning air slash, return to regular fall, gentle knockback.
+    /// </summary>
+    public void CancelSpinningAirSlashFromParryOrClash(float knockAwaySign)
+    {
+        autoSpinAfterAirSlashAt = -1f;
+        spinningAirSlashLockedUntilApex = false;
+        airSlashHoldUntil = 0f;
+
+        bool wasSpinning = isSpinningAirSlash;
+        EndSpinningAirSlash();
+        jumpAttackActive = false;
+        if (attackHitbox != null)
+            attackHitbox.Deactivate();
+
+        if (Mathf.Abs(knockAwaySign) > 0.01f)
+            GentleKnockback.Apply(this, Mathf.Sign(knockAwaySign), slashClashKnockback,
+                slashClashKnockbackDuration, chainKill: false);
+
+        if (wasSpinning && animator != null)
+        {
+            animator.speed = 1f;
+            SetAnimBool("IsAttacking", false);
+            SetAnimBool("IsInAir", !isGrounded);
+            SetAnimBool("IsGrounded", isGrounded);
+        }
     }
 
     private MaliceSlashProjectile FireWave(int damage, float distanceMul, float dir, bool fromAttackBox,
@@ -2043,6 +2376,13 @@ public class BossHarlie : Boss
     private WaveShape ChargedWaveShape => useHexMoves ? WaveShape.Triple : WaveShape.Forward;
 
     private void FireWaveShape(WaveShape shape, int damage, float distanceMul)
+    {
+        int repeats = DifficultyTuning.BossSignatureCountMul();
+        for (int r = 0; r < repeats; r++)
+            FireWaveShapeOnce(shape, damage, distanceMul);
+    }
+
+    private void FireWaveShapeOnce(WaveShape shape, int damage, float distanceMul)
     {
         switch (shape)
         {
@@ -2357,9 +2697,11 @@ public class BossHarlie : Boss
         for (int i = 0; i < count; i++)
         {
             var go = new GameObject($"{name}_DashAfterimage_{i + 1}");
-            go.transform.SetParent(transform, false);
+            // World-space (unparented): trails the body center and copies sprite/spin, but is not
+            // rotated around the character like a clock hand when the body spins.
+            go.transform.SetParent(null, false);
             var sr = go.AddComponent<SpriteRenderer>();
-            CharacterEffectSorting.ApplyTrailBehindBody(sr, spriteRenderer, EffectSortingGroup, i);
+            CharacterEffectSorting.ApplyDetachedEffectBehindHost(sr, EffectSortingGroup, spriteRenderer, 1 + i);
             go.SetActive(false);
             dashAfterimageObjects[i] = go;
             dashAfterimageRenderers[i] = sr;
@@ -2402,11 +2744,13 @@ public class BossHarlie : Boss
         {
             time = Time.time,
             position = transform.position,
+            rotation = transform.rotation,
             sprite = spriteRenderer.sprite,
             flipX = spriteRenderer.flipX
         });
 
-        float cutoff = Time.time - (MaxAfterimageDelay + 0.35f);
+        // Keep enough history so ghosts keep moving while fading after a spin/dash.
+        float cutoff = Time.time - (MaxAfterimageDelay + 0.85f);
         while (poseHistory.Count > 0 && poseHistory[0].time < cutoff)
             poseHistory.RemoveAt(0);
     }
@@ -2436,7 +2780,7 @@ public class BossHarlie : Boss
         if (dashAfterimageRenderers == null || spriteRenderer == null)
             return;
 
-        bool moving = isDashing || forceTrail;
+        bool moving = isDashing || forceTrail || isSpinningAirSlash;
         if (moving)
             dashAfterimagesVisibleUntil = Mathf.Max(dashAfterimagesVisibleUntil,
                 Time.time + MaxAfterimageDelay + dashAfterimageLifetimePadding);
@@ -2456,14 +2800,17 @@ public class BossHarlie : Boss
             }
 
             go.SetActive(true);
-            go.transform.position = sample.position;
+            go.transform.SetPositionAndRotation(sample.position, sample.rotation);
             SpriteRenderer sr = dashAfterimageRenderers[i];
             sr.sprite = sample.sprite != null ? sample.sprite : spriteRenderer.sprite;
             sr.flipX = sample.flipX;
-            CharacterEffectSorting.ApplyTrailBehindBody(sr, spriteRenderer, EffectSortingGroup, i);
+            CharacterEffectSorting.ApplyDetachedEffectBehindHost(sr, EffectSortingGroup, spriteRenderer, 1 + i);
 
             float t = dashAfterimageRenderers.Length == 1 ? 0f : i / (float)(dashAfterimageRenderers.Length - 1);
             Color c = dashAfterimageColor;
+            // Boss Hex: redder smear while spinning.
+            if (useHexMoves && isSpinningAirSlash)
+                c = Color.Lerp(c, new Color(1f, 0.18f, 0.12f, 1f), 0.65f);
             c.a = Mathf.Lerp(dashAfterimageAlphaStart, dashAfterimageAlphaEnd, t);
             sr.color = c;
         }
@@ -2477,11 +2824,15 @@ public class BossHarlie : Boss
         EndCharge();
         HideAura(telegraphAura);
         isAttacking = false;
-        forceTrail = false;
+        if (!isSpinningAirSlash)
+            forceTrail = false;
         attackAnimSpeed = 1f;
-        attackHitboxInUse = false;
-        if (attackHitbox != null && !jumpAttackActive)
-            attackHitbox.Deactivate();
+        if (!isSpinningAirSlash)
+        {
+            attackHitboxInUse = false;
+            if (attackHitbox != null && !jumpAttackActive)
+                attackHitbox.Deactivate();
+        }
         SetGravity(true);
         if (motion != Motion.Free)
             motion = Motion.Stop;
@@ -2491,6 +2842,9 @@ public class BossHarlie : Boss
     private void ResetActions()
     {
         actionStack.Clear();
+        EndSpinningAirSlash();
+        autoSpinAfterAirSlashAt = -1f;
+        spinningAirSlashLockedUntilApex = false;
         CleanupAfterPattern();
         jumpAttackActive = false;
         if (attackHitbox != null)
@@ -2520,6 +2874,20 @@ public class BossHarlie : Boss
         swordsWereAttacking = false;
         ClearOrbitVBots();
         orbitVBotsUnlocked = false;
+    }
+
+    protected override void OnCinematicDeathStarted()
+    {
+        base.OnCinematicDeathStarted();
+        ResetActions();
+        DismissSilverSwords();
+        ClearOrbitVBots();
+        HideAura(enrageAura);
+        HideAura(telegraphAura);
+        SetDashAfterimagesHidden();
+        if (sparkEmitter != null)
+            sparkEmitter.StopImmediate();
+        hitVfxTimer = 0f;
     }
 
     protected override void OnBossDefeated()
@@ -2594,6 +2962,12 @@ public class BossHarlie : Boss
         airSteerSpeed = Mathf.Max(0f, airSteerSpeed);
         hitboxActiveTime = Mathf.Max(0.01f, hitboxActiveTime);
         aerialBounceForce = Mathf.Max(0.1f, aerialBounceForce);
+        airSlashAutoSpinDelay = Mathf.Max(0f, airSlashAutoSpinDelay);
+        spinningAirSlashPogoBounceForce = Mathf.Max(0.1f, spinningAirSlashPogoBounceForce);
+        spinningAirSlashPogoHorizontalMul = Mathf.Clamp(spinningAirSlashPogoHorizontalMul, 0.05f, 0.5f);
+        spinningAirSlashDegreesPerSecond = Mathf.Max(360f, spinningAirSlashDegreesPerSecond);
+        slashClashKnockback = Mathf.Max(0f, slashClashKnockback);
+        slashClashKnockbackDuration = Mathf.Max(0.01f, slashClashKnockbackDuration);
         dashCancelSlashSpeedMul = Mathf.Max(1f, dashCancelSlashSpeedMul);
         kickSpeedVsDash = Mathf.Max(1.01f, kickSpeedVsDash);
         chargeMaxSeconds = Mathf.Max(0.05f, chargeMaxSeconds);

@@ -1032,10 +1032,10 @@ public class KitPlayerController : PlayerController
         }
     }
 
-    private int GetShotDamage(ProjectileShotType type)
+    private float GetShotDamage(ProjectileShotType type)
     {
         Projectile prefab = GetPrefab(type);
-        return prefab != null ? prefab.Damage : 1;
+        return prefab != null ? prefab.Damage : 1f;
     }
 
     private GameVisualEffect GetBusterBlastPrefab(ProjectileShotType type)

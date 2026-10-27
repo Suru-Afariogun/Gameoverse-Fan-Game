@@ -85,7 +85,7 @@ public class HarliePlayerController : PlayerController
     [SerializeField] private float outgoingDamageMultiplier = 1f;
 
     [Header("Harlie - Upgrades: Ariel Action")]
-    [Tooltip("Air dashes added per level (each level also adds one air jump).")]
+    [Tooltip("Air dashes added per level (each level also adds one air jump). Level 3+: pogo off shredder blades without taking damage.")]
     [SerializeField] private int aerialAirDashesPerLevel = 2;
 
     [Header("Harlie - Upgrades: Hyper Ability (attack / speed / wave only at full health)")]
@@ -164,16 +164,22 @@ public class HarliePlayerController : PlayerController
     [SerializeField] private bool lockMoveDuringGroundAttack = true;
     [Tooltip("After an air slash, keep that pose briefly before fall/jump anims resume.")]
     [SerializeField] private float airSlashAnimHold = 0.5f;
+    [Tooltip("If still airborne this long after an air slash starts, auto-enter spinning air slash.")]
+    [SerializeField] private float airSlashAutoSpinDelay = 0.3f;
 
     [Header("Harlie - Jump Attack / Pogo")]
     [Tooltip("Automatic falling attack while airborne (Little Program Harlie jump attack).")]
     [SerializeField] private int jumpAttackDamage = 2;
     [Tooltip("Upward speed applied when bounce-hitting a target while falling.")]
     [SerializeField] private float aerialBounceForce = 12f;
+    [Tooltip("Gentler upward bounce while spinning air slash pogos (stops successive spins from launching too hard).")]
+    [SerializeField] private float spinningAirSlashPogoBounceForce = 6.5f;
+    [Tooltip("Horizontal push multiplier vs move speed on spinning air slash pogos (normal pogo uses 0.35).")]
+    [SerializeField] [Range(0.05f, 0.5f)] private float spinningAirSlashPogoHorizontalMul = 0.18f;
 
     [Header("Harlie - Attack Knockback (same rule as Malice's slashes)")]
     [Tooltip("Gentle push on hit moving enemies (world units). Bosses and stationary enemies (Laser Bot, Chaotic Tanker, Blocker Bot) are never pushed.")]
-    [SerializeField] private float attackKnockbackDistance = 2f;
+    [SerializeField] private float attackKnockbackDistance = 2.5f;
     [SerializeField] private float attackKnockbackDuration = 0.12f;
 
     [Header("Harlie - Attack Lunge (world units)")]
@@ -199,8 +205,10 @@ public class HarliePlayerController : PlayerController
     [SerializeField] private float chargeKickMaxSeconds = 2f;
     [Tooltip("Max charged travel in spaces (× space size).")]
     [SerializeField] private float chargeKickMaxSpaces = 24f;
-    [Tooltip("Hold ratio at or below this uses Slash 1; above uses charge kick.")]
-    [SerializeField] [Range(0.1f, 0.9f)] private float chargeSlashMaxRatio = 0.5f;
+    [Tooltip("Ground charge hold ≤ this ratio of max charge = kick. Above it = charged slash 3.")]
+    [SerializeField] [Range(0.05f, 0.9f)] private float chargeKickMaxRatio = 0.1f;
+    [Tooltip("Charged slash 3 waves travel this much faster / larger than a normal slash wave.")]
+    [SerializeField] [Range(1f, 1.5f)] private float chargedSlash3WaveBoost = 1.15f;
     [Tooltip("World units per space.")]
     [SerializeField] private float chargeKickSpaceSize = 1f;
     [SerializeField] private float chargeKickMinHoldSeconds = 0.08f;
@@ -240,9 +248,25 @@ public class HarliePlayerController : PlayerController
     private bool hitboxClosed;
     private bool currentAttackWasAir;
     private float airSlashHoldUntil;
+    private bool isSpinningAirSlash;
+    [Tooltip("Z-spin speed while in spinning air slash (degrees/sec). Very high = smear.")]
+    [SerializeField] private float spinningAirSlashDegreesPerSecond = 28800f;
+    [Tooltip("Normalized time in the air slash clip to freeze on while spinning. " +
+             "Both Harlie and Hex author the largest Attack Box on the first keyed frame (0).")]
+    [SerializeField] [Range(0f, 1f)] private float spinningAirSlashHoldNormalizedTime = 0f;
+    private Quaternion spinningAirSlashRestLocalRotation = Quaternion.identity;
+    /// <summary>Facing locked when the spin starts (+1 right / -1 left). Spin tumbles forward into that facing.</summary>
+    private float spinningAirSlashDirSign = -1f;
+    /// <summary>First air jump: spinning air slash stays locked until she reaches jump apex.</summary>
+    private bool spinningAirSlashLockedUntilApex;
+    /// <summary>Unupgraded spin: 1 damage per this interval. Any equipped upgrade removes the gate.</summary>
+    private const float SpinningAirSlashBaseHitInterval = 0.2f;
+    private float spinningAirSlashHitTimer;
+    /// <summary>Unscaled-time deadline to auto-start spinning air slash after a normal air slash (-1 = none).</summary>
+    private float autoSpinAfterAirSlashAt = -1f;
     private bool hasAttackComboParam;
 
-    private bool isJumpAttackActive;
+    protected bool isJumpAttackActive;
     private bool isChargingKick;
     private float chargeKickTimer;
     private SilverSwordSquad silverSwordSquad;
@@ -330,6 +354,11 @@ public class HarliePlayerController : PlayerController
     protected override float AfterimageFadeStaggerSeconds => harlieAfterimageFadeStagger;
 
     protected override float AfterimageFadeDurationSeconds => harlieAfterimageFadeDuration;
+
+    protected override bool WantsAfterimageTrail() =>
+        base.WantsAfterimageTrail() || isSpinningAirSlash;
+
+    protected override bool ExtendsAfterimageTrailLifetime() => isSpinningAirSlash;
 
     protected override bool BlocksActionCancel()
     {
@@ -448,13 +477,50 @@ public class HarliePlayerController : PlayerController
         if (rb == null)
             return;
 
+        // First air jump: normal jump, spin locked until apex. Later air jumps: spin immediately.
+        bool spinningAirJump = airJumpsRemaining < MaxAirJumps;
         airJumpsRemaining--;
         rb.linearVelocity = new Vector2(rb.linearVelocity.x, GetDoubleJumpForce());
         SoundManager.Instance?.PlayJump();
         ReportTutorialAction(TutorialAction.AirJump);
 
+        if (spinningAirJump)
+        {
+            spinningAirSlashLockedUntilApex = false;
+            BeginSpinningAirSlash();
+            return;
+        }
+
+        spinningAirSlashLockedUntilApex = true;
         if (!IsMeleeAttacking && !isDashing)
             PlayJumpAnimation();
+    }
+
+    private void TickFirstAirJumpApexUnlock()
+    {
+        if (!spinningAirSlashLockedUntilApex || rb == null || isSpinningAirSlash || isGrounded)
+            return;
+
+        // Peak of the first air jump — start spinning the moment she starts to fall.
+        if (rb.linearVelocity.y <= 0.05f)
+        {
+            spinningAirSlashLockedUntilApex = false;
+            BeginSpinningAirSlash();
+        }
+    }
+
+    private void TickAirSlashAutoSpin()
+    {
+        if (autoSpinAfterAirSlashAt < 0f || isSpinningAirSlash || isGrounded)
+            return;
+
+        if (Time.time < autoSpinAfterAirSlashAt)
+            return;
+
+        autoSpinAfterAirSlashAt = -1f;
+        // Still airborne 0.3s after the air slash — enter the spin.
+        spinningAirSlashLockedUntilApex = false;
+        BeginSpinningAirSlash();
     }
 
     private void PlayJumpAnimation()
@@ -476,6 +542,9 @@ public class HarliePlayerController : PlayerController
 
     protected override void OnLanded()
     {
+        EndSpinningAirSlash();
+        spinningAirSlashLockedUntilApex = false;
+        autoSpinAfterAirSlashAt = -1f;
         base.OnLanded();
         airJumpsRemaining = MaxAirJumps;
         pogoInvincibleUntilLanded = false;
@@ -584,6 +653,7 @@ public class HarliePlayerController : PlayerController
         SetChargeAuraVisible(false);
         EndJumpAttack();
         CancelChargeKick();
+        EndSpinningAirSlash();
         EndMeleeImmediate();
         SoundManager.Instance?.StopHarlieSwordSwingImmediate();
         DismissSilverSwords(instant);
@@ -598,17 +668,26 @@ public class HarliePlayerController : PlayerController
     protected override void UpdateAnimator()
     {
         if (animator != null)
-            animator.speed = IsMeleeAttacking ? AttackSpeed() : StyleSpeedMultiplier();
+        {
+            // Freeze on the biggest air-slash hitbox frame for the whole spin.
+            if (isSpinningAirSlash)
+                animator.speed = 0f;
+            else
+                animator.speed = IsMeleeAttacking ? AttackSpeed() : StyleSpeedMultiplier();
+        }
 
         base.UpdateAnimator();
         if (animator == null)
             return;
 
-        bool attacking = IsMeleeAttacking || Time.time < airSlashHoldUntil;
+        bool attacking = IsMeleeAttacking || Time.time < airSlashHoldUntil || isSpinningAirSlash;
         animator.SetBool("IsAttacking", attacking);
 
         if (hasAttackComboParam)
             animator.SetInteger("AttackCombo", IsMeleeAttacking ? currentComboIndex : nextComboIndex);
+
+        if (isSpinningAirSlash)
+            HoldSpinningAirSlashAnimPose();
     }
 
     protected override bool BlocksRunAnimationWhileShooting()
@@ -652,6 +731,9 @@ public class HarliePlayerController : PlayerController
 
         TickRapidAttackSpeedIdleReset();
         TickMelee(Time.deltaTime);
+        TickFirstAirJumpApexUnlock();
+        TickAirSlashAutoSpin();
+        TickSpinningAirSlash(Time.deltaTime);
         UpdateJumpAttack();
         UpdateSilverSwords();
     }
@@ -819,6 +901,17 @@ public class HarliePlayerController : PlayerController
         if (IsMeleeAttacking && !currentAttackWasAir && comboTimer > 0f)
         {
             BeginAttack();
+            return;
+        }
+
+        // After an air slash, Attack again starts a Zero-style spinning air slash until landing.
+        // First air jump: only after she reaches max height (apex).
+        if (!isGrounded
+            && !isSpinningAirSlash
+            && !spinningAirSlashLockedUntilApex
+            && ((IsMeleeAttacking && currentAttackWasAir) || Time.time < airSlashHoldUntil))
+        {
+            BeginSpinningAirSlash();
             return;
         }
 
@@ -1017,6 +1110,12 @@ public class HarliePlayerController : PlayerController
         PlayHarlieSlashSound(inAir, currentComboIndex);
         attackBoxHasLastWritten = false;
 
+        // Schedule auto spinning air slash if she stays airborne after this air slash.
+        if (inAir && !isSpinningAirSlash)
+            autoSpinAfterAirSlashAt = Time.time + Mathf.Max(0f, airSlashAutoSpinDelay);
+        else
+            autoSpinAfterAirSlashAt = -1f;
+
         if (!chargedAirSlash)
             OnRegularAttackStarted();
     }
@@ -1043,10 +1142,11 @@ public class HarliePlayerController : PlayerController
         ReportTutorialAction(TutorialAction.ChargeAttack);
 
         float slideDuration = ComputeChargeSlideDuration(distance);
-        if (ratio <= chargeSlashMaxRatio)
-            BeginChargeSlashSlide(distance, slideDuration);
-        else
+        // ≤10% (default): keep the old charge kick. Above that: charged slash 3.
+        if (ratio <= chargeKickMaxRatio)
             BeginChargeKickSlide(distance, slideDuration);
+        else
+            BeginChargeSlash3Slide(distance, slideDuration);
     }
 
     private float ComputeChargeSlideDuration(float distance)
@@ -1069,21 +1169,21 @@ public class HarliePlayerController : PlayerController
         PlayHarlieSlashSound(inAir: false, ComboKick);
     }
 
-    private void BeginChargeSlashSlide(float distance, float slideDuration)
+    private void BeginChargeSlash3Slide(float distance, float slideDuration)
     {
         currentAttackWasAir = false;
-        currentComboIndex = ComboSlash1;
-        nextComboIndex = ComboSlash2;
+        currentComboIndex = ComboSlash3;
+        nextComboIndex = ComboSlash1;
         comboTimer = Mathf.Max(0.05f, comboInputWindow);
-        meleeState = MeleeState.Slash1;
+        meleeState = MeleeState.Slash3;
         pendingHitDamage = ScaleOutgoingDamage(chargeSlashDamage);
         chargeSlideUsesKick = false;
         chargeSlideFiresWave = true;
-        BeginChargeSlide(distance, slideDuration, useKickAnim: false);
-        PlayHarlieSlashSound(inAir: false, ComboSlash1);
+        BeginChargeSlide(distance, slideDuration, useKickAnim: false, useSlash3Anim: true);
+        PlayHarlieSlashSound(inAir: false, ComboSlash3);
     }
 
-    private void BeginChargeSlide(float distance, float slideDuration, bool useKickAnim)
+    private void BeginChargeSlide(float distance, float slideDuration, bool useKickAnim, bool useSlash3Anim = false)
     {
         if (rb == null)
             return;
@@ -1103,15 +1203,17 @@ public class HarliePlayerController : PlayerController
 
         if (animator != null)
         {
+            int combo = useKickAnim ? ComboKick : (useSlash3Anim ? ComboSlash3 : ComboSlash1);
+            string anim = useKickAnim ? "kick" : (useSlash3Anim ? "slash 3" : "slash 1");
             if (hasAttackComboParam)
-                animator.SetInteger("AttackCombo", useKickAnim ? ComboKick : ComboSlash1);
+                animator.SetInteger("AttackCombo", combo);
 
             animator.SetBool("IsAttacking", true);
             animator.SetBool("IsGrounded", true);
             animator.SetBool("IsInAir", false);
             animator.ResetTrigger("Attack");
             animator.SetTrigger("Attack");
-            animator.Play(useKickAnim ? "kick" : "slash 1", 0, 0f);
+            animator.Play(anim, 0, 0f);
         }
 
         attackBoxHasLastWritten = false;
@@ -1197,6 +1299,10 @@ public class HarliePlayerController : PlayerController
         if (!IsMeleeAttacking)
             return;
 
+        // Spinning air slash keeps the air-slash hitbox until landing.
+        if (isSpinningAirSlash)
+            return;
+
         meleeTimer += dt;
         float attackSpeed = AttackSpeed();
 
@@ -1254,9 +1360,14 @@ public class HarliePlayerController : PlayerController
         Collider2D attackBox = attackHitbox != null ? attackHitbox.GetComponent<Collider2D>() : null;
 
         bool chargedSlash = currentChargedAirSlash || chargeSlideFiresWave;
+        float boost = chargeSlideFiresWave ? Mathf.Max(1f, chargedSlash3WaveBoost) : 1f;
+        float boostedDistance = distanceMul * boost;
+        float boostSpeed = boost;
+
         if (!tripleWaveOnChargedSlash || !chargedSlash)
         {
-            FireWaveWithUpgrades(attackBox, null, damage, distanceMul, null, null);
+            FireWaveWithUpgrades(attackBox, null, damage, boostedDistance, null, null,
+                bonusDistance: 0f, speedMultiplier: boostSpeed);
             return;
         }
 
@@ -1264,9 +1375,12 @@ public class HarliePlayerController : PlayerController
         float rad = tripleWaveAngle * Mathf.Deg2Rad;
         Vector2 up = new Vector2(FacingSign * Mathf.Cos(rad), Mathf.Sin(rad));
         Vector2 down = new Vector2(up.x, -up.y);
-        FireWaveWithUpgrades(attackBox, null, damage, distanceMul, null, volley);
-        FireWaveWithUpgrades(attackBox, null, damage, distanceMul, up, volley);
-        FireWaveWithUpgrades(attackBox, null, damage, distanceMul, down, volley);
+        FireWaveWithUpgrades(attackBox, null, damage, boostedDistance, null, volley,
+            bonusDistance: 0f, speedMultiplier: boostSpeed);
+        FireWaveWithUpgrades(attackBox, null, damage, boostedDistance, up, volley,
+            bonusDistance: 0f, speedMultiplier: boostSpeed);
+        FireWaveWithUpgrades(attackBox, null, damage, boostedDistance, down, volley,
+            bonusDistance: 0f, speedMultiplier: boostSpeed);
     }
 
     /// <summary>
@@ -1300,7 +1414,7 @@ public class HarliePlayerController : PlayerController
         StopAttackLunge();
         isChargeSlideActive = false;
         chargeSlideVelocityX = 0f;
-        if (!isJumpAttackActive)
+        if (!isJumpAttackActive && !isSpinningAirSlash)
             attackHitbox?.Deactivate();
         meleeState = MeleeState.Idle;
         meleeTimer = 0f;
@@ -1314,6 +1428,152 @@ public class HarliePlayerController : PlayerController
         currentMeleeSpeed = 1f;
         currentChargedAirSlash = false;
         currentDamageMultiplier = 1;
+    }
+
+    /// <summary>Hex spins faster / hits harder.</summary>
+    protected virtual float SpinningAirSlashDegreesPerSecond => spinningAirSlashDegreesPerSecond;
+    protected virtual int SpinningAirSlashDamageMultiplier => 1;
+    /// <summary>
+    /// Multiplies Z rotation with facing (+1 right / -1 left).
+    /// -1 = cartwheel forward for left-facing flipX art (Harlie). Hex overrides if her pose reads opposite.
+    /// </summary>
+    protected virtual float SpinningAirSlashZSign => -1f;
+
+    private void BeginSpinningAirSlash()
+    {
+        if (spinningAirSlashLockedUntilApex || isSpinningAirSlash)
+            return;
+
+        CancelChargeKick();
+        ClearAirSlashHold();
+        autoSpinAfterAirSlashAt = -1f;
+
+        if (!IsMeleeAttacking || !currentAttackWasAir)
+        {
+            BeginAttack(chargedAirSlash: false);
+        }
+
+        autoSpinAfterAirSlashAt = -1f; // BeginAttack may have re-armed the timer
+        isSpinningAirSlash = true;
+        spinningAirSlashRestLocalRotation = transform.localRotation;
+        // Lock facing for the whole spin so flipX / Z rotation stay matched.
+        spinningAirSlashDirSign = FacingSign >= 0f ? 1f : -1f;
+        SetFacingSign(spinningAirSlashDirSign);
+        currentAttackWasAir = true;
+        spinningAirSlashHitTimer = 0f;
+
+        if (SpinningAirSlashUsesHitCooldown())
+        {
+            // Background balance: unupgraded spin is a steady 1 dmg / 0.2s tick.
+            currentDamageMultiplier = 1;
+            pendingHitDamage = 1;
+        }
+        else
+        {
+            currentDamageMultiplier = Mathf.Max(1, SpinningAirSlashDamageMultiplier);
+            pendingHitDamage = ScaleOutgoingDamage(Mathf.Max(1, pendingHitDamage) * currentDamageMultiplier);
+        }
+
+        meleeState = MeleeState.AirSlash;
+        meleeTimer = 0f;
+        meleeDuration = 999f;
+        hitboxArmed = true;
+        hitboxOpened = true;
+        hitboxClosed = false;
+        attackHitbox?.Activate(pendingHitDamage, applyDamage: true);
+        HoldSpinningAirSlashAnimPose();
+        BeginDashAfterimageTrail(GetMaxAfterimageDelay() + 0.5f);
+        SoundManager.Instance?.PlayHarlieSwordSwing();
+    }
+
+    /// <summary>
+    /// True when no Aerial / Hyper / Attack Style upgrade is active — spin uses the 0.2s hit gate.
+    /// Silent balance; not surfaced in UI.
+    /// </summary>
+    private bool SpinningAirSlashUsesHitCooldown()
+    {
+        return PlayerUpgrades.GetActiveLevel(this, UpgradeType.AerialAction) <= 0
+               && PlayerUpgrades.GetActiveLevel(this, UpgradeType.HyperAbility) <= 0
+               && PlayerUpgrades.GetActiveLevel(this, UpgradeType.AttackStyle) <= 0;
+    }
+
+    /// <summary>
+    /// Freeze the air slash clip on the keyed frame with the largest Attack Box
+    /// (authored at time 0 for Harlie and Hex — not the later smaller recovery frame).
+    /// </summary>
+    private void HoldSpinningAirSlashAnimPose()
+    {
+        if (animator == null)
+            return;
+
+        float hold = Mathf.Clamp01(spinningAirSlashHoldNormalizedTime);
+        string stateName = GetAttackStateName(true, ComboKick);
+        int stateHash = Animator.StringToHash(stateName);
+        if (animator.HasState(0, stateHash))
+            animator.Play(stateHash, 0, hold);
+        else
+            animator.Play(stateName, 0, hold);
+
+        animator.speed = 0f;
+        animator.Update(0f);
+    }
+
+    private void TickSpinningAirSlash(float dt)
+    {
+        if (!isSpinningAirSlash)
+            return;
+
+        if (isGrounded)
+        {
+            EndSpinningAirSlash();
+            return;
+        }
+
+        // Keep facing locked to the spin direction (input must not flip mid-tumble).
+        if (FacingSign != spinningAirSlashDirSign)
+            SetFacingSign(spinningAirSlashDirSign);
+
+        // ZSign * facing: tumble forward into the direction she faces.
+        transform.Rotate(0f, 0f,
+            SpinningAirSlashZSign * SpinningAirSlashDegreesPerSecond * dt * spinningAirSlashDirSign);
+
+        if (attackHitbox == null)
+            return;
+
+        if (SpinningAirSlashUsesHitCooldown())
+        {
+            spinningAirSlashHitTimer += dt;
+            if (spinningAirSlashHitTimer >= SpinningAirSlashBaseHitInterval)
+            {
+                spinningAirSlashHitTimer = 0f;
+                // Re-activate clears hit tracking so the next 1-damage tick can land.
+                attackHitbox.Activate(1, applyDamage: true);
+            }
+            else if (!attackHitbox.IsActive)
+            {
+                attackHitbox.Activate(1, applyDamage: true);
+            }
+        }
+        else if (!attackHitbox.IsActive)
+        {
+            attackHitbox.Activate(pendingHitDamage, applyDamage: true);
+        }
+    }
+
+    private void EndSpinningAirSlash()
+    {
+        if (!isSpinningAirSlash)
+            return;
+
+        isSpinningAirSlash = false;
+        autoSpinAfterAirSlashAt = -1f;
+        transform.localRotation = spinningAirSlashRestLocalRotation;
+        if (animator != null && !IsTimeFrozen)
+            animator.speed = StyleSpeedMultiplier();
+        if (!isJumpAttackActive)
+            attackHitbox?.Deactivate();
+        if (meleeState == MeleeState.AirSlash)
+            EndMeleeImmediate();
     }
 
     private void BeginAttackLunge(int combo)
@@ -1463,33 +1723,34 @@ public class HarliePlayerController : PlayerController
             return true;
         }
 
-        // Jump attack / kick / charge kick — clash only (no reflect, no damage to Harlie).
+        // Jump attack / kick / charge kick / spinning air slash — clash only (no reflect, no damage to Harlie).
         projectile.ClashAndDespawn();
         PlaySlashClashSound();
 
-        if (isJumpAttackActive)
+        if (CanPogoNow())
         {
-            if (CanPogoNow())
-            {
-                Collider2D pogoCollider = hitCollider != null
-                    ? hitCollider
-                    : projectile.GetComponent<Collider2D>();
-                BounceOffTarget(pogoCollider);
-                attackHitbox.ForgetHitInstance(projectile.GetInstanceID());
-            }
+            Collider2D pogoCollider = hitCollider != null
+                ? hitCollider
+                : projectile.GetComponent<Collider2D>();
+            BounceOffTarget(pogoCollider);
+            attackHitbox.ForgetHitInstance(projectile.GetInstanceID());
         }
 
         return true;
     }
 
     /// <summary>Called from AttackHitbox after a meaningful melee contact.</summary>
-    public void NotifyMeleeContact(Collider2D other, bool bossAttackTool)
+    public virtual void NotifyMeleeContact(Collider2D other, bool bossAttackTool)
     {
         if (other == null)
             return;
 
         if (UsesSlashForCombat())
             PlaySlashClashSound();
+
+        // Direct slash clash vs another slasher's melee box (player or boss tool).
+        if (TryResolveDirectSlashClash(other, bossAttackTool))
+            return;
 
         if (ShouldApplyAttackKnockback())
             PushTargetOnHit(other);
@@ -1501,27 +1762,131 @@ public class HarliePlayerController : PlayerController
         attackHitbox?.ForgetHitInstance(ResolvePogoTargetId(other));
     }
 
-    private bool ShouldApplyAttackKnockback()
+    protected bool ShouldApplyAttackKnockback()
     {
         return isJumpAttackActive || IsMeleeAttacking;
     }
 
-    /// <summary>Malice's push rule: a short shove on moving common enemies only (never bosses or stationary enemies).</summary>
-    private void PushTargetOnHit(Collider2D hitCollider)
+    private const float DirectSlashClashKnockback = 2f;
+    private const int ShredderPogoMinAerialLevel = 3;
+    private const int SpinningAirSlashCounterMinDamage = 3;
+
+    /// <summary>
+    /// When two direct slashes meet, both fighters are shoved 2 spaces and Hex-style sparks burst.
+    /// Spinning air slash is canceled into a normal fall.
+    /// </summary>
+    private bool TryResolveDirectSlashClash(Collider2D other, bool attackToolContact)
+    {
+        if (!UsesSlashForCombat() || other == null)
+            return false;
+
+        AttackHitbox otherBox = other.GetComponent<AttackHitbox>();
+        if (otherBox == null)
+            otherBox = other.GetComponentInParent<AttackHitbox>();
+        if (otherBox == null || otherBox == attackHitbox || !otherBox.IsActive)
+            return false;
+
+        HarliePlayerController otherHarlie = otherBox.Owner as HarliePlayerController;
+        MalicePlayerController otherMalice = otherBox.Owner as MalicePlayerController;
+        Boss otherBoss = otherBox.OwnerBoss;
+
+        bool otherSlashing =
+            (otherHarlie != null && otherHarlie.UsesSlashForCombat())
+            || otherMalice != null
+            || (otherBoss != null && attackToolContact);
+
+        if (!otherSlashing)
+            return false;
+
+        Vector3 mid = (transform.position + otherBox.transform.position) * 0.5f;
+        float away = Mathf.Sign(transform.position.x - otherBox.transform.position.x);
+        if (Mathf.Abs(away) < 0.01f)
+            away = -FacingSign;
+
+        BurstClashSparks(mid);
+        PlaySlashClashSound();
+
+        // Spinning air slash vs slash: cancel into fall + gentle 2-space knockback (both sides).
+        CancelSpinningAirSlashFromParryOrClash(away);
+        if (otherHarlie != null)
+            otherHarlie.CancelSpinningAirSlashFromParryOrClash(-away);
+        else if (otherMalice != null)
+            GentleKnockback.Apply(otherMalice, -away, DirectSlashClashKnockback, attackKnockbackDuration, chainKill: false);
+        else if (otherBoss is BossHarlie otherBossHarlie)
+            otherBossHarlie.CancelSpinningAirSlashFromParryOrClash(-away);
+        else if (otherBoss != null)
+            GentleKnockback.Apply(otherBoss, -away, DirectSlashClashKnockback, attackKnockbackDuration, chainKill: false);
+
+        return true;
+    }
+
+    /// <summary>
+    /// Clash / parry interrupt: stop spinning air slash, return to regular fall, gentle knockback.
+    /// </summary>
+    public void CancelSpinningAirSlashFromParryOrClash(float knockAwaySign)
+    {
+        autoSpinAfterAirSlashAt = -1f;
+        spinningAirSlashLockedUntilApex = false;
+        ClearAirSlashHold();
+
+        bool wasSpinning = isSpinningAirSlash;
+        EndSpinningAirSlash();
+        EndMeleeImmediate();
+        EndJumpAttack();
+
+        if (Mathf.Abs(knockAwaySign) > 0.01f)
+            GentleKnockback.Apply(this, Mathf.Sign(knockAwaySign), DirectSlashClashKnockback,
+                attackKnockbackDuration, chainKill: false);
+
+        if (wasSpinning && animator != null && !IsTimeFrozen)
+        {
+            // Resume normal air/fall anims instead of frozen air-slash pose.
+            animator.speed = StyleSpeedMultiplier();
+            animator.SetBool("IsAttacking", false);
+            animator.SetBool("IsInAir", !isGrounded);
+            animator.SetBool("IsGrounded", isGrounded);
+        }
+    }
+
+    private void BurstClashSparks(Vector3 worldPosition)
+    {
+        HexSparkEmitter sparks = GetComponent<HexSparkEmitter>();
+        if (sparks == null)
+            sparks = FindFirstObjectByType<HexSparkEmitter>();
+        sparks?.Burst(worldPosition);
+    }
+
+    /// <summary>
+    /// Direct slash knockback: moving common enemies and bosses (2.5 spaces by default).
+    /// Projectile waves keep their own push rules.
+    /// </summary>
+    protected void PushTargetOnHit(Collider2D hitCollider)
     {
         float distance = SlashKnockbackDistance;
         if (hitCollider == null || distance <= 0f)
             return;
 
         if (hitCollider.GetComponentInParent<Projectile>() != null
-            || hitCollider.GetComponentInParent<Boss>() != null
             || hitCollider.GetComponentInParent<Crystal>() != null
             || hitCollider.GetComponentInParent<PlayerController>() != null)
             return;
 
+        Boss boss = hitCollider.GetComponentInParent<Boss>();
+        if (boss != null)
+        {
+            if (!boss.IsDead)
+                GentleKnockback.Apply(boss, FacingSign, distance, attackKnockbackDuration, chainKill: false);
+            return;
+        }
+
         AttackHitbox tool = hitCollider.GetComponentInParent<AttackHitbox>();
         if (tool != null && tool.OwnerBoss != null)
+        {
+            Boss toolBoss = tool.OwnerBoss;
+            if (toolBoss != null && !toolBoss.IsDead)
+                GentleKnockback.Apply(toolBoss, FacingSign, distance, attackKnockbackDuration, chainKill: false);
             return;
+        }
 
         ICommonEnemy enemy = hitCollider.GetComponentInParent<ICommonEnemy>();
         if (enemy is not Component enemyComponent || enemy.IsDead || MaliceSlashProjectile.IsStationaryEnemy(enemy))
@@ -1530,9 +1895,9 @@ public class HarliePlayerController : PlayerController
         GentleKnockback.Apply(enemyComponent, FacingSign, distance, attackKnockbackDuration, ChainKillActive);
     }
 
-    private bool UsesSlashForCombat()
+    public bool UsesSlashForCombat()
     {
-        return UsesSlashForReflect();
+        return UsesSlashForReflect() || isSpinningAirSlash;
     }
 
     private bool UsesSlashForReflect()
@@ -1556,6 +1921,11 @@ public class HarliePlayerController : PlayerController
         if (rb.linearVelocity.y > 0.05f)
             return false;
 
+        // Spinning air slash pogos while falling (X6-style).
+        if (isSpinningAirSlash)
+            return true;
+
+        // Normal air slash hold does not pogo — only the automatic jump-attack fall does.
         bool airSlashActive = (IsMeleeAttacking && currentAttackWasAir) || Time.time < airSlashHoldUntil;
         if (airSlashActive)
             return false;
@@ -1611,6 +1981,18 @@ public class HarliePlayerController : PlayerController
         if (IsInvincibleFromMovement())
             return;
 
+        // Ariel Action 3+: pogo off shredder blades without taking damage.
+        if (TryPogoOffShredderBlade(hitSource))
+            return;
+
+        // 3+ damage attacks counter spinning air slash: cancel into fall + 2-space knockback.
+        if (TryCounterSpinningAirSlash(amount, hitSource))
+        {
+            // Spin is gone — allow the hit to deal damage (no slash-box guard).
+            base.TakeDamage(amount, hitSource, applyKnockback: false);
+            return;
+        }
+
         if (IsHitCoveredByActiveAttackBox(hitSource))
         {
             slashGuardedSource = hitSource;
@@ -1620,6 +2002,46 @@ public class HarliePlayerController : PlayerController
 
         // Harlie is never pushed back by hits.
         base.TakeDamage(amount, hitSource, applyKnockback: false);
+    }
+
+    /// <summary>
+    /// Strong hits (3+ damage) break spinning air slash into a regular fall with gentle knockback.
+    /// </summary>
+    private bool TryCounterSpinningAirSlash(int amount, Transform hitSource)
+    {
+        if (!isSpinningAirSlash || amount < SpinningAirSlashCounterMinDamage)
+            return false;
+
+        float away = -FacingSign;
+        if (hitSource != null)
+        {
+            away = Mathf.Sign(transform.position.x - hitSource.position.x);
+            if (Mathf.Abs(away) < 0.01f)
+                away = -FacingSign;
+        }
+
+        CancelSpinningAirSlashFromParryOrClash(away);
+        return true;
+    }
+
+    /// <summary>
+    /// Ariel Action level 3+: bounce off shredder blades while in a pogo-capable fall / spin.
+    /// </summary>
+    private bool TryPogoOffShredderBlade(Transform hitSource)
+    {
+        if (AerialLevel < ShredderPogoMinAerialLevel || hitSource == null)
+            return false;
+
+        ShredderBlade blade = hitSource.GetComponentInParent<ShredderBlade>();
+        if (blade == null)
+            return false;
+
+        if (!CanPogoNow())
+            return false;
+
+        Collider2D bladeCol = blade.GetComponent<Collider2D>();
+        BounceOffTarget(bladeCol != null ? bladeCol : hitSource.GetComponent<Collider2D>());
+        return true;
     }
 
     /// <summary>Dash, pogo guard, and (max Ariel Action) the post-pogo fall.</summary>
@@ -1707,14 +2129,18 @@ public class HarliePlayerController : PlayerController
         }
     }
 
-    private void BounceOffTarget(Collider2D hitCollider)
+    protected void BounceOffTarget(Collider2D hitCollider)
     {
         if (rb == null)
             return;
 
         ReportTutorialAction(TutorialAction.Pogo);
         if (pogoRefreshesDoubleJump)
+        {
             airJumpsRemaining = MaxAirJumps;
+            // Next air jump is a fresh "first" again after a bounce refresh.
+            spinningAirSlashLockedUntilApex = false;
+        }
 
         pogoInvincibleUntil = Time.time + Mathf.Max(0f, pogoGuardSeconds);
         if (AerialLevel >= PlayerUpgrades.MaxLevel)
@@ -1722,8 +2148,10 @@ public class HarliePlayerController : PlayerController
 
         SeparateFromTargetForPogo(hitCollider);
 
-        float bounce = Mathf.Max(0.1f, aerialBounceForce);
-        float awayX = rb.linearVelocity.x;
+        bool spinPogo = isSpinningAirSlash;
+        float bounce = Mathf.Max(0.1f, spinPogo ? spinningAirSlashPogoBounceForce : aerialBounceForce);
+        float horizMul = spinPogo ? spinningAirSlashPogoHorizontalMul : 0.35f;
+        float awayX = rb.linearVelocity.x * (spinPogo ? 0.35f : 1f);
 
         Transform targetTransform = hitCollider != null ? hitCollider.transform : null;
         if (targetTransform != null)
@@ -1731,8 +2159,12 @@ public class HarliePlayerController : PlayerController
             float away = Mathf.Sign(transform.position.x - targetTransform.position.x);
             if (Mathf.Abs(away) < 0.01f)
                 away = -FacingSign;
-            awayX = away * moveSpeed * 0.35f;
+            awayX = away * moveSpeed * horizMul;
         }
+
+        // Soften successive spinning pogos: if already rising, don't relaunch at full height.
+        if (spinPogo && rb.linearVelocity.y > 0.5f)
+            bounce = Mathf.Min(bounce, Mathf.Lerp(bounce, bounce * 0.4f, Mathf.Clamp01(rb.linearVelocity.y / Mathf.Max(0.1f, bounce))));
 
         rb.linearVelocity = new Vector2(awayX, bounce);
     }
@@ -1809,7 +2241,7 @@ public class HarliePlayerController : PlayerController
         return hitCollider;
     }
 
-    private static void PlaySlashClashSound()
+    protected static void PlaySlashClashSound()
     {
         SoundManager.Instance?.PlayHarlieBigSwordClash();
     }
@@ -1881,7 +2313,7 @@ public class HarliePlayerController : PlayerController
         CharacterEffectSorting.ApplyAuraBehindBody(chargeAuraRenderer, spriteRenderer, EffectSortingGroup);
 
         float alpha;
-        float halfSeconds = chargeKickMaxSeconds * chargeSlashMaxRatio;
+        float halfSeconds = chargeKickMaxSeconds * chargeKickMaxRatio;
         if (chargeSeconds >= chargeKickMaxSeconds)
             alpha = auraAlphaAtFull;
         else if (chargeSeconds >= halfSeconds)
@@ -1956,6 +2388,9 @@ public class HarliePlayerController : PlayerController
         pogoGuardSeconds = Mathf.Max(0f, pogoGuardSeconds);
         chargedAirSlashDamageMultiplier = Mathf.Max(1, chargedAirSlashDamageMultiplier);
         chargedAirSlashDistanceMultiplier = Mathf.Max(1f, chargedAirSlashDistanceMultiplier);
+        spinningAirSlashDegreesPerSecond = Mathf.Max(360f, spinningAirSlashDegreesPerSecond);
+        spinningAirSlashHoldNormalizedTime = Mathf.Clamp01(spinningAirSlashHoldNormalizedTime);
+        airSlashAutoSpinDelay = Mathf.Max(0f, airSlashAutoSpinDelay);
         aerialAirDashesPerLevel = Mathf.Max(0, aerialAirDashesPerLevel);
         hyperDamagePerLevel = Mathf.Max(0, hyperDamagePerLevel);
         hyperMaxHealthPerLevel = Mathf.Max(0, hyperMaxHealthPerLevel);
@@ -1978,12 +2413,15 @@ public class HarliePlayerController : PlayerController
         heavyDashPushDuration = Mathf.Max(0.02f, heavyDashPushDuration);
         harlieAfterimageFadeStagger = Mathf.Max(0f, harlieAfterimageFadeStagger);
         harlieAfterimageFadeDuration = Mathf.Max(0.05f, harlieAfterimageFadeDuration);
-        chargeSlashMaxRatio = Mathf.Clamp(chargeSlashMaxRatio, 0.1f, 0.9f);
+        chargeKickMaxRatio = Mathf.Clamp(chargeKickMaxRatio, 0.05f, 0.9f);
+        chargedSlash3WaveBoost = Mathf.Clamp(chargedSlash3WaveBoost, 1f, 1.5f);
         chargeAttackSpeedVsDash = Mathf.Max(1.01f, chargeAttackSpeedVsDash);
         attackKnockbackDuration = Mathf.Max(0.02f, attackKnockbackDuration);
         auraBaseScale = Mathf.Max(1f, auraBaseScale);
         jumpAttackDamage = Mathf.Max(0, jumpAttackDamage);
         aerialBounceForce = Mathf.Max(0.1f, aerialBounceForce);
+        spinningAirSlashPogoBounceForce = Mathf.Max(0.1f, spinningAirSlashPogoBounceForce);
+        spinningAirSlashPogoHorizontalMul = Mathf.Clamp(spinningAirSlashPogoHorizontalMul, 0.05f, 0.5f);
         outgoingDamageMultiplier = Mathf.Max(0.1f, outgoingDamageMultiplier);
         slashWave?.Validate();
     }

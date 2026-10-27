@@ -95,6 +95,11 @@ public sealed class BlockerBot : MonoBehaviour, ICommonEnemy
     private float hitAnimTimer;
     private int currentAnimStateHash;
     private PlayerController targetPlayer;
+    private int authoredMaxHealth;
+    private float authoredMaxApproachSpeed;
+    private float authoredDetectRadius;
+    private Vector2 authoredDetectBoxSize;
+    private bool difficultyCaptured;
 
     public int CurrentHealth => currentHealth;
     public int MaxHealth => maxHealth;
@@ -139,6 +144,31 @@ public sealed class BlockerBot : MonoBehaviour, ICommonEnemy
 
         if (groundLayers.value == 0)
             groundLayers = LayerMask.GetMask("Ground");
+
+        CaptureDifficultyAuthored();
+        RefreshDifficulty();
+    }
+
+    private void CaptureDifficultyAuthored()
+    {
+        if (difficultyCaptured)
+            return;
+        authoredMaxHealth = Mathf.Max(1, maxHealth);
+        authoredMaxApproachSpeed = maxApproachSpeed;
+        if (detectionCollider is CircleCollider2D circle)
+            authoredDetectRadius = circle.radius;
+        else if (detectionCollider is BoxCollider2D box)
+            authoredDetectBoxSize = box.size;
+        difficultyCaptured = true;
+    }
+
+    public void RefreshDifficulty()
+    {
+        CaptureDifficultyAuthored();
+        int newMax = DifficultyTuning.ScaleEnemyHp(authoredMaxHealth);
+        DifficultyTuning.RetuneHealth(ref currentHealth, ref maxHealth, newMax, IsDead);
+        maxApproachSpeed = DifficultyTuning.ScaleEnemySpeed(authoredMaxApproachSpeed);
+        DifficultyTuning.ApplyDetectionCollider(detectionCollider, authoredDetectRadius, authoredDetectBoxSize);
     }
 
     private void Start()
@@ -668,9 +698,62 @@ public sealed class BlockerBot : MonoBehaviour, ICommonEnemy
 
     private void PlayHitSparks()
     {
-        VisualEffects.SpawnBlockerBotHitSparks(hitSparkPrefab, sparkSpawnPoint != null
+        GameVisualEffect prefab = ResolveHitSparkPrefab();
+        if (prefab == null)
+            return;
+
+        Vector3 origin = sparkSpawnPoint != null
             ? sparkSpawnPoint.position
-            : transform.position);
+            : transform.position;
+        VisualEffects.SpawnBlockerBotHitSparks(prefab, origin, spriteRenderer);
+    }
+
+    /// <summary>
+    /// Prefer the Inspector prefab; if it was pointed at Bass Spark (or left empty),
+    /// fall back to a child / sibling "Blocker Bot Spark" template in the scene hierarchy.
+    /// </summary>
+    private GameVisualEffect ResolveHitSparkPrefab()
+    {
+        if (hitSparkPrefab != null && !IsBassSparkName(hitSparkPrefab.name))
+            return hitSparkPrefab;
+
+        // Scene / prefab child templates (often inactive).
+        Transform found = transform.Find("Blocker Bot Spark");
+        if (found == null)
+        {
+            for (int i = 0; i < transform.childCount; i++)
+            {
+                Transform child = transform.GetChild(i);
+                if (child != null && child.name != null &&
+                    child.name.IndexOf("Blocker Bot Spark", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    found = child;
+                    break;
+                }
+            }
+        }
+
+        if (found != null)
+        {
+            GameVisualEffect fx = found.GetComponent<GameVisualEffect>();
+            if (fx != null && !IsBassSparkName(fx.name))
+            {
+                hitSparkPrefab = fx;
+                return fx;
+            }
+        }
+
+        return hitSparkPrefab != null && !IsBassSparkName(hitSparkPrefab.name) ? hitSparkPrefab : null;
+    }
+
+    private static bool IsBassSparkName(string n)
+    {
+        if (string.IsNullOrEmpty(n))
+            return false;
+        if (n.EndsWith("(Clone)", System.StringComparison.Ordinal))
+            n = n.Substring(0, n.Length - 7).TrimEnd();
+        return n.IndexOf("Bass Spark", System.StringComparison.OrdinalIgnoreCase) >= 0
+            || n.IndexOf("Bass Stunned", System.StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
     private void BeginHitAnim()

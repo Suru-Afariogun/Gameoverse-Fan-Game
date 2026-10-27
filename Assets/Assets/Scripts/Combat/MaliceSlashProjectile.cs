@@ -63,6 +63,29 @@ public class MaliceSlashProjectile : MonoBehaviour
     /// <summary>Set before Launch: a pushed enemy that runs into another moving enemy destroys both.</summary>
     public bool ChainKillOnPush { get; set; }
 
+    /// <summary>Remove every live slash wave owned by this root (boss defeat cinema).</summary>
+    public static void DestroyOwnedBy(Transform root)
+    {
+        if (root == null)
+            return;
+
+        for (int i = LiveWaves.Count - 1; i >= 0; i--)
+        {
+            MaliceSlashProjectile wave = LiveWaves[i];
+            if (wave == null)
+            {
+                LiveWaves.RemoveAt(i);
+                continue;
+            }
+
+            Transform shotOwner = wave.owner;
+            if (shotOwner == null)
+                continue;
+            if (shotOwner == root || shotOwner.IsChildOf(root) || root.IsChildOf(shotOwner))
+                Destroy(wave.gameObject);
+        }
+    }
+
     private void Awake()
     {
         if (spriteRenderer == null)
@@ -317,6 +340,16 @@ public class MaliceSlashProjectile : MonoBehaviour
             return;
 
         // Melee boxes are tools, not bodies.
+        SilverSword silverSword = other.GetComponentInParent<SilverSword>();
+        if (silverSword != null && silverSword.Armed)
+        {
+            float away = Mathf.Sign(silverSword.transform.position.x - transform.position.x);
+            if (Mathf.Abs(away) < 0.01f)
+                away = 1f;
+            silverSword.ReceiveParry(away);
+            return;
+        }
+
         AttackHitbox tool = other.GetComponent<AttackHitbox>();
         if (tool != null)
         {
@@ -434,7 +467,7 @@ public class MaliceSlashProjectile : MonoBehaviour
 
         SoundManager.Instance?.PlayProjectileHit(shot.ShotType);
         shot.ClashAndDespawn();
-        TakeWaveDamage(shot.Damage);
+        TakeWaveDamage(Mathf.Max(1, Mathf.RoundToInt(shot.Damage)));
         return true;
     }
 

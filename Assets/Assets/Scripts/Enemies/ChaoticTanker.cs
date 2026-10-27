@@ -60,9 +60,16 @@ public sealed class ChaoticTanker : MonoBehaviour, ICommonEnemy
     private bool firePointRestsCached;
     private PlayerController targetPlayer;
     private bool chargeSfxActive;
+    private int authoredMaxHealth;
+    private int authoredVoltDamage;
+    private float authoredShotInterval;
+    private float authoredDetectRadius;
+    private Vector2 authoredDetectBoxSize;
+    private bool difficultyCaptured;
 
     public int CurrentHealth => currentHealth;
     public int MaxHealth => maxHealth;
+    public GameVisualEffect DeathExplosionPrefab => deathExplosionPrefab;
     public bool IsDead => currentHealth <= 0;
     public bool IsStunned => isStunned;
 
@@ -77,10 +84,36 @@ public sealed class ChaoticTanker : MonoBehaviour, ICommonEnemy
         CacheFirePointRests();
         ConfigureBody();
         ConfigureUtilityColliders();
+        CaptureDifficultyAuthored();
 
         currentHealth = Mathf.Max(1, maxHealth);
         facingSign = -1f;
         ApplyFacingVisual();
+        RefreshDifficulty();
+    }
+
+    private void CaptureDifficultyAuthored()
+    {
+        if (difficultyCaptured)
+            return;
+        authoredMaxHealth = Mathf.Max(1, maxHealth);
+        authoredVoltDamage = voltDamage;
+        authoredShotInterval = shotInterval;
+        if (detectionCollider is CircleCollider2D circle)
+            authoredDetectRadius = circle.radius;
+        else if (detectionCollider is BoxCollider2D box)
+            authoredDetectBoxSize = box.size;
+        difficultyCaptured = true;
+    }
+
+    public void RefreshDifficulty()
+    {
+        CaptureDifficultyAuthored();
+        int newMax = DifficultyTuning.ScaleEnemyHp(authoredMaxHealth);
+        DifficultyTuning.RetuneHealth(ref currentHealth, ref maxHealth, newMax, IsDead);
+        voltDamage = Mathf.Max(1, DifficultyTuning.ScaleEnemyDamage(authoredVoltDamage));
+        shotInterval = DifficultyTuning.ScaleEnemyInterval(authoredShotInterval);
+        DifficultyTuning.ApplyDetectionCollider(detectionCollider, authoredDetectRadius, authoredDetectBoxSize);
     }
 
     private void Start()
