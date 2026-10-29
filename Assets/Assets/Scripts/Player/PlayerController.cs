@@ -187,6 +187,8 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
     public bool IsInvincible => invincibilityTimer > 0f;
     public float FacingSign => facingSign;
     public float NormalMoveSpeed => moveSpeed;
+    public float JumpForce => jumpForce;
+    public float FallMultiplier => fallMultiplier;
     public Vector2 Velocity => rb != null ? rb.linearVelocity : Vector2.zero;
     public Vector2 MoveInput => moveInput;
 
@@ -1583,6 +1585,9 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
         BeginVariableJumpAscent();
         SoundManager.Instance?.PlayJump();
         ReportTutorialAction(TutorialAction.Jump);
+        OnPerformedJump(wasAirJump: false);
+        // Force Jump state immediately — feet often still overlap ground for a frame after takeoff.
+        PlayJumpAnimation();
     }
 
     /// <summary>
@@ -1599,14 +1604,40 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
         BeginVariableJumpAscent();
         SoundManager.Instance?.PlayJump();
         ReportTutorialAction(TutorialAction.AirJump);
+        OnPerformedJump(wasAirJump: true);
+        PlayJumpAnimation();
+    }
 
-        if (animator == null || isShooting || isDashing)
+    /// <summary>
+    /// Snap animator into the Jump clip / air bools so takeoff is not stuck on Idle/Run
+    /// while the ground probe still overlaps for a frame.
+    /// </summary>
+    protected void PlayJumpAnimation()
+    {
+        if (animator == null)
+            return;
+
+        animator.SetBool("IsDashing", false);
+        animator.SetBool("IsGrounded", false);
+        animator.SetBool("IsInAir", true);
+        animator.SetBool("IsJumping", true);
+        animator.SetBool("IsFalling", false);
+        animator.SetBool("IsMoving", false);
+
+        // Don't yank out of a shoot clip; bools above still drive air pose afterward.
+        if (isShooting)
             return;
 
         int jumpState = Animator.StringToHash("Jump");
         if (animator.HasState(0, jumpState))
             animator.Play(jumpState, 0, 0f);
     }
+
+    /// <summary>Hook after a ground or upgrade air jump (Deadline Aerial Action refill, etc.).</summary>
+    protected virtual void OnPerformedJump(bool wasAirJump) { }
+
+    /// <summary>Hit i-frame length; characters can add situational bonuses (Deadline DA on Hard).</summary>
+    protected virtual float GetHitInvincibilityDuration() => hitInvincibilityDuration;
 
     protected bool CanPerformDashJump()
     {
@@ -1645,15 +1676,7 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
     /// </summary>
     protected void SyncAnimatorAfterDashJump()
     {
-        if (animator == null)
-            return;
-
-        animator.SetBool("IsDashing", false);
-        animator.SetBool("IsGrounded", false);
-        animator.SetBool("IsInAir", true);
-        animator.SetBool("IsJumping", true);
-        animator.SetBool("IsFalling", false);
-        animator.SetBool("IsMoving", false);
+        PlayJumpAnimation();
     }
 
     protected virtual float GetDashJumpHorizontalSpeed()
@@ -1920,6 +1943,15 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
 
             IgnoreSolidColliders(myCols, npc.GetComponentsInChildren<Collider2D>(true));
         }
+
+        // Rocket ship hull — combat / movement phases through.
+        KitRocketShip[] ships = FindObjectsByType<KitRocketShip>(FindObjectsSortMode.None);
+        for (int s = 0; s < ships.Length; s++)
+        {
+            if (ships[s] == null)
+                continue;
+            IgnoreSolidColliders(myCols, ships[s].GetComponentsInChildren<Collider2D>(true));
+        }
     }
 
     private static void IgnoreSolidColliders(Collider2D[] aCols, Collider2D[] bCols)
@@ -2095,7 +2127,8 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
 
         float verticalSpeed = rb != null ? rb.linearVelocity.y : 0f;
         bool moving = Mathf.Abs(moveInput.x) > 0.01f && !isDashing && !BlocksRunAnimationWhileShooting();
-        bool groundedForAnim = IsGrounded;
+        // Ignore coyote / lingering foot overlap while rising from a jump so Jump plays on takeoff.
+        bool groundedForAnim = IsGrounded && !IsVoluntarilyAirborne;
 
         // Parameters match Kit.controller (and future characters).
         animator.SetBool("IsMoving", moving);
@@ -2250,7 +2283,7 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
             return false;
 
         lastAutoUseTime = Time.time;
-        invincibilityTimer = Mathf.Max(invincibilityTimer, hitInvincibilityDuration);
+        invincibilityTimer = Mathf.Max(invincibilityTimer, GetHitInvincibilityDuration());
         invincibilityFlickerTimer = 0f;
         invincibilityFlickerActive = true;
         SetBodySpriteAlpha(invincibilityFlickerAlphaHigh);
@@ -2410,7 +2443,7 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
 
         isStunned = true;
         stunTimer = Mathf.Max(0f, hitStunDuration);
-        invincibilityTimer = Mathf.Max(0f, hitInvincibilityDuration);
+        invincibilityTimer = Mathf.Max(0f, GetHitInvincibilityDuration());
         invincibilityFlickerTimer = 0f;
         invincibilityFlickerActive = true;
         SetBodySpriteAlpha(invincibilityFlickerAlphaHigh);
@@ -2439,7 +2472,7 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
 
     private void BeginArmoredHitReaction(Transform hitSource, bool applyKnockback)
     {
-        invincibilityTimer = Mathf.Max(0f, hitInvincibilityDuration);
+        invincibilityTimer = Mathf.Max(0f, GetHitInvincibilityDuration());
         invincibilityFlickerTimer = 0f;
         invincibilityFlickerActive = true;
         SetBodySpriteAlpha(invincibilityFlickerAlphaHigh);
@@ -2447,6 +2480,15 @@ public abstract class PlayerController : MonoBehaviour, IDamageable
         if (applyKnockback)
             ApplyHitKnockback(hitSource);
 
+        PlayTimedHurtSpark();
+    }
+
+    /// <summary>
+    /// Hurt spark that lasts exactly as long as normal hit stun, without locking controls.
+    /// Used by armored hits and Deadline DA overdrive drain.
+    /// </summary>
+    protected void PlayTimedHurtSpark()
+    {
         VisualEffects.PlayStunned(stunnedEffectPrefab, this);
         armoredHitSparkTimer = Mathf.Max(0.05f, hitStunDuration);
     }

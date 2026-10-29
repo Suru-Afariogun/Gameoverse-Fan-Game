@@ -316,11 +316,11 @@ public class Boss : MonoBehaviour, IDamageable
     /// <summary>Override for physics movement.</summary>
     protected virtual void HandleBossFixedUpdate() { }
 
-    protected float BossDeltaTime => HyperSpeedWorldSlow.WorldDeltaTime;
+    protected float BossDeltaTime => HyperSpeedWorldSlow.BossWorldDeltaTime;
 
-    protected float BossFixedDeltaTime => HyperSpeedWorldSlow.WorldFixedDeltaTime;
+    protected float BossFixedDeltaTime => HyperSpeedWorldSlow.BossWorldFixedDeltaTime;
 
-    protected float BossSpeed(float speed) => HyperSpeedWorldSlow.ScaleSpeed(speed);
+    protected float BossSpeed(float speed) => HyperSpeedWorldSlow.ScaleBossSpeed(speed);
 
     /// <summary>
     /// Matches Kit/Malice animator parameter names so character controllers can be reused.
@@ -330,7 +330,7 @@ public class Boss : MonoBehaviour, IDamageable
         if (animator == null)
             return;
 
-        animator.speed = HyperSpeedWorldSlow.IsActive ? HyperSpeedWorldSlow.WorldTimeScale : 1f;
+        animator.speed = HyperSpeedWorldSlow.IsActive ? HyperSpeedWorldSlow.BossWorldTimeScale : 1f;
 
         float verticalSpeed = rb != null ? rb.linearVelocity.y : 0f;
         bool moving = wantsMoveAnim && !isDashing && !isAttacking;
@@ -368,7 +368,7 @@ public class Boss : MonoBehaviour, IDamageable
         if (rb.linearVelocity.y < 0f)
         {
             float mult = HyperSpeedWorldSlow.IsActive
-                ? HyperSpeedWorldSlow.ScaleEnemyFallMultiplier(fallMultiplier)
+                ? HyperSpeedWorldSlow.ScaleBossFallMultiplier(fallMultiplier)
                 : fallMultiplier;
             rb.linearVelocity += Vector2.up * Physics2D.gravity.y * (mult - 1f) * Time.fixedDeltaTime;
         }
@@ -393,6 +393,14 @@ public class Boss : MonoBehaviour, IDamageable
                 continue;
 
             IgnoreSolidColliders(myCols, enemy.GetComponentsInChildren<Collider2D>(true));
+        }
+
+        KitRocketShip[] ships = FindObjectsByType<KitRocketShip>(FindObjectsSortMode.None);
+        for (int s = 0; s < ships.Length; s++)
+        {
+            if (ships[s] == null)
+                continue;
+            IgnoreSolidColliders(myCols, ships[s].GetComponentsInChildren<Collider2D>(true));
         }
     }
 

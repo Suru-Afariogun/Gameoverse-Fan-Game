@@ -34,13 +34,29 @@ public static class CityBackgroundParallaxSetup
     private const int SortGrey = 1;
     private const int SortRegularParts = 2;
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    private static void ApplyForCityScene()
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void Bootstrap()
     {
-        Scene scene = SceneManager.GetActiveScene();
-        if (!IsCityScene(scene.name))
+        // AfterSceneLoad RuntimeInitialize only runs for the *first* scene at play start.
+        // Traveling HomeTown → City never re-ran setup, so buildings kept broken nesting /
+        // never got their City layer assignment. Hook every scene load instead.
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        ApplyForCityScene(scene);
+    }
+
+    private static void ApplyForCityScene(Scene scene)
+    {
+        if (!scene.IsValid() || !IsCityScene(scene.name))
             return;
 
+        // Must be DestroyImmediate: Object.Destroy waits until end of frame, so
+        // ApplyParallaxLayer / Background.Awake would still see nested Backgrounds and
+        // set drivesOwnTransform = false — buildings then never move.
         StripBackgroundFromMixedGroupParents();
         StripBackgroundFromSkyBackdrops();
         StripBackgroundFromNestedBuildingPieces();
@@ -49,7 +65,7 @@ public static class CityBackgroundParallaxSetup
         for (int i = 0; i < transforms.Length; i++)
         {
             Transform t = transforms[i];
-            if (t == null)
+            if (t == null || t.gameObject.scene != scene)
                 continue;
 
             if (IsSkyBackdropName(t.name))
@@ -78,8 +94,21 @@ public static class CityBackgroundParallaxSetup
             ApplyBuildingDrawOrder(t, layer);
         }
 
+        // Nested strips + adds are done — force every remaining layer to re-check drive state.
+        RefreshAllDriveStates();
+
         if (CameraFollow.Instance != null)
             CameraFollow.Instance.RefreshPlayableBounds();
+    }
+
+    private static void RefreshAllDriveStates()
+    {
+        Background[] all = Object.FindObjectsByType<Background>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        for (int i = 0; i < all.Length; i++)
+        {
+            if (all[i] != null)
+                all[i].RefreshDriveState();
+        }
     }
 
     /// <summary>
@@ -119,34 +148,12 @@ public static class CityBackgroundParallaxSetup
 
     private static void StripBackgroundFromMixedGroupParents()
     {
-        Background[] all = Object.FindObjectsByType<Background>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        for (int i = 0; i < all.Length; i++)
-        {
-            Background background = all[i];
-            if (background == null)
-                continue;
-
-            if (!IsMixedGroupParentName(background.gameObject.name))
-                continue;
-
-            Object.Destroy(background);
-        }
+        DestroyBackgroundsMatching(b => IsMixedGroupParentName(b.gameObject.name));
     }
 
     private static void StripBackgroundFromSkyBackdrops()
     {
-        Background[] all = Object.FindObjectsByType<Background>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        for (int i = 0; i < all.Length; i++)
-        {
-            Background background = all[i];
-            if (background == null)
-                continue;
-
-            if (!IsSkyBackdropName(background.gameObject.name))
-                continue;
-
-            Object.Destroy(background);
-        }
+        DestroyBackgroundsMatching(b => IsSkyBackdropName(b.gameObject.name));
     }
 
     /// <summary>
@@ -155,17 +162,19 @@ public static class CityBackgroundParallaxSetup
     /// </summary>
     private static void StripBackgroundFromNestedBuildingPieces()
     {
+        DestroyBackgroundsMatching(b => IsUnderBuildingPropRoot(b.transform));
+    }
+
+    private static void DestroyBackgroundsMatching(System.Func<Background, bool> match)
+    {
         Background[] all = Object.FindObjectsByType<Background>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         for (int i = 0; i < all.Length; i++)
         {
             Background background = all[i];
-            if (background == null)
+            if (background == null || !match(background))
                 continue;
 
-            if (!IsUnderBuildingPropRoot(background.transform))
-                continue;
-
-            Object.Destroy(background);
+            Object.DestroyImmediate(background);
         }
     }
 

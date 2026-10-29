@@ -41,7 +41,8 @@ public class BossSpawner : MonoBehaviour
         new BossEntry { bossId = "Harlie" },
         new BossEntry { bossId = "Hex" },
         new BossEntry { bossId = "Count" },
-        new BossEntry { bossId = "Bass" }
+        new BossEntry { bossId = "Bass" },
+        new BossEntry { bossId = "Deadline" }
     };
 
     [Header("Spawn")]
@@ -189,7 +190,7 @@ public class BossSpawner : MonoBehaviour
 
     /// <summary>
     /// Boss Fight Mode rival after Copy Bot / level progress:
-    /// Kit↔Malice, Harlie↔Hex, Bass→Count (worthy sparring partner); everyone else→Kit.
+    /// Kit↔Malice, Harlie↔Hex, Bass→Count, Count→Deadline, Deadline→Count; everyone else→Kit.
     /// </summary>
     public static string GetBossFightOpponentBossId()
     {
@@ -201,6 +202,10 @@ public class BossSpawner : MonoBehaviour
         if (string.Equals(playerId, BossEncounter.BossIdHex, StringComparison.OrdinalIgnoreCase))
             return BossEncounter.BossIdHarlie;
         if (string.Equals(playerId, "Bass", StringComparison.OrdinalIgnoreCase))
+            return BossEncounter.BossIdCount;
+        if (string.Equals(playerId, BossEncounter.BossIdCount, StringComparison.OrdinalIgnoreCase))
+            return BossEncounter.BossIdDeadline;
+        if (string.Equals(playerId, BossEncounter.BossIdDeadline, StringComparison.OrdinalIgnoreCase))
             return BossEncounter.BossIdCount;
 
         return BossEncounter.BossIdKit;

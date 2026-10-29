@@ -74,6 +74,10 @@ public class CountChargeAuraVisual : MonoBehaviour
     [Tooltip("Stay fully visible until this fraction of the rise is complete, then fade out.")]
     [SerializeField] [Range(0.5f, 0.98f)] private float fadeStartNormalized = 0.82f;
 
+    [Header("Tint")]
+    [Tooltip("Multiplies spawned particle sprite colors (Deadline uses yellow over Count's red art).")]
+    [SerializeField] private Color particleTint = Color.white;
+
     private SpriteRenderer bodyRenderer;
     private SortingGroup hostSortingGroup;
 
@@ -104,6 +108,7 @@ public class CountChargeAuraVisual : MonoBehaviour
         public float StartTime;
         public float Duration;
         public float StartAlpha;
+        public Color BaseRgb;
         public bool SpawnFlipX;
         public int SortingOrder;
     }
@@ -205,6 +210,48 @@ public class CountChargeAuraVisual : MonoBehaviour
     public void SetActivityMultiplier(float multiplier)
     {
         activityMultiplier = Mathf.Clamp(multiplier, 0.05f, 1f);
+    }
+
+    /// <summary>Tint aura particle sprites (e.g. yellow for Deadline).</summary>
+    public void SetParticleTint(Color tint)
+    {
+        particleTint = tint;
+        // Retint anything already floating.
+        for (int i = 0; i < activeParticles.Count; i++)
+        {
+            AuraParticle p = activeParticles[i];
+            if (p.Renderer == null)
+                continue;
+            bool keepSource = particleTint.r >= 0.99f && particleTint.g >= 0.99f && particleTint.b >= 0.99f;
+            Color c = keepSource
+                ? new Color(p.BaseRgb.r, p.BaseRgb.g, p.BaseRgb.b, p.Renderer.color.a)
+                : new Color(particleTint.r, particleTint.g, particleTint.b, p.Renderer.color.a);
+            if (!keepSource)
+                ApplySolidTintMaterial(p.Renderer);
+            p.Renderer.color = c;
+            if (!keepSource)
+                p.BaseRgb = new Color(particleTint.r, particleTint.g, particleTint.b, 1f);
+            activeParticles[i] = p;
+        }
+    }
+
+    private static Material sharedSolidTintMaterial;
+
+    private static void ApplySolidTintMaterial(SpriteRenderer renderer)
+    {
+        if (renderer == null)
+            return;
+
+        if (sharedSolidTintMaterial == null)
+        {
+            Shader solid = Shader.Find("Gameoverse/SpriteSolidColor");
+            if (solid == null)
+                return;
+            sharedSolidTintMaterial = new Material(solid);
+            sharedSolidTintMaterial.hideFlags = HideFlags.HideAndDontSave;
+        }
+
+        renderer.sharedMaterial = sharedSolidTintMaterial;
     }
 
     private void TrySpawnParticles()
@@ -384,10 +431,24 @@ public class CountChargeAuraVisual : MonoBehaviour
 
         ApplyParticleSorting(renderer, spawnFlipX, sortingOrder);
 
-        Color c = renderer != null ? renderer.color : Color.white;
-        c.a = startAlpha;
+        Color baseRgb = Color.white;
         if (renderer != null)
+        {
+            Color src = renderer.color;
+            // White tint = keep prefab color (Count red). Any other tint replaces RGB (Deadline yellow).
+            bool keepSource = particleTint.r >= 0.99f && particleTint.g >= 0.99f && particleTint.b >= 0.99f;
+            baseRgb = keepSource
+                ? new Color(src.r, src.g, src.b, 1f)
+                : new Color(particleTint.r, particleTint.g, particleTint.b, 1f);
+
+            // Red aura art still reads red when only SpriteRenderer.color is changed — use solid tint.
+            if (!keepSource)
+                ApplySolidTintMaterial(renderer);
+
+            Color c = baseRgb;
+            c.a = startAlpha;
             renderer.color = c;
+        }
 
         activeParticles.Add(new AuraParticle
         {
@@ -402,6 +463,7 @@ public class CountChargeAuraVisual : MonoBehaviour
             StartTime = Time.time,
             Duration = floatDuration * Random.Range(0.65f, 1.35f),
             StartAlpha = startAlpha,
+            BaseRgb = baseRgb,
             SpawnFlipX = spawnFlipX,
             SortingOrder = sortingOrder
         });
@@ -521,7 +583,6 @@ public class CountChargeAuraVisual : MonoBehaviour
             if (particle.Renderer != null)
             {
                 ApplyParticleSorting(particle.Renderer, particle.SpawnFlipX, particle.SortingOrder);
-                Color c = particle.Renderer.color;
                 float fadeAlpha = EvaluateFadeAlpha(eased, particle.StartAlpha);
                 if (dissipating && dissipateEndTime > 0f)
                 {
@@ -529,6 +590,7 @@ public class CountChargeAuraVisual : MonoBehaviour
                     fadeAlpha *= dissipateT * dissipateStartMultiplier;
                 }
 
+                Color c = particle.BaseRgb;
                 c.a = fadeAlpha;
                 particle.Renderer.color = c;
             }

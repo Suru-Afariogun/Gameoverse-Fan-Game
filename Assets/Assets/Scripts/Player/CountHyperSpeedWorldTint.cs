@@ -204,8 +204,17 @@ public static class HyperSpeedWorldSlow
     private static readonly object LegacyOwner = new object();
 
     public static bool IsActive { get; private set; }
-    public static float WorldTimeScale { get; private set; } = 1f;
+    /// <summary>Slow layers only (1 when none). Multiplied by DA scales for the effective world rate.</summary>
+    public static float BaseWorldTimeScale { get; private set; } = 1f;
+    /// <summary>Effective non-boss world scale: Hyper Slow × DA enemy scale.</summary>
+    public static float WorldTimeScale =>
+        BaseWorldTimeScale * DeteriorationAccelerationWorld.WorldTimeScale;
+    /// <summary>Effective boss scale: Hyper Slow × DA boss scale (capped softer than enemies).</summary>
+    public static float BossWorldTimeScale =>
+        BaseWorldTimeScale * DeteriorationAccelerationWorld.BossTimeScale;
     public static bool SlowsPlayer { get; private set; }
+    /// <summary>True when any Hyper Slow layer is active (ignores Deadline acceleration alone).</summary>
+    public static bool HasSlowLayers => layers.Count > 0;
 
     /// <summary>Legacy single-owner Begin. Prefer <see cref="Begin(object, float, bool)"/>.</summary>
     public static void Begin(float worldScale, bool slowPlayer) =>
@@ -273,8 +282,8 @@ public static class HyperSpeedWorldSlow
     {
         if (layers.Count == 0)
         {
-            IsActive = false;
-            WorldTimeScale = 1f;
+            IsActive = DeteriorationAccelerationWorld.IsActive;
+            BaseWorldTimeScale = 1f;
             SlowsPlayer = false;
             return;
         }
@@ -290,8 +299,15 @@ public static class HyperSpeedWorldSlow
         }
 
         // 0 = full freeze (Bass QuickTime Time Stop); Double Gear / Hyper still use mid scales.
-        WorldTimeScale = minScale;
+        BaseWorldTimeScale = minScale;
         SlowsPlayer = anySlowPlayer;
+    }
+
+    /// <summary>Called when Deadline acceleration starts/stops so <see cref="IsActive"/> stays correct with no slow layers.</summary>
+    public static void RefreshActiveFromAcceleration()
+    {
+        if (layers.Count == 0)
+            IsActive = DeteriorationAccelerationWorld.IsActive;
     }
 
     private static void RestorePhysicsGravityIfNeeded()
@@ -310,8 +326,17 @@ public static class HyperSpeedWorldSlow
     public static float WorldFixedDeltaTime =>
         IsActive ? Time.fixedDeltaTime * WorldTimeScale : Time.fixedDeltaTime;
 
+    public static float BossWorldDeltaTime =>
+        IsActive ? Time.deltaTime * BossWorldTimeScale : Time.deltaTime;
+
+    public static float BossWorldFixedDeltaTime =>
+        IsActive ? Time.fixedDeltaTime * BossWorldTimeScale : Time.fixedDeltaTime;
+
     public static float ScaleSpeed(float speed) =>
         IsActive ? speed * WorldTimeScale : speed;
+
+    public static float ScaleBossSpeed(float speed) =>
+        IsActive ? speed * BossWorldTimeScale : speed;
 
     /// <summary>
     /// Softens player fall while Hyper Slow is active (can partially counter gravity below 1).
@@ -323,7 +348,15 @@ public static class HyperSpeedWorldSlow
         return Mathf.Lerp(0.25f, fallMultiplier, Mathf.Clamp01(WorldTimeScale));
     }
 
-    /// <summary>Same fall soften for bosses / common enemies.</summary>
+    /// <summary>Same fall soften for common enemies.</summary>
     public static float ScaleEnemyFallMultiplier(float fallMultiplier) =>
         ScaleFallMultiplier(fallMultiplier);
+
+    /// <summary>Fall soften using boss DA scale (softer than enemy ×6).</summary>
+    public static float ScaleBossFallMultiplier(float fallMultiplier)
+    {
+        if (!IsActive)
+            return fallMultiplier;
+        return Mathf.Lerp(0.25f, fallMultiplier, Mathf.Clamp01(BossWorldTimeScale));
+    }
 }

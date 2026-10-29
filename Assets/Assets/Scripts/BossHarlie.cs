@@ -760,7 +760,7 @@ public class BossHarlie : Boss
         if (animator == null)
             return;
 
-        float world = HyperSpeedWorldSlow.IsActive ? HyperSpeedWorldSlow.WorldTimeScale : 1f;
+        float world = HyperSpeedWorldSlow.IsActive ? HyperSpeedWorldSlow.BossWorldTimeScale : 1f;
         // Freeze the air-slash pose for the whole spin (largest Attack Box frame).
         animator.speed = isSpinningAirSlash
             ? 0f

@@ -17,7 +17,7 @@ using UnityEngine;
 /// </summary>
 public class BossCount : Boss, CountSignatureTimeModule.IHost
 {
-    private enum Pattern
+    protected enum Pattern
     {
         MetalHop,
         QuickRush,
@@ -33,7 +33,7 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
 
     private enum Zone { Close, Mid, Far, AntiAir }
 
-    private enum Motion { Free, Stop, Walk, Velocity, Hang }
+    protected enum Motion { Free, Stop, Walk, Velocity, Hang }
 
     private static readonly Pattern[] CloseRotation =
         { Pattern.QuickRush, Pattern.MetalHop, Pattern.TimeStop, Pattern.HyperEvade, Pattern.QuickBoomerang, Pattern.TimeClones };
@@ -51,8 +51,8 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
     [SerializeField] private float damageMultiplier = 1f;
 
     [Header("Shots")]
-    [SerializeField] private Projectile shortHandPrefab;
-    [SerializeField] private Projectile longHandPrefab;
+    [SerializeField] protected Projectile shortHandPrefab;
+    [SerializeField] protected Projectile longHandPrefab;
     [SerializeField] private GameVisualEffect busterBlastSmallPrefab;
     [SerializeField] private GameVisualEffect busterBlastBigPrefab;
     [Tooltip("Authored for facing LEFT; mirrored when he faces right. Found by name when empty.")]
@@ -83,8 +83,8 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
     [SerializeField] private float metalApexGlintSeconds = 0.12f;
     [Tooltip("Spaces between hands thrown in the same volley.")]
     [SerializeField] private float metalShotSpacing = 2.2f;
-    [SerializeField] private float metalShotSpeed = 15f;
-    [SerializeField] private int metalShotDamage = 2;
+    [SerializeField] protected float metalShotSpeed = 15f;
+    [SerializeField] protected int metalShotDamage = 2;
 
     [Header("Metal Man - Reactive Hop")]
     [Tooltip("While recovering, he hops and throws a hand when a player shot flies at him.")]
@@ -93,12 +93,12 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
     [SerializeField] private float dodgeCooldown = 1.4f;
 
     [Header("Quick Man - Rush")]
-    [SerializeField] private float rushWindupSeconds = 0.35f;
-    [SerializeField] private float rushSpeed = 22f;
+    [SerializeField] protected float rushWindupSeconds = 0.35f;
+    [SerializeField] protected float rushSpeed = 22f;
     [Tooltip("How far past the player the rush ends.")]
-    [SerializeField] private float rushOvershoot = 3f;
-    [SerializeField] private float rushMinDistance = 4f;
-    [SerializeField] private float rushMaxDistance = 16f;
+    [SerializeField] protected float rushOvershoot = 3f;
+    [SerializeField] protected float rushMinDistance = 4f;
+    [SerializeField] protected float rushMaxDistance = 16f;
     [SerializeField] private float rushTurnPause = 0.22f;
     [SerializeField] private int rushDamage = 3;
 
@@ -116,15 +116,15 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
 
     [Header("Flash Man - Time Stop")]
     [Tooltip("Clock activation telegraph before time stops.")]
-    [SerializeField] private float timeStopWindupSeconds = 0.6f;
-    [SerializeField] private float timeStopCooldown = 7f;
+    [SerializeField] protected float timeStopWindupSeconds = 0.6f;
+    [SerializeField] protected float timeStopCooldown = 7f;
     [SerializeField] private int timeStopHandCount = 4;
     [Tooltip("Spaces from the player's spot.")]
     [SerializeField] private float timeStopRadius = 4f;
     [SerializeField] private float timeStopOrbitDegreesPerSecond = 15f;
     [SerializeField] private float timeStopHandSpawnGap = 0.15f;
     [Tooltip("Total time the player stays frozen (includes the hands appearing).")]
-    [SerializeField] private float timeStopFrozenSeconds = 1.5f;
+    [SerializeField] protected float timeStopFrozenSeconds = 1.5f;
     [Tooltip("Seconds after time resumes before the hands fire.")]
     [SerializeField] private float timeStopFireDelay = 0.5f;
     [SerializeField] private float timeStopHandSpeed = 14f;
@@ -136,7 +136,7 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
     [Tooltip("Boss Hyper Speed world/player scale — matches playable Count Up-Hyper feel.")]
     [SerializeField] [Range(0.15f, 0.7f)] private float hyperSpeedWorldScale = 0.5f;
     [Tooltip("Easy: only use Hyper / Rewind / Clones every this many patterns.")]
-    [SerializeField] private int easySpecialEvery = 5;
+    [SerializeField] protected int easySpecialEvery = 5;
 
     [Header("Enrage (HP ratio)")]
     [Range(0f, 1f)] [SerializeField] private float enrageHealthRatio = 0.55f;
@@ -162,38 +162,38 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
     [SerializeField] private float omegaTempoBonus = 0.1f;
 
     [Header("Signature - Midnight")]
-    [SerializeField] private float midnightWindupSeconds = 0.45f;
+    [SerializeField] protected float midnightWindupSeconds = 0.45f;
     [SerializeField] private float midnightRadius = 5f;
     [Tooltip("Long Hands are scaled down so the gap can be escaped.")]
     [SerializeField] private float midnightHandScale = 0.7f;
     [Tooltip("Real-time gap between hand spawns (Count is not slowed — keep this tiny).")]
     [SerializeField] private float midnightHandSpawnGap = 0.025f;
-    [SerializeField] private float midnightFrozenSeconds = 0.85f;
+    [SerializeField] protected float midnightFrozenSeconds = 0.85f;
     [SerializeField] private float midnightFireDelay = 0.18f;
     [Tooltip("Seconds between hands firing (the clock ticking).")]
     [SerializeField] private float midnightFireGap = 0.07f;
     [SerializeField] private float midnightHandSpeed = 15f;
     [SerializeField] private int midnightHandDamage = 2;
     [Tooltip("How often Midnight Count fires Short Hands while chasing.")]
-    [SerializeField] private float midnightShootInterval = 0.38f;
+    [SerializeField] protected float midnightShootInterval = 0.38f;
     [Tooltip("Chance each combat tick to start a self-speed burst during Midnight.")]
     [SerializeField] [Range(0f, 1f)] private float midnightSpeedBurstChance = 0.04f;
     [SerializeField] private float midnightSpeedBurstMul = 1.55f;
     [SerializeField] private float midnightSpeedBurstSeconds = 0.55f;
 
     [Header("Signature - Rewind Rush")]
-    [SerializeField] private int rewindRushDashes = 3;
-    [SerializeField] private float rewindRushSpeed = 26f;
-    [SerializeField] private float rewindRushPause = 0.16f;
+    [SerializeField] protected int rewindRushDashes = 3;
+    [SerializeField] protected float rewindRushSpeed = 26f;
+    [SerializeField] protected float rewindRushPause = 0.16f;
     [SerializeField] private float rewindPlaybackSeconds = 0.5f;
-    [SerializeField] private int rewindRushDamage = 3;
+    [SerializeField] protected int rewindRushDamage = 3;
 
     [Header("Auras")]
-    [SerializeField] private Color telegraphColor = new Color(1f, 0.2f, 0.2f, 1f);
+    [SerializeField] protected Color telegraphColor = new Color(1f, 0.2f, 0.2f, 1f);
     [SerializeField] private Color glintColor = Color.white;
     [SerializeField] private bool showEnrageAura = true;
-    [SerializeField] private Color enrageAuraColor = new Color(0.75f, 0.05f, 0.05f, 1f);
-    [SerializeField] private Color enrageAuraFlickerColor = new Color(1f, 0.35f, 0.35f, 1f);
+    [SerializeField] protected Color enrageAuraColor = new Color(0.75f, 0.05f, 0.05f, 1f);
+    [SerializeField] protected Color enrageAuraFlickerColor = new Color(1f, 0.35f, 0.35f, 1f);
     [Range(0f, 1f)] [SerializeField] private float enrageAuraAlpha = 0.45f;
     [SerializeField] private float auraBaseScale = 1.12f;
 
@@ -210,12 +210,12 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
 
     private readonly Stack<IEnumerator> actionStack = new Stack<IEnumerator>();
     private readonly int[] zoneRotationIndex = new int[4];
-    private Motion motion = Motion.Stop;
-    private float walkDir;
+    protected Motion motion = Motion.Stop;
+    protected float walkDir;
     private Vector2 motionVelocity;
     private bool gravityOff;
 
-    private float timeStopReadyAt;
+    protected float timeStopReadyAt;
     private float dodgeReadyAt;
     private bool signatureStarted;
     private int signaturePatternCounter;
@@ -226,8 +226,8 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
 
     private int contactDamage;
     private bool contactHitDone;
-    private bool forceTrail;
-    private float shootPoseUntil;
+    protected bool forceTrail;
+    protected float shootPoseUntil;
     private float hitVfxTimer;
 
     private Vector3 firePointLeftLocal = new Vector3(-0.8f, -0.41f, 0f);
@@ -236,9 +236,9 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
     private CountHyperSpeedWorldTint timeTint;
     private bool timeTintActive;
     private readonly object flashSlowOwner = new object();
-    private bool ownsFlashSlow;
-    private bool hyperSpeedActive;
-    private bool ownsHyperSlow;
+    protected bool ownsFlashSlow;
+    protected bool hyperSpeedActive;
+    protected bool ownsHyperSlow;
     private bool midnightPhaseActive;
     private float midnightSelfSpeedMul = 1f;
     private float midnightSpeedBurstEndsAt;
@@ -246,7 +246,7 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
     private bool midnightEscapeArmed;
     private float midnightEscapeAngleDeg;
     private Vector2 midnightOrbitCenter;
-    private int patternsSinceSpecial;
+    protected int patternsSinceSpecial;
 
     private readonly List<Projectile> orbitHands = new List<Projectile>(12);
     private readonly List<float> orbitHandAngles = new List<float>(12);
@@ -261,9 +261,9 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
     private Aura enrageAura;
 
     /// <summary>During his own Flash / Hyper he keeps full speed (Bass DG isolation pattern).</summary>
-    private bool KeepsFullSpeed => ownsFlashSlow || ownsHyperSlow || hyperSpeedActive;
+    protected bool KeepsFullSpeed => ownsFlashSlow || ownsHyperSlow || hyperSpeedActive;
 
-    private float ActionDeltaTime => KeepsFullSpeed ? Time.deltaTime : BossDeltaTime;
+    protected float ActionDeltaTime => KeepsFullSpeed ? Time.deltaTime : BossDeltaTime;
 
     private readonly HashSet<int> animatorParams = new HashSet<int>();
     private GameObject[] afterimageObjects;
@@ -323,9 +323,12 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
 
     // ---------- Lifecycle ----------
 
+    /// <summary>Subclasses (Boss Deadline) override so base Awake does not stamp "BossCount".</summary>
+    protected virtual string DefaultBossId => "BossCount";
+
     protected override void Awake()
     {
-        SetBossId("BossCount");
+        SetBossId(DefaultBossId);
         base.Awake();
 
         CacheAnimatorParams();
@@ -344,14 +347,14 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
         SetupAfterimages();
     }
 
-    private void OnDisable()
+    protected virtual void OnDisable()
     {
         EndDrasticTimeSlow();
         EndBossHyperSpeed();
         ClearOrbitHands();
     }
 
-    private void OnDestroy()
+    protected virtual void OnDestroy()
     {
         EndDrasticTimeSlow();
         EndBossHyperSpeed();
@@ -415,7 +418,7 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
         return BossSpeed(speed);
     }
 
-    private int Damage(int baseDamage)
+    protected int Damage(int baseDamage)
     {
         int dmg = Mathf.Max(0, baseDamage) + (IsEnraged ? Mathf.Max(0, enrageBonusDamage) : 0);
         dmg = Mathf.FloorToInt(dmg * Mathf.Max(0.1f, damageMultiplier) + 0.5f);
@@ -582,7 +585,7 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
         // Keep his own clock running at full rate while he owns the slow (player/world crawl).
         animator.speed = KeepsFullSpeed
             ? Mathf.Max(1f, midnightSelfSpeedMul)
-            : (HyperSpeedWorldSlow.IsActive ? HyperSpeedWorldSlow.WorldTimeScale : 1f);
+            : (HyperSpeedWorldSlow.IsActive ? HyperSpeedWorldSlow.BossWorldTimeScale : 1f);
 
         float vy = rb != null ? rb.linearVelocity.y : 0f;
         bool moving = motion == Motion.Walk && Mathf.Abs(walkDir) > 0.01f && !isDashing;
@@ -612,18 +615,7 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
         if (TryStartSignature())
         {
             signatureActive = true;
-            if (GameSettings.Difficulty == GameDifficulty.Hard)
-            {
-                float slow = DifficultyTuning.BossMidnightWorldSlowScale(drasticTimeSlowScale);
-                yield return CountSignatureTimeModule.MidnightChain(
-                    this, midnightWindupSeconds, midnightRadius, midnightHandScale, midnightHandSpawnGap,
-                    midnightFrozenSeconds, midnightFireDelay, midnightFireGap, midnightHandSpeed,
-                    midnightHandDamage, slow, 5);
-            }
-            else
-            {
-                yield return RunPattern(Pattern.Midnight);
-            }
+            yield return RunSignatureMidnight();
 
             CleanupAfterPattern();
             if (!isGrounded)
@@ -650,6 +642,24 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
         }
 
         yield return Recover();
+    }
+
+    /// <summary>
+    /// Signature Midnight opener. Hard Count uses the multi-wave clock chain; Deadline overrides with DA.
+    /// </summary>
+    protected virtual IEnumerator RunSignatureMidnight()
+    {
+        if (GameSettings.Difficulty == GameDifficulty.Hard)
+        {
+            float slow = DifficultyTuning.BossMidnightWorldSlowScale(drasticTimeSlowScale);
+            yield return CountSignatureTimeModule.MidnightChain(
+                this, midnightWindupSeconds, midnightRadius, midnightHandScale, midnightHandSpawnGap,
+                midnightFrozenSeconds, midnightFireDelay, midnightFireGap, midnightHandSpeed,
+                midnightHandDamage, slow, 5);
+            yield break;
+        }
+
+        yield return RunPattern(Pattern.Midnight);
     }
 
     /// <summary>
@@ -702,7 +712,7 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
         return pattern;
     }
 
-    private bool IsPatternReady(Pattern pattern)
+    protected virtual bool IsPatternReady(Pattern pattern)
     {
         if (pattern == Pattern.TimeStop || pattern == Pattern.Midnight)
             return longHandPrefab != null && Time.time >= timeStopReadyAt;
@@ -716,7 +726,8 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
     private static bool IsSpecialPowerPattern(Pattern pattern) =>
         pattern is Pattern.HyperChase or Pattern.HyperEvade or Pattern.SoloRewind or Pattern.TimeClones;
 
-    private bool AllowSpecialPowerNow()
+    /// <summary>Deadline overrides to use DA / clone powers less often (DA is stronger).</summary>
+    protected virtual bool AllowSpecialPowerNow()
     {
         switch (GameSettings.Difficulty)
         {
@@ -729,7 +740,8 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
         }
     }
 
-    private bool ShouldLayerHyperOnPattern(Pattern pattern)
+    /// <summary>Deadline overrides with lower odds — layered DA is very strong.</summary>
+    protected virtual bool ShouldLayerHyperOnPattern(Pattern pattern)
     {
         if (pattern is Pattern.TimeStop or Pattern.Midnight or Pattern.RewindRush)
             return false;
@@ -972,7 +984,7 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
         motion = Motion.Stop;
     }
 
-    private IEnumerator RushTelegraph(float seconds)
+    protected IEnumerator RushTelegraph(float seconds)
     {
         motion = Motion.Stop;
         SoundManager.Instance?.PlayClockworkTic();
@@ -989,7 +1001,7 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
     }
 
     /// <summary>Straight Hyper Speed run along the ground with contact damage. Records its path when asked.</summary>
-    private IEnumerator Rush(float dir, float distance, float speed, int damage, List<Vector2> path)
+    protected IEnumerator Rush(float dir, float distance, float speed, int damage, List<Vector2> path)
     {
         if (rb == null)
             yield break;
@@ -1064,8 +1076,9 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
 
     /// <summary>
     /// Clock telegraph → drastic Hyper Speed slow → four Long Hands orbit → slow ends → hands fire.
+    /// Deadline overrides (DA instead of Hyper Speed).
     /// </summary>
-    private IEnumerator TimeStopPattern()
+    protected virtual IEnumerator TimeStopPattern()
     {
         timeStopReadyAt = Time.time + Mathf.Max(0f, timeStopCooldown);
         yield return ClockWindup(timeStopWindupSeconds, 1);
@@ -1123,7 +1136,7 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
         yield return Wait(0.2f);
     }
 
-    private IEnumerator MidnightPattern()
+    protected virtual IEnumerator MidnightPattern()
     {
         float slow = DifficultyTuning.BossMidnightWorldSlowScale(drasticTimeSlowScale);
         yield return CountSignatureTimeModule.Midnight(
@@ -1132,7 +1145,7 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
             midnightHandDamage, slow);
     }
 
-    private IEnumerator RewindRushPattern()
+    protected virtual IEnumerator RewindRushPattern()
     {
         float speed = rewindRushSpeed * DifficultyTuning.BossRewindRushSpeedMul();
         float pause = rewindRushPause * DifficultyTuning.BossRewindRushPauseMul();
@@ -1143,7 +1156,8 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
             rewindRushDamage, rushOvershoot, rushMinDistance, rushMaxDistance, windup);
     }
 
-    private IEnumerator HyperChasePattern()
+    /// <summary>Deadline overrides as DA chase (never Count Hyper Speed).</summary>
+    protected virtual IEnumerator HyperChasePattern()
     {
         yield return HyperSpeedAssist(chase: true);
         float t = 0f;
@@ -1165,7 +1179,8 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
         motion = Motion.Stop;
     }
 
-    private IEnumerator HyperEvadePattern()
+    /// <summary>Deadline overrides as DA evade.</summary>
+    protected virtual IEnumerator HyperEvadePattern()
     {
         yield return HyperSpeedAssist(chase: false);
         float away = -Mathf.Sign(DxToPlayer());
@@ -1176,9 +1191,12 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
         EndBossHyperSpeed();
     }
 
-    private float dashDistanceSafe() => Mathf.Abs(DxToPlayer()) + rushOvershoot;
+    protected float dashDistanceSafe() => Mathf.Abs(DxToPlayer()) + rushOvershoot;
 
-    private IEnumerator SoloRewindPattern()
+    /// <summary>Deadline sets false so Midnight module cannot spawn Count orbit clocks.</summary>
+    protected virtual bool HasOrbitLongHands => longHandPrefab != null;
+
+    protected virtual IEnumerator SoloRewindPattern()
     {
         if (rb == null)
             yield break;
@@ -1223,7 +1241,7 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
             FireShortHandAtPlayer();
     }
 
-    private IEnumerator TimeClonesPattern()
+    protected virtual IEnumerator TimeClonesPattern()
     {
         if (shortHandPrefab == null || spriteRenderer == null)
             yield break;
@@ -1243,7 +1261,7 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
         yield return Wait(1.2f);
     }
 
-    private IEnumerator HyperSpeedAssist(bool chase)
+    protected IEnumerator HyperSpeedAssist(bool chase)
     {
         BeginBossHyperSpeed();
         forceTrail = true;
@@ -1266,7 +1284,8 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
         }
     }
 
-    private void BeginBossHyperSpeed()
+    /// <summary>Deadline overrides with Deterioration Acceleration instead of Hyper Speed.</summary>
+    protected virtual void BeginBossHyperSpeed()
     {
         if (ownsHyperSlow)
             return;
@@ -1277,7 +1296,8 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
         BeginTimeTint();
     }
 
-    private void EndBossHyperSpeed()
+    /// <summary>Deadline overrides to end DA.</summary>
+    protected virtual void EndBossHyperSpeed()
     {
         hyperSpeedActive = false;
         if (ownsHyperSlow)
@@ -1290,7 +1310,7 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
         forceTrail = false;
     }
 
-    private void FireShortHandAtPlayer()
+    protected virtual void FireShortHandAtPlayer()
     {
         // Uses existing metal apex throw helpers when available; otherwise a direct Launch.
         PlayerController player = FindPlayer();
@@ -1307,7 +1327,7 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
     }
 
     /// <summary>Clock activation pose, Count's charge aura and clock sounds.</summary>
-    private IEnumerator ClockWindup(float seconds, int tickPairs)
+    protected IEnumerator ClockWindup(float seconds, int tickPairs)
     {
         motion = Motion.Stop;
         walkDir = 0f;
@@ -1353,7 +1373,8 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
             SoundManager.Instance?.PlayClockworkToc();
     }
 
-    public void BeginDrasticTimeSlow(float worldScale)
+    /// <summary>Deadline overrides to Deterioration Acceleration (no Count Hyper Speed).</summary>
+    public virtual void BeginDrasticTimeSlow(float worldScale)
     {
         // Already difficulty-tuned by caller; clamp keeps Easy mild and Hard near authored crawl.
         float scale = Mathf.Clamp(worldScale, 0.03f, 0.35f);
@@ -1362,7 +1383,8 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
         BeginTimeTint();
     }
 
-    public void EndDrasticTimeSlow()
+    /// <summary>Deadline overrides to end DA.</summary>
+    public virtual void EndDrasticTimeSlow()
     {
         if (ownsFlashSlow)
         {
@@ -1373,9 +1395,28 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
         EndTimeTint();
     }
 
-    public void BeginTimeTintOnly() => BeginTimeTint();
+    /// <summary>Strip every Count Hyper Speed / Flash slow layer owned by this boss.</summary>
+    protected void ClearAllCountHyperSlow()
+    {
+        if (ownsHyperSlow)
+        {
+            HyperSpeedWorldSlow.End(this);
+            ownsHyperSlow = false;
+        }
 
-    public void EndTimeTintOnly() => EndTimeTint();
+        if (ownsFlashSlow)
+        {
+            HyperSpeedWorldSlow.End(flashSlowOwner);
+            ownsFlashSlow = false;
+        }
+
+        hyperSpeedActive = false;
+        EndTimeTint();
+    }
+
+    public virtual void BeginTimeTintOnly() => BeginTimeTint();
+
+    public virtual void EndTimeTintOnly() => EndTimeTint();
 
     private void BeginTimeTint()
     {
@@ -1407,7 +1448,7 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
         return p != null ? PlayerBounds(p) : MyBounds();
     }
 
-    bool CountSignatureTimeModule.IHost.HasLongHandPrefab => longHandPrefab != null;
+    bool CountSignatureTimeModule.IHost.HasLongHandPrefab => HasOrbitLongHands;
 
     void CountSignatureTimeModule.IHost.SpawnOrbitHand(float angleDegrees, float scale) =>
         SpawnOrbitHand(angleDegrees, scale);
@@ -1604,7 +1645,7 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
 
     float CountSignatureTimeModule.IHost.FacingSign => facingSign;
 
-    private void SpawnOrbitHand(float angleDegrees, float scale)
+    protected virtual void SpawnOrbitHand(float angleDegrees, float scale)
     {
         if (longHandPrefab == null)
             return;
@@ -1657,7 +1698,7 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
             handBody.position = pos;
     }
 
-    private void LaunchOrbitHand(int index, float speed, int damage)
+    protected virtual void LaunchOrbitHand(int index, float speed, int damage)
     {
         Projectile hand = orbitHands[index];
         if (hand == null)
@@ -1673,7 +1714,7 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
     }
 
     /// <summary>Destroys hands that never launched (pattern interrupted, boss defeated).</summary>
-    private void ClearOrbitHands()
+    protected virtual void ClearOrbitHands()
     {
         for (int i = 0; i < orbitHands.Count; i++)
         {
@@ -1687,7 +1728,7 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
 
     // ---------- Shooting ----------
 
-    private Projectile FireAtPlayer(Projectile prefab, float speed, int damage, float angleOffset, float lifetime = -1f)
+    protected Projectile FireAtPlayer(Projectile prefab, float speed, int damage, float angleOffset, float lifetime = -1f)
     {
         if (prefab == null)
             return null;
@@ -1716,16 +1757,55 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
         return shot;
     }
 
-    private void PlayShootAnim()
+    protected virtual void PlayShootAnim()
     {
-        shootPoseUntil = Time.time + 0.25f;
+        shootPoseUntil = Time.time + 0.28f;
         if (animator == null)
             return;
 
         float vy = rb != null ? rb.linearVelocity.y : 0f;
-        string trigger = isGrounded ? "Shoot" : vy < -0.01f ? "FallShot" : "JumpShot";
+        // Prefer walk intent over momentary velocity so run+shoot doesn't flash Ground Shoot.
+        bool movingOnGround = isGrounded &&
+                              ((motion == Motion.Walk && Mathf.Abs(walkDir) > 0.01f) ||
+                               (rb != null && Mathf.Abs(rb.linearVelocity.x) > 0.35f));
+
+        string trigger;
+        string stateName;
+        if (!isGrounded)
+        {
+            trigger = vy < -0.01f ? "FallShot" : "JumpShot";
+            stateName = "Jump Shoot";
+        }
+        else if (movingOnGround)
+        {
+            trigger = "RunShoot";
+            stateName = "Run Shoot";
+        }
+        else
+        {
+            trigger = "Shoot";
+            stateName = "Ground shoot";
+        }
+
+        SetAnimBool("IsMoving", movingOnGround);
+        SetAnimBool("IsShooting", true);
+        SetAnimBool("IsDashing", false);
+
+        if (HasParam("Shoot"))
+            animator.ResetTrigger("Shoot");
+        if (HasParam("RunShoot"))
+            animator.ResetTrigger("RunShoot");
+        if (HasParam("JumpShot"))
+            animator.ResetTrigger("JumpShot");
+        if (HasParam("FallShot"))
+            animator.ResetTrigger("FallShot");
+
         if (HasParam(trigger))
             animator.SetTrigger(trigger);
+
+        int hash = Animator.StringToHash(stateName);
+        if (animator.HasState(0, hash))
+            animator.Play(hash, 0, 0f);
     }
 
     /// <summary>FirePoint is authored facing left; mirror its X when facing right.</summary>
@@ -1742,7 +1822,7 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
 
     // ---------- Building blocks ----------
 
-    private IEnumerator Wait(float seconds)
+    protected IEnumerator Wait(float seconds)
     {
         float t = 0f;
         while (t < seconds)
@@ -1757,7 +1837,7 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
     /// Uses ActionDeltaTime so while Count owns Hyper/Midnight the wait stays real-time
     /// (spawn rate is not slowed — only launched shots crawl).
     /// </summary>
-    private IEnumerator WaitRaw(float seconds)
+    protected IEnumerator WaitRaw(float seconds)
     {
         float t = 0f;
         while (t < seconds)
@@ -1797,13 +1877,13 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
         }
     }
 
-    private float DxToPlayer()
+    protected float DxToPlayer()
     {
         PlayerController player = FindPlayer();
         return player != null ? player.transform.position.x - transform.position.x : 0f;
     }
 
-    private float DirToPlayer()
+    protected float DirToPlayer()
     {
         float dx = DxToPlayer();
         return Mathf.Abs(dx) > 0.05f ? Mathf.Sign(dx) : facingSign;
@@ -1827,7 +1907,7 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
         return bodyCollider != null ? bodyCollider.bounds : new Bounds(transform.position, Vector3.one);
     }
 
-    private void FacePlayer()
+    protected void FacePlayer()
     {
         PlayerController player = FindPlayer();
         if (player != null)
@@ -1869,7 +1949,7 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
         SoundManager.Instance?.PlayCountJump();
     }
 
-    private void TeleportTo(Vector2 position)
+    protected void TeleportTo(Vector2 position)
     {
         if (rb != null)
         {
@@ -1892,15 +1972,15 @@ public class BossCount : Boss, CountSignatureTimeModule.IHost
             animatorParams.Add(param.nameHash);
     }
 
-    private bool HasParam(string paramName) => animatorParams.Contains(Animator.StringToHash(paramName));
+    protected bool HasParam(string paramName) => animatorParams.Contains(Animator.StringToHash(paramName));
 
-    private void SetAnimBool(string paramName, bool value)
+    protected void SetAnimBool(string paramName, bool value)
     {
         if (HasParam(paramName))
             animator.SetBool(paramName, value);
     }
 
-    private void SetAnimFloat(string paramName, float value)
+    protected void SetAnimFloat(string paramName, float value)
     {
         if (HasParam(paramName))
             animator.SetFloat(paramName, value);

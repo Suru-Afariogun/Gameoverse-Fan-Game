@@ -11,7 +11,9 @@ public abstract class CollectablePickupBase : MonoBehaviour
         Rising,
         Descending,
         Hover,
-        Held
+        Held,
+        DriftOut,
+        BobHover
     }
 
     [Header("Burst")]
@@ -37,6 +39,14 @@ public abstract class CollectablePickupBase : MonoBehaviour
     private float collectableAfterTime;
     private BurstPhase burstPhase = BurstPhase.Rising;
     private bool magnetized;
+    private Vector3 driftTarget;
+    private float driftSpeed = 2f;
+    private float bobAmplitude = 1f;
+    private float bobOscillationSpeed = 1.6f;
+    private float bobTimer;
+    private float bobCenterY;
+    private bool deadlineSeekActive;
+    private float deadlineSeekSpeed;
 
     /// <summary>False for pickups that stay in the world after collection (held items).</summary>
     protected virtual bool DestroyOnCollect => true;
@@ -137,6 +147,43 @@ public abstract class CollectablePickupBase : MonoBehaviour
         EnableCollection();
     }
 
+    /// <summary>Stay at the spawn point and become collectable.</summary>
+    public void PlaceFloatingInPlace()
+    {
+        launchedFromSpawn = true;
+        burstActive = false;
+        burstPhase = BurstPhase.Hover;
+        hoverY = transform.position.y;
+        velocity = Vector2.zero;
+        EnableCollection();
+    }
+
+    /// <summary>
+    /// Deadline clocks: slowly drift <paramref name="driftDistance"/> spaces away, then bob up/down
+    /// by <paramref name="bobAmplitude"/> while floating in place.
+    /// </summary>
+    public void PlaceFloatingDriftThenBob(
+        Vector2 direction,
+        float driftDistance = 2f,
+        float bobAmplitude = 1f,
+        float driftSpeed = 2f,
+        float bobSpeed = 1.6f)
+    {
+        launchedFromSpawn = true;
+        burstActive = false;
+        magnetized = false;
+        velocity = Vector2.zero;
+
+        Vector2 dir = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector2.up;
+        this.driftSpeed = Mathf.Max(0.1f, driftSpeed);
+        this.bobAmplitude = Mathf.Max(0.05f, bobAmplitude);
+        bobOscillationSpeed = Mathf.Max(0.1f, bobSpeed);
+        driftTarget = transform.position + (Vector3)(dir * Mathf.Max(0.1f, driftDistance));
+        bobTimer = 0f;
+        burstPhase = BurstPhase.DriftOut;
+        EnableCollection();
+    }
+
     private void EnableCollection()
     {
         readyToCollect = true;
@@ -164,8 +211,40 @@ public abstract class CollectablePickupBase : MonoBehaviour
 
         if (burstActive)
             TickBurst(Time.deltaTime);
+        else if (burstPhase == BurstPhase.DriftOut)
+            TickDriftOut(Time.deltaTime);
+        else if (burstPhase == BurstPhase.BobHover)
+            TickBobHover(Time.deltaTime);
         else if (burstPhase == BurstPhase.Hover)
             MaintainHover();
+    }
+
+    private void TickDriftOut(float dt)
+    {
+        transform.position = Vector3.MoveTowards(transform.position, driftTarget, driftSpeed * dt);
+        if ((transform.position - driftTarget).sqrMagnitude > 0.0001f)
+            return;
+
+        transform.position = driftTarget;
+        bobCenterY = transform.position.y;
+        bobTimer = Random.Range(0f, Mathf.PI * 2f);
+        burstPhase = BurstPhase.BobHover;
+    }
+
+    private void TickBobHover(float dt)
+    {
+        bobTimer += dt * bobOscillationSpeed;
+        float y = bobCenterY + Mathf.Sin(bobTimer) * bobAmplitude;
+        transform.position = new Vector3(transform.position.x, y, transform.position.z);
+    }
+
+    /// <summary>
+    /// Deadline Hyper Ability: clocks slowly float toward Deadline for auto-collection (any range).
+    /// </summary>
+    public void EnableDeadlineSeek(float speed)
+    {
+        deadlineSeekActive = speed > 0.01f;
+        deadlineSeekSpeed = Mathf.Max(0f, speed);
     }
 
     /// <summary>Magnet Gear: once the player is in range, fly straight to them until collected.</summary>
@@ -185,6 +264,18 @@ public abstract class CollectablePickupBase : MonoBehaviour
             ? player.BodyCollider.bounds.center
             : player.transform.position;
         target.z = transform.position.z;
+
+        // Deadline Hyper seek (heal/recharge clocks) — always pull when active, slower than Magnet Gear.
+        if (deadlineSeekActive &&
+            player is DeadlinePlayerController &&
+            string.Equals(player.CharacterId, DeadlinePlayerController.DeadlineCharacterId, System.StringComparison.OrdinalIgnoreCase))
+        {
+            burstActive = false;
+            velocity = Vector2.zero;
+            magnetized = true;
+            transform.position = Vector3.MoveTowards(transform.position, target, deadlineSeekSpeed * dt);
+            return true;
+        }
 
         if (!magnetized)
         {

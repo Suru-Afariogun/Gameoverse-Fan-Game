@@ -422,6 +422,11 @@ public class Projectile : MonoBehaviour
         speed = Mathf.Max(0f, moveSpeed);
     }
 
+    public void SetDamage(float dmg)
+    {
+        damage = Mathf.Max(0f, dmg);
+    }
+
     public Vector2 Direction => direction;
 
     /// <summary>Force shot type (e.g. Medium so Tanker volts stop on walls).</summary>
@@ -717,8 +722,10 @@ public class Projectile : MonoBehaviour
         if (damageable.IsDead)
             return;
 
-        // Count's Time Clones fight on the player's side.
+        // Count's Time Clones / Deadline's Future Clones fight on the player's side.
         if (damageable is CountTimeClone && IsPlayerOwned(owner))
+            return;
+        if (damageable is DeadlineFutureClone && IsPlayerOwned(owner))
             return;
 
         // Boss-owned shots pass through the crystal (no damage, no despawn).
@@ -766,7 +773,7 @@ public class Projectile : MonoBehaviour
                 damageable.TakeDamage(applied);
         }
 
-        TrySpawnCountHealthClock(other);
+        TrySpawnOwnerHitExtras(other);
 
         SoundManager.Instance?.PlayProjectileHit(shotType);
 
@@ -880,10 +887,17 @@ public class Projectile : MonoBehaviour
         return damageable != null;
     }
 
-    private void TrySpawnCountHealthClock(Collider2D other)
+    private void TrySpawnOwnerHitExtras(Collider2D other)
     {
         if (owner == null || other == null)
             return;
+
+        DeadlinePlayerController deadline = owner.GetComponent<DeadlinePlayerController>();
+        if (deadline != null)
+        {
+            deadline.NotifyDeadlineShotImpact(this, other);
+            return;
+        }
 
         CountPlayerController count = owner.GetComponent<CountPlayerController>();
         if (count == null)
@@ -894,6 +908,12 @@ public class Projectile : MonoBehaviour
 
         Vector3 spawnCenter = other.bounds.center;
         count.TrySpawnHealthClockFromEnemyHit(spawnCenter);
+    }
+
+    /// <summary>Cap travel distance in world units (Deadline shots fade after 20 spaces).</summary>
+    public void SetMaxTravelDistance(float worldUnits)
+    {
+        maxTravelDistance = Mathf.Max(0.05f, worldUnits);
     }
 
     /// <summary>True for walls/ceilings (pierceable). False for floors (always solid).</summary>
@@ -946,6 +966,10 @@ public class Projectile : MonoBehaviour
         if (other.GetComponentInParent<ICommonEnemy>() != null)
             return false;
         if (other.GetComponentInParent<Boss>() != null)
+            return false;
+
+        // Rocket ship is scenery/vehicle — shots phase through it.
+        if (other.GetComponentInParent<KitRocketShip>() != null)
             return false;
 
         if (((1 << other.gameObject.layer) & environmentLayers.value) != 0)

@@ -16,11 +16,14 @@ public static class KaboodleTutorialContent
         bool harlie = IsCharacterSelected("Harlie");
         bool hex = IsCharacterSelected("Hex");
         bool count = IsCharacterSelected("Count");
+        bool deadline = IsCharacterSelected("Deadline");
         bool bass = IsCharacterSelected("Bass");
         AttackStyleId style = PlayerAttackStyle.Selected;
         var parts = new List<string>(7);
 
-        if (count)
+        if (deadline)
+            BuildDeadlineParts(parts, style);
+        else if (count)
             BuildCountParts(parts, style);
         else if (hex)
             BuildHexParts(parts, style);
@@ -140,6 +143,71 @@ public static class KaboodleTutorialContent
                     $"Current attack style: <b>{styleName}</b>.\n\n" +
                     $"This is Count's default buster. {Capitalize(b.FormatPress("Attack"))} for Short Hand shots, or {b.FormatHold("Attack")} to charge Long Hand shots.\n\n" +
                     "Visit Kaboodle's Item Shop to equip <b>Spread Shot</b> or <b>Machine Gun</b> when you want a different play style.";
+        }
+    }
+
+    private static void BuildDeadlineParts(List<string> parts, AttackStyleId style)
+    {
+        ButtonSpriteManager b = Btn;
+
+        parts.Add(
+            "You are playing as <b>Deadline</b> — Count's evil opposite.\n\n" +
+            $"To move, {b.FormatMoveHorizontal()}.\n\n" +
+            $"To jump, {b.FormatPress("Jump")}. In the air, press it again to double jump.\n\n" +
+            $"To dash, {b.FormatPress("Dash")}. Deadline can air-dash and dash-jump like Count, but there is <b>no Rewind</b> — once time slips, it stays slipped.\n\n" +
+            $"To peek the camera up or down, hold {b.FormatAimUp()} or {b.FormatAimDown()} alone (no other buttons).");
+
+        parts.Add(
+            "Deadline fights with yellow clock-hand shots — the dark mirror of Count's buster.\n\n" +
+            $"To fire a Short Hand shot, {b.FormatPress("Attack")}.\n\n" +
+            $"To charge, {b.FormatHold("Attack")}, then release for a Long Hand shot. Once the charge aura appears you can move while charging.\n\n" +
+            $"To aim diagonally upward while shooting, {b.FormatAimUp()}.");
+
+        parts.Add(
+            "Deadline's special is <b>Deterioration Acceleration</b> (DA) — the opposite of Count's Hyper Speed.\n\n" +
+            $"While aiming down, {b.FormatPress("Attack")} to toggle DA on or off.\n\n" +
+            "While DA is active, time races: enemies and hazards speed up, Deadline gets faster too, and short-range pressure drains health. Your Short / Long Hands pierce and can explode, and Attack fires <b>Accelerator</b> shots that ramp in power the longer DA stays on.\n\n" +
+            "Cancel the same way (aim down + Attack) to save remaining DA time.");
+
+        parts.Add(
+            "DA lasts up to about <b>10 seconds</b> from a shared pool. Turn it off early to keep what is left.\n\n" +
+            "Burn the pool dry and Deadline is forced out of DA until it recovers — treat it like a ticking fuse, not a free forever buff.\n\n" +
+            $"Combat tip: open with DA, pressure with Accelerators, then finish with {b.FormatButton("Attack")} on the {b.DeviceDisplayName()}.\n\n" +
+            $"To open your inventory, {b.FormatOpenInventory()}. To open the system pause menu, {b.FormatOpenSystemPause()}.");
+
+        parts.Add(
+            "Deadline's Scratch upgrades:\n\n" +
+            "• <b>Ariel Action</b>: each level adds air jumps / air dashes. Higher levels keep Deadline parkouring like a Future Clone.\n\n" +
+            "• <b>Hyper Ability</b> (full health): each level strengthens Accelerator damage while DA is active. There is still <b>no Rewind</b> — Deadline never turns the clock back.\n\n" +
+            "• <b>Attack Style</b> level 1+ (Spread Shot or Machine Gun): each dash can leave a <b>Future Clone</b> that hunts and shoots. Hold Dash briefly to recall every clone beside you.\n\n" +
+            "• <b>Attack Style</b> high levels: clones get tougher / stronger. On a killing blow, Deadline can transfer into a living Future Clone and keep fighting until none remain.");
+
+        parts.Add(BuildDeadlineStylePart(style));
+    }
+
+    private static string BuildDeadlineStylePart(AttackStyleId style)
+    {
+        ButtonSpriteManager b = Btn;
+        string styleName = PlayerAttackStyle.DisplayName(style);
+        switch (style)
+        {
+            case AttackStyleId.SpreadShot:
+                return
+                    $"Current attack style: <b>{styleName}</b>.\n\n" +
+                    $"Deadline's shots fan into a multi-way spread, and dash afterimages can become Future Clones. Press or hold {b.FormatButton("Attack")} on the {b.DeviceDisplayName()} to cover a wider area.\n\n" +
+                    $"Buy or change styles at Kaboodle's Item Shop. Hover an equipped style and {b.FormatPress("Attack")} there to return to <b>Normal</b>.";
+
+            case AttackStyleId.MachineGun:
+                return
+                    $"Current attack style: <b>{styleName}</b>.\n\n" +
+                    $"Hold {b.FormatButton("Attack")} on the {b.DeviceDisplayName()} to spray rapid Short Hand / Accelerator shots. While you are not holding fire, Deadline auto-charges — tap briefly to release a Long Hand, then hold again to keep the stream going. Future Clones still spawn from dashes.\n\n" +
+                    $"Buy or change styles at Kaboodle's Item Shop. Hover an equipped style and {b.FormatPress("Attack")} there to return to <b>Normal</b>.";
+
+            default:
+                return
+                    $"Current attack style: <b>{styleName}</b>.\n\n" +
+                    $"This is Deadline's default buster. {Capitalize(b.FormatPress("Attack"))} for Short Hand shots, or {b.FormatHold("Attack")} to charge Long Hand shots. Aim down + Attack for Deterioration Acceleration.\n\n" +
+                    "Visit Kaboodle's Item Shop to equip <b>Spread Shot</b> or <b>Machine Gun</b> when you want Future Clones and a different fire pattern.";
         }
     }
 

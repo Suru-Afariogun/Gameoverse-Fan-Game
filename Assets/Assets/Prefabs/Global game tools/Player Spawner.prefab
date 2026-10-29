@@ -58,6 +58,8 @@ MonoBehaviour:
     prefab: {fileID: 1425409008181505920, guid: fa4d2f5486ad49789863b7658260dadf, type: 3}
   - characterId: Bass
     prefab: {fileID: 3672412826225818953, guid: 9f3c2e1a0b8d4c6e9a7f5d4c3b2a1908, type: 3}
+  - characterId: Deadline
+    prefab: {fileID: 3672412826225818953, guid: e9c4b7a12d8f4e6a9b0c1d2e3f4a5b6c, type: 3}
   defaultCharacterId: Kit
   spawnPoint: {fileID: 3327100007589403974}
   spawnOnStart: 1

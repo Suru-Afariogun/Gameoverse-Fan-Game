@@ -45,7 +45,18 @@ public class Background : MonoBehaviour
     {
         ResolveCamera();
         EnsureStageBackdropFollowsY();
+        // City setup may DestroyImmediate nested Backgrounds after our Awake — re-check.
+        RefreshDriveState();
         CacheStartPositions();
+    }
+
+    /// <summary>
+    /// Re-evaluates whether this component should move its transform.
+    /// Nested Backgrounds that only exist until end-of-frame Destroy() can falsely disable drive.
+    /// </summary>
+    public void RefreshDriveState()
+    {
+        drivesOwnTransform = !HasBackgroundOnDescendant();
     }
 
     /// <summary>
@@ -211,7 +222,7 @@ public class Background : MonoBehaviour
         followX = followHorizontal;
         followY = followVertical;
         parallaxFactor = CalculateParallaxFactor(layerOrder);
-        drivesOwnTransform = !HasBackgroundOnDescendant();
+        RefreshDriveState();
         hasCachedStartPositions = false;
     }
 

@@ -14,26 +14,26 @@ public class CountPlayerController : PlayerController
     }
 
     [Header("Count - Projectiles")]
-    [SerializeField] private Projectile shortHandProjectilePrefab;
-    [SerializeField] private Projectile longHandProjectilePrefab;
-    [SerializeField] private float shootCooldown = 0.12f;
+    [SerializeField] protected Projectile shortHandProjectilePrefab;
+    [SerializeField] protected Projectile longHandProjectilePrefab;
+    [SerializeField] protected float shootCooldown = 0.12f;
     [Tooltip("Short Hand buster muzzle flash.")]
-    [SerializeField] private GameVisualEffect busterBlastSmallPrefab;
+    [SerializeField] protected GameVisualEffect busterBlastSmallPrefab;
     [Tooltip("Long Hand buster muzzle flash.")]
-    [SerializeField] private GameVisualEffect busterBlastMediumBigPrefab;
+    [SerializeField] protected GameVisualEffect busterBlastMediumBigPrefab;
 
     [Header("Count - Charge")]
     [SerializeField] private float fullChargeSeconds = 3f;
     [SerializeField] private float spreadFullChargeSeconds = 3.45f;
     [SerializeField] private float chargeMoveSpeedBonus = 5f;
     [SerializeField] private float auraDelayAfterShortShot = 0.2f;
-    [SerializeField] private CountChargeAuraVisual chargeAuraVisual;
+    [SerializeField] protected CountChargeAuraVisual chargeAuraVisual;
 
-    [Header("Count - Red Charge Hue")]
-    [SerializeField] private bool showChargeHue = true;
-    [SerializeField] private Color chargeAuraColor = new Color(1f, 0.35f, 0.35f, 1f);
-    [SerializeField] private Color chargeAuraStrongColor = new Color(1f, 0.15f, 0.15f, 1f);
-    [SerializeField] private Color chargeAuraFlickerColor = new Color(1f, 0.75f, 0.75f, 1f);
+    [Header("Count - Charge Hue")]
+    [SerializeField] protected bool showChargeHue = true;
+    [SerializeField] protected Color chargeAuraColor = new Color(1f, 0.35f, 0.35f, 1f);
+    [SerializeField] protected Color chargeAuraStrongColor = new Color(1f, 0.15f, 0.15f, 1f);
+    [SerializeField] protected Color chargeAuraFlickerColor = new Color(1f, 0.75f, 0.75f, 1f);
     [SerializeField] private float auraBaseScale = 1.05f;
     [SerializeField] private float auraPulseAmount = 0.05f;
     [SerializeField] private float auraPulseSpeed = 6f;
@@ -175,7 +175,7 @@ public class CountPlayerController : PlayerController
 
     private bool isCharging;
     private float chargeTimer;
-    private float shootCooldownTimer;
+    protected float shootCooldownTimer;
     private float auraAllowedAfterTime;
 
     private bool pendingShot;
@@ -226,16 +226,18 @@ public class CountPlayerController : PlayerController
     public override bool WeaponGearBoostsShots => true;
 
     private int AerialLevel => PlayerUpgrades.GetActiveLevel(this, UpgradeType.AerialAction);
-    private int HyperLevel => PlayerUpgrades.GetActiveLevel(this, UpgradeType.HyperAbility);
-    private int StyleLevel => PlayerUpgrades.GetActiveLevel(this, UpgradeType.AttackStyle);
+    protected int HyperLevel => PlayerUpgrades.GetActiveLevel(this, UpgradeType.HyperAbility);
+    protected int StyleLevel => PlayerUpgrades.GetActiveLevel(this, UpgradeType.AttackStyle);
     private int HyperBonusLevel => PlayerUpgrades.IsHyperActive(this) ? HyperLevel : 0;
     private float HyperSpeedPoolSeconds =>
         hyperSpeedMaxSeconds + HyperBonusLevel * Mathf.Max(0f, hyperSpeedSecondsPerLevel);
-    private bool RewindUnlocked => HyperLevel >= Mathf.Max(1, rewindMinHyperLevel);
+    /// <summary>Deadline overrides to disable Rewind entirely.</summary>
+    protected virtual bool CanUseRewind() => HyperLevel >= Mathf.Max(1, rewindMinHyperLevel);
     private float RewindSeconds =>
         rewindBaseSeconds + Mathf.Max(0, HyperLevel - rewindMinHyperLevel) * Mathf.Max(0f, rewindSecondsPerLevel);
-    private bool TimeClonesUnlocked =>
+    protected bool TimeClonesUnlocked =>
         StyleLevel >= Mathf.Max(1, timeCloneMinStyleLevel) && (UsesSpreadShotStyle() || UsesMachineGunStyle());
+    protected int TimeCloneMinStyleLevel => Mathf.Max(1, timeCloneMinStyleLevel);
     private int TimeCloneCap => Mathf.Max(1, timeCloneBaseCap + Mathf.Max(0, StyleLevel - timeCloneMinStyleLevel));
 
     protected override void Awake()
@@ -461,6 +463,12 @@ public class CountPlayerController : PlayerController
     protected override void OnDashEnded()
     {
         base.OnDashEnded();
+        OnStyleDashCloneOpportunity();
+    }
+
+    /// <summary>Count leaves a Time Clone; Deadline overrides with Future Clones.</summary>
+    protected virtual void OnStyleDashCloneOpportunity()
+    {
         TrySpawnTimeClone();
     }
 
@@ -526,7 +534,7 @@ public class CountPlayerController : PlayerController
 
     private void RecordRewindHistory()
     {
-        if (!RewindUnlocked || IsDead || spriteRenderer == null)
+        if (!CanUseRewind() || IsDead || spriteRenderer == null)
         {
             if (rewindHistory.Count > 0)
                 rewindHistory.Clear();
@@ -552,7 +560,7 @@ public class CountPlayerController : PlayerController
 
     private void TickRewindHold()
     {
-        if (!RewindUnlocked || IsDead || inputLocked || isStunned || IsRidingVehicle || Time.time < rewindReadyAt)
+        if (!CanUseRewind() || IsDead || inputLocked || isStunned || IsRidingVehicle || Time.time < rewindReadyAt)
         {
             rewindHoldTimer = 0f;
             return;
@@ -624,7 +632,7 @@ public class CountPlayerController : PlayerController
         }
     }
 
-    private void TeleportTo(Vector3 position)
+    protected void TeleportTo(Vector3 position)
     {
         transform.position = position;
         if (rb == null)
@@ -632,6 +640,25 @@ public class CountPlayerController : PlayerController
 
         rb.position = position;
         rb.linearVelocity = Vector2.zero;
+    }
+
+    /// <summary>Shared cleanup when transferring into a clone body (Last / Future Clone).</summary>
+    protected void ResetCombatStateForCloneTransfer()
+    {
+        EndHyperSpeed(force: true);
+        CancelAllDashState();
+        CancelPendingShot();
+        isCharging = false;
+        chargeTimer = 0f;
+        machineGunHolding = false;
+        spreadHolding = false;
+        SoundManager.Instance?.StopChargeLoop();
+        SetChargeAuraVisible(false, instant: true);
+        rewindHistory.Clear();
+        rewindHoldTimer = 0f;
+        floating = false;
+        floatTrailUntilLanded = false;
+        airDashesRemaining = Mathf.Min(airDashesRemaining, MaxAirDashesWithUpgrades);
     }
 
     private void FlashTimeTint()
@@ -714,8 +741,9 @@ public class CountPlayerController : PlayerController
     /// <summary>
     /// Attack Style max level: a lethal hit moves Count into his newest clone instead. The other clones vanish and he
     /// keeps fighting with base abilities only (no upgrades) until he goes down again.
+    /// Deadline overrides to transfer into Future Clones one at a time until none remain.
     /// </summary>
-    private bool TryBecomeLastClone()
+    protected virtual bool TryBecomeLastClone()
     {
         if (playingAsLastClone || StyleLevel < Mathf.Max(1, lastCloneStyleLevel))
             return false;
@@ -730,22 +758,8 @@ public class CountPlayerController : PlayerController
         // Before CancelAllDashState: ending a dash would otherwise leave a fresh clone behind.
         playingAsLastClone = true;
         UpgradesSuppressed = true;
-
-        EndHyperSpeed(force: true);
-        CancelAllDashState();
-        CancelPendingShot();
-        isCharging = false;
-        chargeTimer = 0f;
-        machineGunHolding = false;
-        spreadHolding = false;
-        SoundManager.Instance?.StopChargeLoop();
-        SetChargeAuraVisible(false, instant: true);
+        ResetCombatStateForCloneTransfer();
         TeleportTo(position);
-
-        rewindHistory.Clear();
-        floating = false;
-        floatTrailUntilLanded = false;
-        airDashesRemaining = Mathf.Min(airDashesRemaining, MaxAirDashesWithUpgrades);
 
         base.SetHealth(Mathf.Max(1, Mathf.Min(lastCloneHealth, maxHealth)));
         invincibilityTimer = Mathf.Max(invincibilityTimer, hitInvincibilityDuration);
@@ -958,8 +972,11 @@ public class CountPlayerController : PlayerController
         base.OnHitStunStarted();
     }
 
-    private bool UsesMachineGunStyle() => PlayerAttackStyle.Is(AttackStyleId.MachineGun);
-    private bool UsesSpreadShotStyle() => PlayerAttackStyle.Is(AttackStyleId.SpreadShot);
+    // StyleLevel gate: Last / Future Clone bodies (UpgradesSuppressed) fall back to normal + charged only.
+    protected bool UsesMachineGunStyle() =>
+        StyleLevel >= 1 && PlayerAttackStyle.Is(AttackStyleId.MachineGun);
+    protected bool UsesSpreadShotStyle() =>
+        StyleLevel >= 1 && PlayerAttackStyle.Is(AttackStyleId.SpreadShot);
 
     private float GetActiveFullChargeSeconds()
     {
@@ -1060,7 +1077,7 @@ public class CountPlayerController : PlayerController
             SetChargeAuraVisible(false);
     }
 
-    private void BeginSpreadFire()
+    protected void BeginSpreadFire()
     {
         spreadHolding = true;
         bool longHand = HyperMaxChargeReady ||
@@ -1106,7 +1123,7 @@ public class CountPlayerController : PlayerController
             SetChargeAuraVisible(false);
     }
 
-    private void BeginMachineGunFire()
+    protected void BeginMachineGunFire()
     {
         machineGunHolding = true;
         machineGunPelletIndex = 0;
@@ -1120,11 +1137,17 @@ public class CountPlayerController : PlayerController
         QueueShot(longHand, replacePending: true);
     }
 
-    private void EndMachineGunFire()
+    protected void EndMachineGunFire()
     {
         machineGunHolding = false;
         machineGunFirstShotQueued = false;
         runShootAnimEngaged = false;
+    }
+
+    protected void ClearAttackStyleHold()
+    {
+        EndMachineGunFire();
+        spreadHolding = false;
     }
 
     private void FireMachineGunPellet()
@@ -1280,7 +1303,7 @@ public class CountPlayerController : PlayerController
         SpawnProjectile(aim, longHand, trackMachineGun);
     }
 
-    private void SpawnProjectile(Vector2 direction, bool longHand, bool trackMachineGun, float muzzleOffset = 0f)
+    protected virtual void SpawnProjectile(Vector2 direction, bool longHand, bool trackMachineGun, float muzzleOffset = 0f)
     {
         if (!CanSpawnFromFirePoint())
             return;
@@ -1301,16 +1324,9 @@ public class CountPlayerController : PlayerController
         float damage = prefab.Damage + HyperBonusLevel * Mathf.Max(0, hyperDamagePerLevel);
         shot.Launch(dir, prefab.Speed, damage, transform);
         shot.BeginSpawnBehindOwnerUntilClear(spriteRenderer, EffectSortingGroup, bodyCollider, firePoint, facingSign);
+        OnProjectileSpawned(shot, longHand);
 
-        GameVisualEffect blastPrefab = VisualEffects.ResolveBusterBlastPrefab(
-            longHand ? ProjectileShotType.Big : ProjectileShotType.Small,
-            busterBlastSmallPrefab,
-            busterBlastMediumBigPrefab);
-        if (blastPrefab != null)
-        {
-            Transform muzzle = firePoint != null ? firePoint : transform;
-            VisualEffects.SpawnBusterBlast(blastPrefab, muzzle, shot);
-        }
+        SpawnBusterBlastForShot(shot, longHand ? ProjectileShotType.Big : ProjectileShotType.Small);
 
         if (trackMachineGun)
             liveMachineGunShots.Add(shot);
@@ -1323,6 +1339,30 @@ public class CountPlayerController : PlayerController
                 SpawnPos = spawnPos
             });
         }
+    }
+
+    /// <summary>Hook for Deadline pierce / explode setup after a Count-style shot is spawned.</summary>
+    protected virtual void OnProjectileSpawned(Projectile shot, bool longHand) { }
+
+    /// <summary>Deadline overrides for yellow muzzle blasts.</summary>
+    protected virtual void GetBusterBlastTint(out Color? colorOverride, out bool replaceTint)
+    {
+        colorOverride = null;
+        replaceTint = false;
+    }
+
+    protected void SpawnBusterBlastForShot(Projectile shot, ProjectileShotType shotType)
+    {
+        GameVisualEffect blastPrefab = VisualEffects.ResolveBusterBlastPrefab(
+            shotType,
+            busterBlastSmallPrefab,
+            busterBlastMediumBigPrefab);
+        if (blastPrefab == null)
+            return;
+
+        Transform muzzle = firePoint != null ? firePoint : transform;
+        GetBusterBlastTint(out Color? colorOverride, out bool replaceTint);
+        VisualEffects.SpawnBusterBlast(blastPrefab, muzzle, shot, colorOverride, replaceTint);
     }
 
     private static Vector2 RotateAim(Vector2 direction, float degrees)
@@ -1428,7 +1468,7 @@ public class CountPlayerController : PlayerController
         lastHyperPool = pool;
     }
 
-    private bool CanActivateHyperSpeed()
+    protected virtual bool CanActivateHyperSpeed()
     {
         return isGrounded
             && !IsDashJumping
@@ -1632,13 +1672,16 @@ public class CountPlayerController : PlayerController
         return GetCurrentChargeSeconds() >= GetActiveFullChargeSeconds() - 0.01f;
     }
 
-    public void TrySpawnHealthClockFromEnemyHit(Vector3 enemyCenter)
+    public virtual void TrySpawnHealthClockFromEnemyHit(Vector3 enemyCenter)
     {
         if (healthUpClockPrefab == null)
             return;
 
         CollectableHealthUpClock.SpawnFromEnemyHit(healthUpClockPrefab, enemyCenter);
     }
+
+    /// <summary>Deadline override: short/long hand explode / pierce clocks. Count no-ops.</summary>
+    public virtual void NotifyDeadlineShotImpact(Projectile shot, Collider2D hitCollider) { }
 
     private bool IsInShootAnimation()
     {
@@ -1696,7 +1739,7 @@ public class CountPlayerController : PlayerController
         return false;
     }
 
-    private void PlayShootAnimatorTriggers()
+    protected void PlayShootAnimatorTriggers()
     {
         if (animator == null)
             return;
@@ -1807,14 +1850,17 @@ public class CountPlayerController : PlayerController
         if (firePoint == null)
             return;
 
-        bool wantsShot = pendingShot || isShooting || machineGunHolding;
+        bool wantsShot = pendingShot || isShooting || machineGunHolding || ExtraWantsFirePoint();
         bool shouldEnable = wantsShot && IsInShootAnimation();
 
         if (firePoint.gameObject.activeSelf != shouldEnable)
             firePoint.gameObject.SetActive(shouldEnable);
     }
 
-    private bool CanSpawnFromFirePoint()
+    /// <summary>Deadline accelerator (and similar) can keep the FirePoint gate open while a shot is queued.</summary>
+    protected virtual bool ExtraWantsFirePoint() => false;
+
+    protected bool CanSpawnFromFirePoint()
     {
         if (firePoint == null || !firePoint.gameObject.activeSelf)
             return false;

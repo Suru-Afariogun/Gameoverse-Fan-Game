@@ -262,6 +262,18 @@ MonoBehaviour:
     damagedLifeBarSprite: {fileID: -7849933211252913511, guid: 3713ed55690a41d409aa659e6ddefec3, type: 3}
     positionOffsetDownSpaces: 2
     sizeMultiplier: 1
+  - characterId: Deadline
+    lifeBarSprites:
+    - {fileID: 7084086872303138854, guid: e2e77374e657d234e9c832a79f3b085b, type: 3}
+    - {fileID: -7674351199562464151, guid: e2e77374e657d234e9c832a79f3b085b, type: 3}
+    - {fileID: 1242340062777494839, guid: e2e77374e657d234e9c832a79f3b085b, type: 3}
+    - {fileID: -2767185301508006299, guid: e2e77374e657d234e9c832a79f3b085b, type: 3}
+    - {fileID: -4717231151014061536, guid: e2e77374e657d234e9c832a79f3b085b, type: 3}
+    - {fileID: -8284930414581149582, guid: e2e77374e657d234e9c832a79f3b085b, type: 3}
+    - {fileID: 2760594273252962020, guid: e2e77374e657d234e9c832a79f3b085b, type: 3}
+    damagedLifeBarSprite: {fileID: 7084086872303138854, guid: e2e77374e657d234e9c832a79f3b085b, type: 3}
+    positionOffsetDownSpaces: 2
+    sizeMultiplier: 1
   - characterId: Hex
     lifeBarSprites:
     - {fileID: 1332609407, guid: c193b6668123c304ba1df0db8f0322a9, type: 3}

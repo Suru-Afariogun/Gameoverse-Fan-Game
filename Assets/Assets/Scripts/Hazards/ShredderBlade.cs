@@ -167,6 +167,22 @@ public class ShredderBlade : MonoBehaviour
             return;
         }
 
+        DeadlineFutureClone futureClone = other.GetComponent<DeadlineFutureClone>();
+        if (futureClone == null)
+            futureClone = other.GetComponentInParent<DeadlineFutureClone>();
+
+        if (futureClone != null && !futureClone.IsDead)
+        {
+            if (!CanDamageTarget(futureClone.GetInstanceID()))
+                return;
+
+            int before = futureClone.Health;
+            futureClone.TakeDamage(contactDamage);
+            if (before > futureClone.Health)
+                MarkTargetDamaged(futureClone.GetInstanceID());
+            return;
+        }
+
         CrankyClanky enemy = other.GetComponent<CrankyClanky>();
         if (enemy == null)
             enemy = other.GetComponentInParent<CrankyClanky>();

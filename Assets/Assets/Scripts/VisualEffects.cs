@@ -28,6 +28,18 @@ public static class VisualEffects
     /// </summary>
     public static void SpawnBusterBlast(GameVisualEffect prefab, Transform firePoint, Projectile projectile)
     {
+        SpawnBusterBlast(prefab, firePoint, projectile, colorOverride: null, replaceTint: false);
+    }
+
+    /// <param name="colorOverride">When set, used instead of the prefab BlastColor (e.g. Deadline yellow).</param>
+    /// <param name="replaceTint">Replace sprite RGB instead of multiplying (needed for yellow over red blast art).</param>
+    public static void SpawnBusterBlast(
+        GameVisualEffect prefab,
+        Transform firePoint,
+        Projectile projectile,
+        Color? colorOverride,
+        bool replaceTint)
+    {
         if (prefab == null || firePoint == null)
             return;
 
@@ -64,14 +76,17 @@ public static class VisualEffects
 
         ActiveBusterBlasts.Add(driver);
 
+        Color tint = colorOverride ?? instance.BlastColor;
+        bool tintSprites = colorOverride.HasValue || instance.TintBlastSprites;
         driver.Play(
             projectile,
             instance.MaxTravelDistance,
             instance.MaxLifetime,
             instance.MaxEndScale,
-            instance.BlastColor,
-            instance.TintBlastSprites,
-            startLocalScale);
+            tint,
+            tintSprites,
+            startLocalScale,
+            replaceTint);
     }
 
     private static void CapActiveBusterBlasts()
@@ -1038,6 +1053,8 @@ public class BusterBlastEffect : MonoBehaviour
     private Color[] baseColors;
     private bool running;
 
+    private bool replaceTintRgb;
+
     public void Play(
         Projectile linkedProjectile,
         float travelLimit,
@@ -1045,7 +1062,8 @@ public class BusterBlastEffect : MonoBehaviour
         float endScale,
         Color tint,
         bool tintSprites,
-        Vector3 startingLocalScale)
+        Vector3 startingLocalScale,
+        bool replaceTint = false)
     {
         projectile = linkedProjectile;
         projectileSpawnPos = linkedProjectile != null
@@ -1057,6 +1075,7 @@ public class BusterBlastEffect : MonoBehaviour
         baseLocalScale = startingLocalScale;
         blastTint = tint;
         applyTint = tintSprites;
+        replaceTintRgb = replaceTint;
         age = 0f;
         running = true;
 
@@ -1076,15 +1095,45 @@ public class BusterBlastEffect : MonoBehaviour
             Color c = renderers[i].color;
             if (applyTint)
             {
-                c.r *= blastTint.r;
-                c.g *= blastTint.g;
-                c.b *= blastTint.b;
-                c.a *= blastTint.a;
+                if (replaceTintRgb)
+                {
+                    c.r = blastTint.r;
+                    c.g = blastTint.g;
+                    c.b = blastTint.b;
+                    c.a *= blastTint.a;
+                    ApplySolidTintMaterial(renderers[i]);
+                }
+                else
+                {
+                    c.r *= blastTint.r;
+                    c.g *= blastTint.g;
+                    c.b *= blastTint.b;
+                    c.a *= blastTint.a;
+                }
             }
 
             baseColors[i] = c;
             renderers[i].color = c;
         }
+    }
+
+    private static Material sharedSolidTintMaterial;
+
+    private static void ApplySolidTintMaterial(SpriteRenderer renderer)
+    {
+        if (renderer == null)
+            return;
+
+        if (sharedSolidTintMaterial == null)
+        {
+            Shader solid = Shader.Find("Gameoverse/SpriteSolidColor");
+            if (solid == null)
+                return;
+            sharedSolidTintMaterial = new Material(solid);
+            sharedSolidTintMaterial.hideFlags = HideFlags.HideAndDontSave;
+        }
+
+        renderer.sharedMaterial = sharedSolidTintMaterial;
     }
 
     private void Update()

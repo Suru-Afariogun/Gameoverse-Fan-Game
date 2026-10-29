@@ -956,6 +956,27 @@ public class HarliePlayerController : PlayerController
             BeginAttack();
     }
 
+    protected override void TryBeginDash()
+    {
+        base.TryBeginDash();
+
+        // Spinning air slash locks facing for the spin; dash travel should still follow
+        // the player's horizontal input so mid-spin dashes don't fight the stick.
+        if (!isDashing || !isSpinningAirSlash)
+            return;
+
+        if (Mathf.Abs(moveInput.x) <= 0.01f)
+            return;
+
+        float inputDir = Mathf.Sign(moveInput.x);
+        float speed = Mathf.Abs(dashVelocityX);
+        if (speed < 0.01f)
+            speed = Mathf.Max(0.1f, dashSpeed);
+
+        dashDirSign = inputDir;
+        dashVelocityX = inputDir * speed;
+    }
+
     protected override void OnDashStarted()
     {
         // A held charge carries through the dash.

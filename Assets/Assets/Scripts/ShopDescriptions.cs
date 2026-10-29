@@ -43,6 +43,7 @@ public static class ShopDescriptions
         if (Is(characterId, "Hex")) return Hex(type);
         if (Is(characterId, "Harlie")) return Harlie(type);
         if (Is(characterId, "Count")) return Count(type);
+        if (Is(characterId, "Deadline")) return Deadline(type);
         if (Is(characterId, "Bass")) return Bass(type);
         return Generic(type);
     }
@@ -150,6 +151,23 @@ public static class ShopDescriptions
         }
     }
 
+    private static string Deadline(UpgradeType type)
+    {
+        switch (type)
+        {
+            case UpgradeType.AerialAction:
+                return "Each level: +1 air jump and +1 air dash.\n" +
+                       "Higher levels keep Deadline (and Future Clones) parkouring harder. No Rewind — ever.";
+            case UpgradeType.HyperAbility:
+                return "Full health: each level strengthens Accelerator shots while Deterioration Acceleration is active.\n" +
+                       "Deadline has no Rewind. Hyper Ability pushes DA pressure forward, never back.";
+            default:
+                return "Spread Shot or Machine Gun only. Level 1+: dashing can leave a Future Clone that hunts and shoots.\n" +
+                       "Hold <b>Dash</b> briefly to recall clones. Higher levels: tougher clones; on a killing blow you can " +
+                       "transfer into a living Future Clone until none remain.";
+        }
+    }
+
     private static string Generic(UpgradeType type)
     {
         switch (type)
@@ -209,9 +227,11 @@ public static class ShopDescriptions
     private static string WeaponGear(string characterId)
     {
         const string damage = "+1 damage at levels 1-2, +2 at 3-4, +3 at 5";
-        if (Is(characterId, "Kit") || Is(characterId, "Count") || Is(characterId, "Bass"))
+        if (Is(characterId, "Kit") || Is(characterId, "Count") || Is(characterId, "Deadline") ||
+            Is(characterId, "Bass"))
         {
             string shots = Is(characterId, "Count") ? "Short and Long Hand shots (Time Clones too)"
+                : Is(characterId, "Deadline") ? "Short Hand, Long Hand, and Accelerator shots (Future Clones too)"
                 : Is(characterId, "Bass") ? "Buster and Double Gear shots"
                 : "Buster shots";
             return shots + ": " + damage + ", and 10% faster, farther shots each level.\n" +

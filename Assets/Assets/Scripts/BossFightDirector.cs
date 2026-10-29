@@ -159,8 +159,8 @@ public class BossFightDirector : MonoBehaviour
                 warning = WarningText.FindInScene(includeInactive: true);
         }
 
-        // Same-character Boss Select: reuse Copy Bot banter before unlock (handy for testing too).
-        yield return PlayMirrorIntroDialogueIfNeeded();
+        // Player × boss intro cutscene (mirrors reuse Copy Bot banter inside BossIntroDialogue).
+        yield return PlayBossIntroDialogueIfNeeded();
 
         // WarningText unlocks on finish; keep a clean release for anything spawned late.
         IntroPending = false;
@@ -170,35 +170,59 @@ public class BossFightDirector : MonoBehaviour
             CameraFollow.Instance.SetFollowEnabled(true);
     }
 
-    private IEnumerator PlayMirrorIntroDialogueIfNeeded()
+    private IEnumerator PlayBossIntroDialogueIfNeeded()
     {
         PlayerController player = PlayerController.ResolveActive();
         string playerId = player != null ? player.CharacterId : PlayerSpawner.SelectedCharacterId;
         if (string.IsNullOrWhiteSpace(playerId))
             yield break;
 
-        Boss mirrorBoss = FindLivingMirrorBoss(playerId);
-        if (mirrorBoss == null)
+        Boss boss = FindPreferredIntroBoss(playerId);
+        if (boss == null)
             yield break;
 
         ApplyIntroLock();
-        yield return CopyBotIntroDialogue.PlayForActivePlayer(mirrorBoss);
+        yield return BossIntroDialogue.PlayForActivePlayer(boss);
         ApplyIntroLock();
     }
 
-    private static Boss FindLivingMirrorBoss(string playerCharacterId)
+    /// <summary>
+    /// Prefer the Kaboodle/rival-selected boss when present; otherwise any living non-decoy boss.
+    /// </summary>
+    private static Boss FindPreferredIntroBoss(string playerCharacterId)
     {
         Boss[] bosses = FindObjectsByType<Boss>(FindObjectsSortMode.None);
+        Boss selectedMatch = null;
+        Boss anyLiving = null;
+        string selectedId = BossEncounter.SelectedBossId;
+
         for (int i = 0; i < bosses.Length; i++)
         {
             Boss boss = bosses[i];
             if (boss == null || boss.IsDead || boss.IsCopyBotDecoy)
                 continue;
-            if (BossEncounter.MatchesBoss(boss, playerCharacterId))
+
+            if (anyLiving == null)
+                anyLiving = boss;
+
+            if (!string.IsNullOrWhiteSpace(selectedId) && BossEncounter.MatchesBoss(boss, selectedId))
+                selectedMatch = boss;
+        }
+
+        if (selectedMatch != null)
+            return selectedMatch;
+
+        // Rival / forced fights may not keep SelectedBossId in sync — prefer a non-mirror if possible.
+        for (int i = 0; i < bosses.Length; i++)
+        {
+            Boss boss = bosses[i];
+            if (boss == null || boss.IsDead || boss.IsCopyBotDecoy)
+                continue;
+            if (!BossEncounter.MatchesBoss(boss, playerCharacterId))
                 return boss;
         }
 
-        return null;
+        return anyLiving;
     }
 
     private static void ApplyIntroLock()

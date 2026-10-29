@@ -5,13 +5,13 @@ using UnityEngine;
 /// <summary>
 /// Powered Up–style banter for Copy Bots and same-character Boss Select mirrors.
 /// Copy speakers use a trailing "?" and render in red in the DialogueBox.
-/// Before banter, the player walks to within a few spaces of the boss so both fit on camera.
+/// Before banter, the player walks up or away until they stand 8 spaces from the boss.
 /// </summary>
 public static class CopyBotIntroDialogue
 {
     /// <summary>World units per "space" (same convention as knockback / charge travel).</summary>
     private const float SpaceSize = 1f;
-    private const float ApproachStopSpaces = 5f;
+    private const float ApproachStopSpaces = 8f;
     private const float ApproachTimeoutSeconds = 10f;
     private const float ApproachArriveTolerance = 0.08f;
 
@@ -50,8 +50,8 @@ public static class CopyBotIntroDialogue
     }
 
     /// <summary>
-    /// Walks the player toward the nearest living boss until they are
-    /// <see cref="ApproachStopSpaces"/> spaces away (or already closer).
+    /// Walks the player toward or away from the nearest living boss until they are
+    /// exactly <see cref="ApproachStopSpaces"/> spaces away (staying on their current side).
     /// </summary>
     public static IEnumerator ApproachNearestBossForDialogue(PlayerController player, Boss preferredBoss = null)
     {
@@ -66,7 +66,14 @@ public static class CopyBotIntroDialogue
 
         float stopDistance = ApproachStopSpaces * SpaceSize;
         float dx = boss.transform.position.x - player.transform.position.x;
-        if (Mathf.Abs(dx) <= stopDistance + ApproachArriveTolerance)
+        float sideFromBoss = Mathf.Sign(dx);
+        if (Mathf.Abs(sideFromBoss) < 0.01f)
+            sideFromBoss = player.FacingSign >= 0f ? -1f : 1f;
+
+        // Stay on the player's current side of the boss, 8 spaces out.
+        float targetX = boss.transform.position.x - sideFromBoss * stopDistance;
+        float toTarget = targetX - player.transform.position.x;
+        if (Mathf.Abs(toTarget) <= ApproachArriveTolerance)
         {
             FaceToward(player, dx);
             yield break;
@@ -79,27 +86,21 @@ public static class CopyBotIntroDialogue
         player.SetInputLocked(true);
         player.SetScriptedInvulnerable(true);
 
-        float dir = Mathf.Sign(dx);
-        if (Mathf.Abs(dir) < 0.01f)
-            dir = player.FacingSign >= 0f ? 1f : -1f;
-
-        float targetX = boss.transform.position.x - dir * stopDistance;
+        float walkDir = Mathf.Sign(toTarget);
         float elapsed = 0f;
         float lastX = player.transform.position.x;
         float stuckTimer = 0f;
 
         while (player != null && !player.IsDead && boss != null && !boss.IsDead)
         {
-            float currentDx = boss.transform.position.x - player.transform.position.x;
-            if (Mathf.Abs(currentDx) <= stopDistance + ApproachArriveTolerance)
+            // Recalculate if the boss drifts; keep the same side the walk started on.
+            targetX = boss.transform.position.x - sideFromBoss * stopDistance;
+            toTarget = targetX - player.transform.position.x;
+            if (Mathf.Abs(toTarget) <= ApproachArriveTolerance || Mathf.Sign(toTarget) != walkDir)
                 break;
 
-            float toTarget = targetX - player.transform.position.x;
-            if (Mathf.Abs(toTarget) <= ApproachArriveTolerance || Mathf.Sign(toTarget) != dir)
-                break;
-
-            player.SetScriptedMove(dir);
-            FaceToward(player, dir);
+            player.SetScriptedMove(walkDir);
+            FaceToward(player, boss.transform.position.x - player.transform.position.x);
 
             elapsed += Time.deltaTime;
             if (elapsed >= ApproachTimeoutSeconds)
@@ -211,6 +212,8 @@ public static class CopyBotIntroDialogue
             return Hex();
         if (EqualsId(id, "Count"))
             return Count();
+        if (EqualsId(id, "Deadline"))
+            return Deadline();
         if (EqualsId(id, "Bass"))
             return Bass();
 
@@ -283,6 +286,20 @@ public static class CopyBotIntroDialogue
             Copy("Count", "Deadline's old news. I'm the appointment you can't reschedule."),
             Real("Count", "Then make it brief. I don't double-book disasters."),
             Copy("Count", "Gladly. Let's see whose clock runs out first.")
+        };
+    }
+
+    private static DialogueBox.Line[] Deadline()
+    {
+        // Voice: ~70% Metal Sonic (superior replacement), ~20% Enker (built to kill one target),
+        // ~10% Surge (brash contempt). Cooperative only until he can return and defeat Count cleanly.
+        return new[]
+        {
+            Copy("Deadline", "Finally. I was starting to wonder if the original even showed up."),
+            Real("Deadline", "Spare me the speech. You're a copy with my face — nothing more."),
+            Copy("Deadline", "Nothing more? I am what you were designed to become. Faster. Cleaner. Built to end Count — not crawl through this world begging for a fair fight."),
+            Real("Deadline", "I am cooperating so I can go home and beat him properly. Not so a knockoff can lecture me."),
+            Copy("Deadline", "Then prove you're worth the name. No shortcuts. No mercy. Show me the Deadline your creator actually wanted — before I replace you.")
         };
     }
 

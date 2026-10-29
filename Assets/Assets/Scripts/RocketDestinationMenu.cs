@@ -70,10 +70,20 @@ public sealed class RocketDestinationMenu : MonoBehaviour
 
     private InputActions controls;
     private GameObject menuRoot;
+    private RectTransform canvasRect;
+    private Transform plateTransform;
+    private SpriteRenderer plateRenderer;
+    private RectTransform infoBoxRoot;
+    private RectTransform infoImageRect;
+    private RectTransform infoTitleRect;
+    private RectTransform infoBodyRect;
     private TMP_Text infoTitleText;
     private TMP_Text infoBodyText;
+    private Vector2 infoTitleOffsetFromImage;
+    private Vector2 infoBodyOffsetFromImage;
     private Button rowTemplate;
     private Transform rowsParent;
+    private float authoredButtonStep = 140f;
 
     private KitRocketShip ship;
     private PlayerController traveler;
@@ -367,12 +377,16 @@ public sealed class RocketDestinationMenu : MonoBehaviour
         moveDownHeld = false;
     }
 
+    private int ActiveDestinationCount =>
+        Mathf.Min(entries.Count, loadableDestinations.Count);
+
     private void MoveSelection(int delta)
     {
-        if (entries.Count == 0 || delta == 0)
+        int count = ActiveDestinationCount;
+        if (count <= 0 || delta == 0)
             return;
 
-        selectedIndex = (selectedIndex + delta + entries.Count) % entries.Count;
+        selectedIndex = (selectedIndex + delta + count) % count;
         RefreshInfo();
         RefreshHighlight();
         ConsumeMenuInputCooldown();
@@ -380,10 +394,11 @@ public sealed class RocketDestinationMenu : MonoBehaviour
 
     private void ActivateSelected()
     {
-        if (entries.Count == 0)
+        int count = ActiveDestinationCount;
+        if (count <= 0)
             return;
 
-        selectedIndex = Mathf.Clamp(selectedIndex, 0, entries.Count - 1);
+        selectedIndex = Mathf.Clamp(selectedIndex, 0, count - 1);
         Entry entry = entries[selectedIndex];
         if (entry?.destination == null || string.IsNullOrWhiteSpace(entry.destination.sceneName))
             return;
@@ -463,23 +478,33 @@ public sealed class RocketDestinationMenu : MonoBehaviour
         }
 
         HideCrystalHeader(menuRoot.transform);
-        CacheInfoTexts(menuRoot.transform);
+        CachePlateAndInfo(menuRoot.transform);
         CollectAndPrepareRowButtons(menuRoot.transform);
         BindCanvasToCamera(menuRoot);
 
+        // Layout runs later in BindDestinationsToButtons once the button pool matches
+        // the loadable destination count (building with destinations.Length > entries.Count
+        // used to throw and break Awake input wiring).
+
         if (infoTitleText != null)
+        {
+            infoTitleText.alignment = TextAlignmentOptions.Center;
             infoTitleText.text = "Choose a Destination";
+        }
+
         if (infoBodyText != null)
-            infoBodyText.text = "Pick where Kit's rocket should fly.\n<size=80%><b>Up</b>/<b>Down</b>: choose   <b>Confirm</b>: launch   <b>Back</b>: cancel</size>";
+        {
+            infoBodyText.alignment = TextAlignmentOptions.Center;
+            infoBodyText.text =
+                "Pick where Kit's rocket should fly.\n" +
+                "<size=80%><b>Up</b>/<b>Down</b>: choose   <b>Confirm</b>: launch   <b>Back</b>: cancel</size>";
+        }
     }
 
     private static void HideCrystalHeader(Transform root)
     {
-        Transform header = FindDeep(root, "Scratch's Shop");
-        if (header != null)
-            header.gameObject.SetActive(false);
-
-        // Hide leftover crystal labels if they live elsewhere.
+        // "Scratch's Shop" is the shop plate / container SpriteRenderer — keep it visible.
+        // Only strip the crystal currency HUD that sits on top of that plate.
         Transform crystalLogo = FindDeep(root, "Crystal Logo");
         if (crystalLogo != null)
             crystalLogo.gameObject.SetActive(false);
@@ -491,10 +516,26 @@ public sealed class RocketDestinationMenu : MonoBehaviour
             crystalCost.gameObject.SetActive(false);
     }
 
-    private void CacheInfoTexts(Transform root)
+    private void CachePlateAndInfo(Transform root)
     {
-        infoTitleText = FindText(root, "Shop Info Title");
-        infoBodyText = FindText(root, "Shop Info Text");
+        canvasRect = root as RectTransform;
+        plateTransform = FindDeep(root, "Scratch's Shop");
+        plateRenderer = plateTransform != null ? plateTransform.GetComponent<SpriteRenderer>() : null;
+
+        Transform infoBox = FindDeep(root, "Shop Info Box");
+        infoBoxRoot = infoBox as RectTransform;
+        Transform infoImage = FindDeep(root, "Shop Info Box Image");
+        infoImageRect = infoImage as RectTransform;
+        Transform title = FindDeep(root, "Shop Info Title");
+        infoTitleRect = title as RectTransform;
+        infoTitleText = title != null ? title.GetComponent<TMP_Text>() : null;
+        Transform body = FindDeep(root, "Shop Info Text");
+        infoBodyRect = body as RectTransform;
+        infoBodyText = body != null ? body.GetComponent<TMP_Text>() : null;
+
+        Vector2 imagePos = infoImageRect != null ? infoImageRect.anchoredPosition : Vector2.zero;
+        infoTitleOffsetFromImage = infoTitleRect != null ? infoTitleRect.anchoredPosition - imagePos : new Vector2(0f, 90f);
+        infoBodyOffsetFromImage = infoBodyRect != null ? infoBodyRect.anchoredPosition - imagePos : new Vector2(0f, -30f);
     }
 
     private void CollectAndPrepareRowButtons(Transform root)
@@ -524,6 +565,8 @@ public sealed class RocketDestinationMenu : MonoBehaviour
 
         rowTemplate = rows[0];
         rowsParent = rowTemplate.transform.parent;
+        if (rows.Count >= 2)
+            authoredButtonStep = Mathf.Max(80f, Mathf.Abs(RowHeight(rows[0]) - RowHeight(rows[1])));
 
         for (int i = 0; i < rows.Count; i++)
             PrepareRowButton(rows[i], addToEntries: true);
@@ -641,7 +684,118 @@ public sealed class RocketDestinationMenu : MonoBehaviour
 
         // Rebuild click indices after pool resize.
         RewireClicks();
-        LayoutButtonsVertically(loadableDestinations.Count);
+        LayoutTravelUi(loadableDestinations.Count);
+    }
+
+    private void LayoutTravelUi(int buttonCount)
+    {
+        if (menuRoot != null && !menuRoot.activeSelf)
+            menuRoot.SetActive(true);
+
+        Canvas.ForceUpdateCanvases();
+
+        if (!TryGetPlateRectInCanvas(out float centerX, out float centerY, out float bottomY))
+        {
+            // Fallback: authored Scratch plate center.
+            centerX = 71f;
+            centerY = 120f;
+            bottomY = -40f;
+        }
+
+        LayoutButtonsInPlate(buttonCount, centerX, centerY);
+        LayoutInfoBelowPlate(centerX, bottomY);
+    }
+
+    private bool TryGetPlateRectInCanvas(out float centerX, out float centerY, out float bottomY)
+    {
+        centerX = 0f;
+        centerY = 0f;
+        bottomY = 0f;
+
+        if (plateTransform == null)
+            return false;
+
+        if (plateRenderer != null && canvasRect != null &&
+            canvasRect.lossyScale.sqrMagnitude > 0.0001f)
+        {
+            Bounds world = plateRenderer.bounds;
+            Vector3 localMin = canvasRect.InverseTransformPoint(world.min);
+            Vector3 localMax = canvasRect.InverseTransformPoint(world.max);
+            centerX = (localMin.x + localMax.x) * 0.5f;
+            centerY = (localMin.y + localMax.y) * 0.5f;
+            bottomY = Mathf.Min(localMin.y, localMax.y);
+            if (IsFinite(centerX) && IsFinite(centerY) && IsFinite(bottomY))
+                return true;
+        }
+
+        Vector3 local = plateTransform.localPosition;
+        centerX = local.x;
+        centerY = local.y;
+        bottomY = local.y - 200f;
+        return IsFinite(centerX) && IsFinite(centerY) && IsFinite(bottomY);
+    }
+
+    private static bool IsFinite(float value)
+    {
+        return !float.IsNaN(value) && !float.IsInfinity(value);
+    }
+
+    private void LayoutButtonsInPlate(int count, float centerX, float centerY)
+    {
+        int layoutCount = Mathf.Min(count, entries.Count);
+        if (layoutCount <= 0)
+            return;
+
+        float step = Mathf.Max(80f, authoredButtonStep);
+        float span = step * Mathf.Max(0, layoutCount - 1);
+        float top = centerY + span * 0.5f;
+
+        for (int i = 0; i < layoutCount; i++)
+        {
+            Button button = entries[i].button;
+            if (button == null)
+                continue;
+
+            RectTransform rt = button.transform as RectTransform;
+            if (rt == null)
+                continue;
+
+            rt.anchoredPosition = new Vector2(centerX, top - step * i);
+        }
+    }
+
+    private void LayoutInfoBelowPlate(float centerX, float plateBottomY)
+    {
+        const float gapBelowPlate = 36f;
+
+        // Prefer moving the authored info image, then keep title/body relative to it.
+        float imageHalfHeight = 0f;
+        if (infoImageRect != null)
+            imageHalfHeight = Mathf.Abs(infoImageRect.rect.height * infoImageRect.localScale.y) * 0.5f;
+
+        float imageY = plateBottomY - gapBelowPlate - imageHalfHeight;
+        Vector2 imagePos = new Vector2(centerX, imageY);
+
+        if (infoImageRect != null)
+            infoImageRect.anchoredPosition = imagePos;
+
+        if (infoTitleRect != null)
+        {
+            infoTitleRect.anchoredPosition = imagePos + new Vector2(0f, infoTitleOffsetFromImage.y);
+            if (infoTitleText != null)
+                infoTitleText.alignment = TextAlignmentOptions.Center;
+        }
+
+        if (infoBodyRect != null)
+        {
+            infoBodyRect.anchoredPosition = imagePos + new Vector2(0f, infoBodyOffsetFromImage.y);
+            if (infoBodyText != null)
+                infoBodyText.alignment = TextAlignmentOptions.Center;
+        }
+
+        // If the whole info box root is used for layout elsewhere, keep it centered too.
+        if (infoBoxRoot != null && infoImageRect == null)
+            infoBoxRoot.anchoredPosition = new Vector2(centerX, imageY);
     }
 
     private void EnsureEnoughButtons(int needed)
@@ -677,38 +831,6 @@ public sealed class RocketDestinationMenu : MonoBehaviour
                 ActivateSelected();
                 ConsumeMenuInputCooldown();
             });
-        }
-    }
-
-    private void LayoutButtonsVertically(int count)
-    {
-        if (count <= 0 || entries.Count == 0)
-            return;
-
-        float top = RowHeight(entries[0].button);
-        float bottom = count == 1 ? top : top - Mathf.Max(1.6f, 0.55f * (count - 1));
-        if (count > 1 && entries.Count >= 2)
-        {
-            // Prefer authored spacing from the first two Scratch rows when available.
-            float authoredStep = Mathf.Abs(RowHeight(entries[0].button) - RowHeight(entries[Mathf.Min(1, entries.Count - 1)].button));
-            if (authoredStep > 0.05f)
-                bottom = top - authoredStep * (count - 1);
-        }
-
-        float step = count <= 1 ? 0f : (top - bottom) / (count - 1);
-        for (int i = 0; i < count; i++)
-        {
-            Button button = entries[i].button;
-            if (button == null)
-                continue;
-
-            RectTransform rt = button.transform as RectTransform;
-            if (rt == null)
-                continue;
-
-            Vector2 pos = rt.anchoredPosition;
-            pos.y = top - step * i;
-            rt.anchoredPosition = pos;
         }
     }
 
@@ -750,7 +872,10 @@ public sealed class RocketDestinationMenu : MonoBehaviour
     private void RefreshInfo()
     {
         if (infoTitleText != null)
+        {
+            infoTitleText.alignment = TextAlignmentOptions.Center;
             infoTitleText.text = "Choose a Destination";
+        }
 
         string body;
         if (selectedIndex >= 0 && selectedIndex < loadableDestinations.Count)
@@ -765,14 +890,20 @@ public sealed class RocketDestinationMenu : MonoBehaviour
 
         body += "\n<size=80%><b>Up</b>/<b>Down</b>: choose   <b>Confirm</b>: launch   <b>Back</b>: cancel</size>";
         if (infoBodyText != null)
+        {
+            infoBodyText.alignment = TextAlignmentOptions.Center;
             infoBodyText.text = body;
+        }
     }
 
     private void RefreshHighlight()
     {
-        int activeCount = Mathf.Min(entries.Count, loadableDestinations.Count);
-        for (int i = 0; i < activeCount; i++)
-            SetButtonHighlighted(entries[i], i == selectedIndex && isOpen);
+        int activeCount = ActiveDestinationCount;
+        for (int i = 0; i < entries.Count; i++)
+        {
+            bool active = i < activeCount;
+            SetButtonHighlighted(entries[i], active && i == selectedIndex && isOpen);
+        }
 
         if (!isOpen || activeCount == 0)
             return;

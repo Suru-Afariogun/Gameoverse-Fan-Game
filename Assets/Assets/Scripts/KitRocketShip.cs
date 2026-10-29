@@ -468,7 +468,7 @@ public sealed class KitRocketShip : MonoBehaviour
 
     private void Update()
     {
-        EnsurePhasedWithActivePlayer();
+        EnsurePhasedThroughCombatants();
 
         if (state == ShipState.Hovering)
         {
@@ -1684,32 +1684,123 @@ public sealed class KitRocketShip : MonoBehaviour
         }
     }
 
-    private void EnsurePhasedWithActivePlayer()
+    private float nextFullPhaseRefreshAt;
+
+    /// <summary>
+    /// Ship solids ignore players, bosses, enemies, clones, and projectiles so combat
+    /// never gets stuck on / blocked by the rocket.
+    /// </summary>
+    private void EnsurePhasedThroughCombatants()
     {
+        if (solidColliders == null || solidColliders.Length == 0)
+            return;
+
         PlayerController player = PlayerController.ResolveActive();
-        if (player == null || player.IsDead)
+        int playerId = player != null && !player.IsDead ? player.GetInstanceID() : int.MinValue;
+        bool playerChanged = playerId != lastPhasedPlayerId;
+        bool dueRefresh = Time.time >= nextFullPhaseRefreshAt;
+        if (!playerChanged && !dueRefresh)
             return;
 
-        int id = player.GetInstanceID();
-        if (id == lastPhasedPlayerId)
+        lastPhasedPlayerId = playerId;
+        nextFullPhaseRefreshAt = Time.time + 0.75f;
+
+        if (player != null && !player.IsDead)
+            IgnoreShipSolidsAgainst(player.GetComponentsInChildren<Collider2D>(true));
+
+        Boss[] bosses = EnemyTypeCache.Bosses;
+        for (int i = 0; i < bosses.Length; i++)
+        {
+            if (bosses[i] == null)
+                continue;
+            IgnoreShipSolidsAgainst(bosses[i].GetComponentsInChildren<Collider2D>(true));
+        }
+
+        PhaseIgnoreEnemyList(EnemyTypeCache.Crankies);
+        PhaseIgnoreEnemyList(EnemyTypeCache.Lasers);
+        PhaseIgnoreEnemyList(EnemyTypeCache.Tankers);
+        PhaseIgnoreEnemyList(EnemyTypeCache.Scraps);
+        PhaseIgnoreEnemyList(EnemyTypeCache.Blockers);
+        PhaseIgnoreEnemyList(EnemyTypeCache.CheckPoints);
+
+        DeadlineFutureClone[] futureClones = FindObjectsByType<DeadlineFutureClone>(FindObjectsSortMode.None);
+        for (int i = 0; i < futureClones.Length; i++)
+        {
+            if (futureClones[i] == null)
+                continue;
+            IgnoreShipSolidsAgainst(futureClones[i].GetComponentsInChildren<Collider2D>(true));
+        }
+
+        CountTimeClone[] timeClones = FindObjectsByType<CountTimeClone>(FindObjectsSortMode.None);
+        for (int i = 0; i < timeClones.Length; i++)
+        {
+            if (timeClones[i] == null)
+                continue;
+            IgnoreShipSolidsAgainst(timeClones[i].GetComponentsInChildren<Collider2D>(true));
+        }
+
+        // Live shots / melee boxes: ignore solids so physics never wedges them on the hull.
+        Projectile[] shots = FindObjectsByType<Projectile>(FindObjectsSortMode.None);
+        for (int i = 0; i < shots.Length; i++)
+        {
+            if (shots[i] == null)
+                continue;
+            IgnoreShipSolidsAgainst(shots[i].GetComponentsInChildren<Collider2D>(true));
+        }
+
+        AttackHitbox[] hitboxes = FindObjectsByType<AttackHitbox>(FindObjectsSortMode.None);
+        for (int i = 0; i < hitboxes.Length; i++)
+        {
+            if (hitboxes[i] == null)
+                continue;
+            IgnoreShipSolidsAgainst(hitboxes[i].GetComponentsInChildren<Collider2D>(true));
+        }
+
+        PhaseThroughPlayers[] props = FindObjectsByType<PhaseThroughPlayers>(FindObjectsSortMode.None);
+        for (int i = 0; i < props.Length; i++)
+        {
+            if (props[i] == null)
+                continue;
+            IgnoreShipSolidsAgainst(props[i].GetComponentsInChildren<Collider2D>(true));
+        }
+    }
+
+    private void PhaseIgnoreEnemyList<T>(T[] list) where T : Component
+    {
+        if (list == null)
+            return;
+        for (int i = 0; i < list.Length; i++)
+        {
+            if (list[i] == null)
+                continue;
+            IgnoreShipSolidsAgainst(list[i].GetComponentsInChildren<Collider2D>(true));
+        }
+    }
+
+    private void IgnoreShipSolidsAgainst(Collider2D[] others)
+    {
+        if (others == null || solidColliders == null)
             return;
 
-        Collider2D[] playerCols = player.GetComponentsInChildren<Collider2D>(true);
         for (int i = 0; i < solidColliders.Length; i++)
         {
             Collider2D mine = solidColliders[i];
-            if (mine == null || !mine.enabled)
+            if (mine == null || !mine.enabled || mine.isTrigger)
                 continue;
 
-            for (int j = 0; j < playerCols.Length; j++)
+            for (int j = 0; j < others.Length; j++)
             {
-                if (playerCols[j] != null && !playerCols[j].isTrigger)
-                    Physics2D.IgnoreCollision(mine, playerCols[j], true);
+                Collider2D other = others[j];
+                if (other == null || !other.enabled)
+                    continue;
+
+                Physics2D.IgnoreCollision(mine, other, true);
             }
         }
-
-        lastPhasedPlayerId = id;
     }
+
+    /// <summary>Legacy name — full combat phasing now.</summary>
+    private void EnsurePhasedWithActivePlayer() => EnsurePhasedThroughCombatants();
 
     private void EnsureInteractSymbol()
     {

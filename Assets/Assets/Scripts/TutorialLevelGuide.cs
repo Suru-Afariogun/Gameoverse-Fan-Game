@@ -253,6 +253,7 @@ public sealed class TutorialLevelGuide : MonoBehaviour
         bool kit = Is(characterId, "Kit");
         bool bass = Is(characterId, "Bass");
         bool count = Is(characterId, "Count");
+        bool deadline = Is(characterId, "Deadline");
         bool malice = Is(characterId, "Malice");
         bool hex = Is(characterId, "Hex");
         bool harlieLike = hex || Is(characterId, "Harlie");
@@ -268,7 +269,7 @@ public sealed class TutorialLevelGuide : MonoBehaviour
             () => Player != null && Player.IsDashing && !Player.IsPhysicallyGrounded);
         Add($"To dash jump, {b.FormatPress("Jump")} while dashing.", () => Player != null && Player.IsDashJumping);
 
-        if (kit || count || bass)
+        if (kit || count || bass || deadline)
         {
             Add($"To shoot, {b.FormatPress("Attack")}.", TutorialAction.Attack);
             Add($"To shoot diagonally up, {b.FormatAimUp()} and {b.FormatPress("Attack")}.", TutorialAction.AimShot);
@@ -305,6 +306,14 @@ public sealed class TutorialLevelGuide : MonoBehaviour
                 () => Player is CountPlayerController c && c.IsHyperSpeedActive);
             Add($"To stop Hyper Speed, {b.FormatAimDown()} and {b.FormatHold("Dash")} again.",
                 () => Player is CountPlayerController c && !c.IsHyperSpeedActive);
+        }
+
+        if (deadline)
+        {
+            Add($"To start Deterioration Acceleration, {b.FormatAimDown()} and {b.FormatPress("Attack")}.",
+                () => Player is DeadlinePlayerController d && d.IsDeteriorationAccelerationActive);
+            Add($"To stop Deterioration Acceleration, {b.FormatAimDown()} and {b.FormatPress("Attack")} again.",
+                () => Player is DeadlinePlayerController d && !d.IsDeteriorationAccelerationActive);
         }
 
         Add($"To drop through a thin platform, stand on it, {b.FormatAimDown()} and {b.FormatPress("Jump")}.",

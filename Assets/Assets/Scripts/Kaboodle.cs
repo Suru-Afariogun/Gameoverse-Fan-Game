@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -39,6 +40,7 @@ public class Kaboodle : MonoBehaviour
     [SerializeField] private GameObject interactPrompt;
 
     private bool subscribedToButtonSprites;
+    private bool greetingInProgress;
 
     [Header("UI - Kaboodle Box")]
     [Tooltip("Root of the Kaboodle dialogue/menu box. Hidden until the player interacts.")]
@@ -71,6 +73,7 @@ public class Kaboodle : MonoBehaviour
     [SerializeField] private Button countCharacterButton;
     [SerializeField] private Button hexCharacterButton;
     [SerializeField] private Button bassCharacterButton;
+    [SerializeField] private Button deadlineCharacterButton;
     [Tooltip("How many character buttons per row (usually 2: Kit | Malice).")]
     [SerializeField] private int characterSelectColumns = 2;
     [Tooltip("Solid blue character-shaped highlight behind the portrait when hovered/selected.")]
@@ -93,6 +96,8 @@ public class Kaboodle : MonoBehaviour
     [SerializeField] private Button countBossButton;
     [Tooltip("Spawns Boss Bass (BossBass prefab via the Boss Spawner's \"Bass\" entry).")]
     [SerializeField] private Button bassBossButton;
+    [Tooltip("Spawns Boss Deadline (BossDeadline prefab via the Boss Spawner's \"Deadline\" entry).")]
+    [SerializeField] private Button deadlineBossButton;
     [SerializeField] private int bossSelectColumns = 2;
 
     [Header("UI - Item Shop")]
@@ -298,6 +303,8 @@ public class Kaboodle : MonoBehaviour
             hexCharacterButton = FindNamedButtonUnder(characterSelectPage, "Hex");
         if (bassCharacterButton == null)
             bassCharacterButton = FindNamedButtonUnder(characterSelectPage, "Bass");
+        if (deadlineCharacterButton == null)
+            deadlineCharacterButton = FindNamedButtonUnder(characterSelectPage, "Deadline");
 
         AddCharacterButton(kitCharacterButton, "Kit");
         AddCharacterButton(maliceCharacterButton, "Malice");
@@ -305,6 +312,7 @@ public class Kaboodle : MonoBehaviour
         AddCharacterButton(countCharacterButton, "Count");
         AddCharacterButton(hexCharacterButton, "Hex");
         AddCharacterButton(bassCharacterButton, "Bass");
+        AddCharacterButton(deadlineCharacterButton, "Deadline");
 
         if (validCharacterButtons.Count == 0)
             Debug.LogWarning("[Kaboodle] Character Select has no character buttons assigned.");
@@ -327,6 +335,8 @@ public class Kaboodle : MonoBehaviour
             countBossButton = FindNamedButtonUnder(bossFightPage, "Count");
         if (bassBossButton == null)
             bassBossButton = FindNamedButtonUnder(bossFightPage, "Bass");
+        if (deadlineBossButton == null)
+            deadlineBossButton = FindNamedButtonUnder(bossFightPage, "Deadline");
 
         AddBossButton(kitBossButton, BossEncounter.BossIdKit);
         AddBossButton(maliceBossButton, BossEncounter.BossIdMalice);
@@ -334,10 +344,11 @@ public class Kaboodle : MonoBehaviour
         AddBossButton(hexBossButton, BossEncounter.BossIdHex);
         AddBossButton(countBossButton, BossEncounter.BossIdCount);
         AddBossButton(bassBossButton, BossEncounter.BossIdBass);
+        AddBossButton(deadlineBossButton, BossEncounter.BossIdDeadline);
 
         if (validBossButtons.Count == 0)
             Debug.LogWarning(
-                "[Kaboodle] Boss Fight page has no Kit/Malice/Harlie/Hex/Count/Bass buttons. " +
+                "[Kaboodle] Boss Fight page has no Kit/Malice/Harlie/Hex/Count/Bass/Deadline buttons. " +
                 "Parent the same buttons under Boss Fight Page (or assign the Boss Button refs).");
     }
 
@@ -1004,6 +1015,7 @@ public class Kaboodle : MonoBehaviour
         BindClick(hexBossButton, OnHexBossButtonClicked, bind);
         BindClick(countBossButton, OnCountBossButtonClicked, bind);
         BindClick(bassBossButton, OnBassBossButtonClicked, bind);
+        BindClick(deadlineBossButton, OnDeadlineBossButtonClicked, bind);
     }
 
     private void WireShopButtonClicks(bool bind)
@@ -1054,6 +1066,13 @@ public class Kaboodle : MonoBehaviour
     public void OnBassBossButtonClicked()
     {
         SelectBossIndexById(BossEncounter.BossIdBass);
+        ConfirmBossSelection();
+    }
+
+    /// <summary>Inspector / UI OnClick → pick Deadline boss and load Boss Fight Mode.</summary>
+    public void OnDeadlineBossButtonClicked()
+    {
+        SelectBossIndexById(BossEncounter.BossIdDeadline);
         ConfirmBossSelection();
     }
 
@@ -1383,7 +1402,19 @@ public class Kaboodle : MonoBehaviour
         nextMenuInputTime = Time.unscaledTime + Mathf.Max(0.05f, menuInputCooldown);
     }
 
+    /// <summary>
+    /// Player interact: Kaboodle greets first (encourage heroes / snark villains), then the menu pops up.
+    /// </summary>
     public void OpenBox()
+    {
+        if (boxOpen || greetingInProgress)
+            return;
+
+        StartCoroutine(OpenBoxAfterGreetingRoutine());
+    }
+
+    /// <summary>Opens the menu immediately (no greeting). Used for programmatic page jumps.</summary>
+    public void OpenBoxImmediate()
     {
         if (boxOpen)
             return;
@@ -1405,6 +1436,54 @@ public class Kaboodle : MonoBehaviour
         LifeBar.SetAllVisible(false);
         ConsumeMenuInputCooldown();
         onOpened?.Invoke();
+    }
+
+    private IEnumerator OpenBoxAfterGreetingRoutine()
+    {
+        greetingInProgress = true;
+
+        PlayerController player = rangedPlayer != null ? rangedPlayer : FindNearestPlayer();
+        string characterId = player != null ? player.CharacterId : PlayerSpawner.SelectedCharacterId;
+
+        DialogueBox.Line[] lines = KaboodleGreetingDialogue.LinesFor(characterId);
+        if (lines != null && lines.Length > 0)
+        {
+            DialogueBox box = CopyBotIntroDialogue.EnsureDialogueBox();
+            if (box != null)
+            {
+                if (player != null)
+                {
+                    player.SetInputLocked(true);
+                    player.SetDashDisabled(true);
+                }
+
+                SetSymbolVisible(false);
+
+                bool done = false;
+                box.OpenConversation(lines, player, () => done = true);
+                while (!done)
+                    yield return null;
+            }
+        }
+
+        greetingInProgress = false;
+
+        // Player may have left range or died during the greeting.
+        PlayerController stillNear = rangedPlayer != null ? rangedPlayer : FindNearestPlayer();
+        bool stillInRange = stillNear != null &&
+                            Vector2.Distance(transform.position, stillNear.transform.position) <= interactRadius;
+        if (!stillInRange)
+        {
+            if (player != null)
+            {
+                player.SetInputLocked(false);
+                player.SetDashDisabled(false);
+            }
+            SetSymbolVisible(playerInRange && !boxOpen);
+            yield break;
+        }
+
+        OpenBoxImmediate();
     }
 
     public void CloseBox(bool unlockPlayer = true)
@@ -1721,8 +1800,9 @@ public class Kaboodle : MonoBehaviour
 
     private void OpenContentPage(BoxPage page, GameObject pageRoot)
     {
+        // Programmatic page opens skip the greeting (menu already in use, or forced tutorial).
         if (!boxOpen)
-            OpenBox();
+            OpenBoxImmediate();
 
         currentPage = page;
         ResetAllButtonVisuals();

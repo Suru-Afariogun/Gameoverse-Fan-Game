@@ -35,6 +35,9 @@ public sealed class NPC : MonoBehaviour
     [Tooltip("Shown when talking to Bass. Leave empty to use built-in Bass lines for this speaker.")]
     [TextArea(2, 6)]
     [SerializeField] private string[] dialoguePagesBass;
+    [Tooltip("Shown when talking to Deadline. Leave empty to use built-in Deadline lines for this speaker.")]
+    [TextArea(2, 6)]
+    [SerializeField] private string[] dialoguePagesDeadline;
 
     [Header("Interact")]
     [SerializeField] private Transform interactRadius;
@@ -549,6 +552,13 @@ public sealed class NPC : MonoBehaviour
             if (dialoguePagesBass != null && dialoguePagesBass.Length > 0)
                 return dialoguePagesBass;
             return BassNpcDialogue.PagesFor(speakerName);
+        }
+
+        if (string.Equals(id, "Deadline", System.StringComparison.OrdinalIgnoreCase))
+        {
+            if (dialoguePagesDeadline != null && dialoguePagesDeadline.Length > 0)
+                return dialoguePagesDeadline;
+            return DeadlineNpcDialogue.PagesFor(speakerName);
         }
 
         // Kit and any unknown / unset character use the default pages.
